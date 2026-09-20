@@ -207,16 +207,28 @@ importers:
 
   .:
     dependencies:
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
       dotenv:
         specifier: ^18.0.0
         version: 18.0.0
       express:
         specifier: ^5.2.1
         version: 5.2.1
+      jose:
+        specifier: ^6.2.12
+        version: 6.2.12
       mongoose:
         specifier: ^9.10.1
         version: 9.10.1
+      zod:
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
+      '@types/bcrypt':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -394,6 +406,9 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
+  '@types/bcrypt@6.0.0':
+    resolution: {integrity: sha512-/oJGukuH3D2+D+3H4JWLaAsJ/ji86dhRidzZ/Od7H/i8g+aCmvkeCc6Ni/f9uxGLSQVCRZkX2/lqEFG2BvWtlQ==}
+
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
@@ -554,6 +569,10 @@ packages:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
     engines: {node: '>= 0.6'}
 
+  bcrypt@6.0.0:
+    resolution: {integrity: sha512-cU8v/EGSrnH+HnxV2z0J7/blxH8gq7Xh2JFT6Aroax7UohdmiJJlxApMxtKfuI7z68NvvVcmR78k2LbT6efhRg==}
+    engines: {node: '>= 18'}
+
   body-parser@2.3.0:
     resolution: {integrity: sha512-2cGmJupaNgg+QUwVLAucDuWuoMZ6EX9iHDRswZ5lsNYEmwPaRknMPCLZz07yTzVq/83p4o/wzbDZbBrTvGGTIw==}
     engines: {node: '>=18'}
@@ -709,6 +728,9 @@ packages:
   is-promise@4.0.0:
     resolution: {integrity: sha512-hvpoI6korhJMnej285dSg6nu1+e6uxs7zG3BYAm5byqDsgJNWwxzM6z6iZiAgQR4TJ30JmBTOwqZUw3WlyH3AQ==}
 
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
+
   kareem@3.4.0:
     resolution: {integrity: sha512-JAKhnR4S027v/8949QXNInRskgETCg9rFUMi1VjhGbjX+XltCAAEFcXykkSocNkom1kc66EMJfjWvhj87BDQKg==}
     engines: {node: '>=18.0.0'}
@@ -785,6 +807,14 @@ packages:
   negotiator@1.1.0:
     resolution: {integrity: sha512-NMPBRMJgiQHjbd8phG3Vebdx4kZ1H121rbl5IkMqeOsahptB9BKo/d7oJ3zTXqTgagn2bWlNSXkh0QUGM31RYg==}
     engines: {node: '>=18'}
+
+  node-addon-api@8.9.2:
+    resolution: {integrity: sha512-VijLXbi3UACN69I0JVXJsX4tjACjNoQDgv2gTF6sx2wWEi8tkSg2eX8p5gSIFi8z2+DL3oHmY6OyKce38SDolg==}
+    engines: {node: ^18 || ^20 || >= 21}
+
+  node-gyp-build@4.8.4:
+    resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
+    hasBin: true
 
   object-inspect@1.13.4:
     resolution: {integrity: sha512-W67iLl4J2EXEGTbfeHCffrjDfitvLANg0UlX3wFUUSTx92KXRFegMHUVgSqE+wvhAbi4WqjGg9czysTV2Epbew==}
@@ -912,6 +942,9 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
+
 snapshots:
 
   '@esbuild/aix-ppc64@0.28.2':
@@ -997,6 +1030,10 @@ snapshots:
       sparse-bitfield: 3.0.3
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@types/bcrypt@6.0.0':
+    dependencies:
+      '@types/node': 26.6.1
 
   '@types/body-parser@1.19.6':
     dependencies:
@@ -1109,6 +1146,11 @@ snapshots:
     dependencies:
       mime-types: 3.0.2
       negotiator: 1.1.0
+
+  bcrypt@6.0.0:
+    dependencies:
+      node-addon-api: 8.9.2
+      node-gyp-build: 4.8.4
 
   body-parser@2.3.0:
     dependencies:
@@ -1304,6 +1346,8 @@ snapshots:
 
   is-promise@4.0.0: {}
 
+  jose@6.2.12: {}
+
   kareem@3.4.0: {}
 
   math-intrinsics@1.1.0: {}
@@ -1358,6 +1402,10 @@ snapshots:
   negotiator@1.1.0:
     dependencies:
       content-type: 2.1.0
+
+  node-addon-api@8.9.2: {}
+
+  node-gyp-build@4.8.4: {}
 
   object-inspect@1.13.4: {}
 
@@ -1524,3 +1572,5 @@ snapshots:
       webidl-conversions: 7.0.0
 
   wrappy@1.0.2: {}
+
+  zod@4.6.5: {}
