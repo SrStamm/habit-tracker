@@ -1,5 +1,10 @@
 import { type Response, type Request } from "express";
-import { findAllHabits, createHabit, updateHabit } from "./habit.service";
+import {
+  findAllHabits,
+  createHabit,
+  updateHabit,
+  deleteHabit,
+} from "./habit.service";
 
 export const handleGetAllHabits = async (req: Request, res: Response) => {
   const userId = req.userId;
@@ -43,6 +48,18 @@ export const handleUpdateHabit = async (req: Request, res: Response) => {
     );
 
     return res.status(201).json({ habitoAtualizado });
+  } catch (error) {
+    return res.status(400).json({ error: (error as Error).message });
+  }
+};
+
+export const handleDeleteHabit = async (req: Request, res: Response) => {
+  const { habitId } = req.params;
+
+  try {
+    await deleteHabit(req.userId, habitId);
+
+    return res.status(204).send();
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
   }

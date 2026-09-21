@@ -26,3 +26,9 @@ export const HabitUpdateSchema = z.object({
     habitId: z.string(),
   }),
 });
+
+export const HabitDeleteSchema = z.object({
+  params: z.object({
+    habitId: z.string(),
+  }),
+});

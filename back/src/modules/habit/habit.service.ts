@@ -43,3 +43,7 @@ export const updateHabit = async (
     { returnDocument: true },
   );
 };
+
+export const deleteHabit = async (userId: string, habitId: string) => {
+  return await Habit.findOneAndDelete({ userId, _id: habitId });
+};
