@@ -1,10 +1,5 @@
 import mongoose from "mongoose";
-
-enum HabitType {
-  BOOLEAN = "BOOLEAN",
-  QUANTITY = "QUANTITY",
-  DURATION = "DURATION",
-}
+import { HabitType } from "../modules/habit/habit.types";
 
 const habitSchema = new mongoose.Schema(
   {
