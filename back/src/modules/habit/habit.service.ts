@@ -21,3 +21,25 @@ export const createHabit = async (
   const novoHabito = new Habit({ userId, name, description, category, type });
   return await novoHabito.save();
 };
+
+export const updateHabit = async (
+  userId: string,
+  habitId: string,
+  name?: string,
+  type?: HabitType,
+  description?: string,
+  category?: string,
+) => {
+  const updateData: Record<string, any> = {};
+
+  if (name !== undefined) updateData.name = name;
+  if (type !== undefined) updateData.type = type;
+  if (description !== undefined) updateData.description = description;
+  if (category !== undefined) updateData.category = category;
+
+  return await Habit.findOneAndUpdate(
+    { userId, _id: habitId },
+    { $set: updateData },
+    { returnDocument: true },
+  );
+};

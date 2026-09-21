@@ -1,5 +1,5 @@
 import { type Response, type Request } from "express";
-import { findAllHabits, createHabit } from "./habit.service";
+import { findAllHabits, createHabit, updateHabit } from "./habit.service";
 
 export const handleGetAllHabits = async (req: Request, res: Response) => {
   const userId = req.userId;
@@ -23,6 +23,26 @@ export const handleCreateHabit = async (req: Request, res: Response) => {
       category,
     );
     return res.status(201).json({ novoHabito });
+  } catch (error) {
+    return res.status(400).json({ error: (error as Error).message });
+  }
+};
+
+export const handleUpdateHabit = async (req: Request, res: Response) => {
+  const { name, description, category, type } = req.body;
+  const { habitId } = req.params;
+
+  try {
+    const habitoAtualizado = await updateHabit(
+      req.userId,
+      habitId,
+      name,
+      type,
+      description,
+      category,
+    );
+
+    return res.status(201).json({ habitoAtualizado });
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
   }

@@ -15,4 +15,14 @@ export const HabitSchema = z.object({
   }),
 });
 
-export type HabitInput = z.infer<typeof HabitSchema>;
+export const HabitUpdateSchema = z.object({
+  body: z.object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+    category: z.string().optional(),
+    type: z.enum(HabitType).optional(),
+  }),
+  params: z.object({
+    habitId: z.string(),
+  }),
+});
