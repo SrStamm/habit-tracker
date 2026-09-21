@@ -1,7 +1,11 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { verificarToken } from "../modules/auth/auth.service";
 
-export const auth = async (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const header = req.headers.authorization;
     if (!header?.startsWith("Bearer ")) {

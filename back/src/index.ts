@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import authRouter from "./modules/auth/auth.routes";
+import habitRouter from "./modules/habit/habit.routes";
 
 mongoose
   .connect(process.env.MONGO_URI)
@@ -13,6 +14,7 @@ const PORT = process.env.PORT ?? 3000;
 app.use(express.json());
 
 app.use("/auth", authRouter);
+app.use("/habits", habitRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
