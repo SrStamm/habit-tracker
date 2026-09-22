@@ -10,5 +10,7 @@ export const handleCreateEntry = async (req: Request, res: Response) => {
     await validateUserHabit(userId, habitId);
     const newEntry = await createEntry(userId, habitId, value, completed);
     res.status(201).json({ newEntry });
-  } catch (error) {}
+  } catch (error) {
+    return res.status(400).json({ error: (error as Error).message });
+  }
 };
