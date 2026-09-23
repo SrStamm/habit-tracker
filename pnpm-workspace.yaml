@@ -1,0 +1,8 @@
+packages:
+  - back
+  - front
+  - shared
+
+allowBuilds:
+  bcrypt: true
+  esbuild: true
