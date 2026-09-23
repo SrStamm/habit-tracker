@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { validate } from "../../middleware/validate";
-import { authMiddleware } from "../../middleware/auth";
+import { authMiddleware, validateHabitOwner } from "../../middleware/auth";
+import { validateHabitOwner } from "../../middleware/validateHabitOwner";
 import {
   handleGetAllHabits,
   handleCreateHabit,
@@ -20,8 +21,18 @@ habitRouter.get("/", handleGetAllHabits);
 
 habitRouter.post("/", validate(HabitSchema), handleCreateHabit);
 
-habitRouter.patch("/:habitId", validate(HabitUpdateSchema), handleUpdateHabit);
+habitRouter.patch(
+  "/:habitId",
+  validate(HabitUpdateSchema),
+  validateHabitOwner,
+  handleUpdateHabit,
+);
 
-habitRouter.delete("/:habitId", validate(HabitDeleteSchema), handleDeleteHabit);
+habitRouter.delete(
+  "/:habitId",
+  validate(HabitDeleteSchema),
+  validateHabitOwner,
+  handleDeleteHabit,
+);
 
 export default habitRouter;

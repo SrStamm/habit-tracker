@@ -23,7 +23,6 @@ export const createHabit = async (
 };
 
 export const updateHabit = async (
-  userId: string,
   habitId: string,
   name?: string,
   type?: HabitType,
@@ -38,12 +37,12 @@ export const updateHabit = async (
   if (category !== undefined) updateData.category = category;
 
   return await Habit.findOneAndUpdate(
-    { userId, _id: habitId },
+    { _id: habitId },
     { $set: updateData },
     { returnDocument: true },
   );
 };
 
-export const deleteHabit = async (userId: string, habitId: string) => {
-  return await Habit.findOneAndDelete({ userId, _id: habitId });
+export const deleteHabit = async (habitId: string) => {
+  return await Habit.findOneAndDelete({ _id: habitId });
 };
