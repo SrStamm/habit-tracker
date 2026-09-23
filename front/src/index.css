@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — color palette.
+ * Placeholder values: replace them with the real palette when ready.
+ * With @theme static they are always present as CSS custom properties in :root
+ * and still generate Tailwind utilities (bg-primary, text-secondary, ...).
+ */
+@theme static {
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-background: #f8fafc;
+  --color-text: #0f172a;
+}
