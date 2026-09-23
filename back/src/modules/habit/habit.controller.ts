@@ -39,7 +39,6 @@ export const handleUpdateHabit = async (req: Request, res: Response) => {
 
   try {
     const habitoAtualizado = await updateHabit(
-      req.userId,
       habitId,
       name,
       type,
@@ -57,7 +56,7 @@ export const handleDeleteHabit = async (req: Request, res: Response) => {
   const { habitId } = req.params;
 
   try {
-    await deleteHabit(req.userId, habitId);
+    await deleteHabit(habitId);
 
     return res.status(204).send();
   } catch (error) {

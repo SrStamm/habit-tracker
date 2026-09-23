@@ -1,11 +1,6 @@
 import Entry from "../../models/Entry";
 import Habit from "../../models/Habit";
 
-export const validateUserHabit = async (userId: String, habitId: String) => {
-  const habit = await Habit.findOne({ userId, _id: habitId });
-  if (!habit) throw new Error("Hábito no encontrado");
-};
-
 export const getEntries = async (
   userId: String,
   habitId: String,
