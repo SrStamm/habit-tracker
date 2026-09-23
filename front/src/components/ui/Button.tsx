@@ -17,7 +17,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "rounded-lg px-4 py-2 font-medium transition",
+        "rounded-lg px-4 py-2 font-medium transition disabled:cursor-not-allowed disabled:opacity-60",
         variants[variant],
         className,
       )}
