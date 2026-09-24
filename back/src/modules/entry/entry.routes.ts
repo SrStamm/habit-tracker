@@ -7,10 +7,20 @@ import {
   GetEntriesQuerySchema,
   EntryParamsSchema,
 } from "@habits/shared/entry";
-import { handleCreateEntry, handleGetEntries } from "./entry.controller";
+import {
+  handleCreateEntry,
+  handleGetAllEntries,
+  handleGetEntries,
+} from "./entry.controller";
 
 const entryRouter: Router = Router();
 entryRouter.use(authMiddleware);
+
+entryRouter.get(
+  "/entries",
+  validate({ query: GetEntriesQuerySchema }),
+  handleGetAllEntries,
+);
 
 entryRouter.get(
   "/:habitId/entries",

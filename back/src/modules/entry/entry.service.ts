@@ -1,5 +1,14 @@
 import Entry from "../../models/Entry";
-import Habit from "../../models/Habit";
+
+export const getAllEntries = async (userId: String, from?: Date, to?: Date) => {
+  const filter: Record<string, unknown> = { userId };
+  if (from || to) {
+    filter.date = {};
+    if (from) filter.date.$gte = from;
+    if (to) filter.date.$lte = to;
+  }
+  return Entry.find(filter).sort({ date: 1 });
+};
 
 export const getEntries = async (
   userId: String,
