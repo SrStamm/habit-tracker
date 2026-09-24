@@ -5,12 +5,7 @@ import { Select } from "../../../components/ui/Select";
 import { Habit, HabitType } from "@habits/shared/habit";
 import { useCreateHabit } from "../hooks/useHabits";
 import { Button } from "../../../components/ui/Button";
-
-const HABIT_TYPE_LABELS: Record<HabitType, string> = {
-  [HabitType.BOOLEAN]: "Sim/Não",
-  [HabitType.QUANTITY]: "Quantidade",
-  [HabitType.DURATION]: "Duração",
-};
+import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 
 type HabitFormProps = {
   onSuccess?: (habit: Habit) => void;
