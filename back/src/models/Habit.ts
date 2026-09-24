@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { HabitType } from "../modules/habit/habit.types";
+import { HabitType } from "@habits/shared/habit";
 
 const habitSchema = new mongoose.Schema(
   {
