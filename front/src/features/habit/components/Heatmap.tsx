@@ -22,7 +22,7 @@ function Heatmap({ weeks }: HeatmapProps) {
       <div
         className="flex items-start gap-1"
         role="img"
-        aria-label="Heatmap de actividad por día"
+        aria-label="Heatmap de atividade por dia"
       >
         {weeks.map((week, weekIndex) => (
           <div
@@ -57,7 +57,7 @@ function Heatmap({ weeks }: HeatmapProps) {
             className={`size-3 rounded-[3px] ${className}`}
           />
         ))}
-        <span>Más</span>
+        <span>Mais</span>
       </div>
     </div>
   );

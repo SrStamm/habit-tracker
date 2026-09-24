@@ -48,7 +48,7 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
 
       {/* Controles de registro diario segun el tipo de hábito */}
       <div className="mt-2 pt-3 border-t border-border/40 flex items-center justify-between">
-        <span className="text-xs text-text-muted">Hoy:</span>
+        <span className="text-xs text-text-muted">Hoje:</span>
 
         {data.type === HabitType.BOOLEAN ? (
           <Button
@@ -61,7 +61,7 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
             disabled={isPending}
             className="text-xs"
           >
-            {completedToday ? "✓ Cumplido" : "Marcar hoy"}
+            {completedToday ? "✓ Cumprido" : "Marcar hoje"}
           </Button>
         ) : (
           <form

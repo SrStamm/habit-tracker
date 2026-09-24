@@ -79,7 +79,7 @@ export default function HomePage() {
             onClick={() => setIsModalOpen(true)}
             className="self-start sm:self-auto shadow-sm"
           >
-            + Nuevo Hábito
+            + Novo Hábito
           </Button>
         </header>
 
@@ -98,11 +98,11 @@ export default function HomePage() {
           {selectedHabit ? (
             <div className="flex flex-col gap-1">
               <p className="text-sm text-text-muted">
-                {selectedHabit.name} · últimos {DAYS} días
+                {selectedHabit.name} · últimos {DAYS} dias
               </p>
               {entries.isPending && (
                 <p className="text-sm text-text-muted">
-                  Cargando entries...
+                  Carregando entries...
                 </p>
               )}
               {entries.error && (
@@ -114,7 +114,7 @@ export default function HomePage() {
             </div>
           ) : (
             <p className="text-sm text-text-muted">
-              Selecciona un hábito para ver su heatmap.
+              Selecciona um hábito para ver seu heatmap.
             </p>
           )}
         </section>
@@ -122,9 +122,9 @@ export default function HomePage() {
         {/* Sección de Hábitos */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-text">Mis Hábitos</h2>
+            <h2 className="text-xl font-semibold text-text">Meus Hábitos</h2>
             <span className="text-xs text-text-muted">
-              {data ? data.length : 0} activos
+              {data ? data.length : 0} ativos
             </span>
           </div>
 
