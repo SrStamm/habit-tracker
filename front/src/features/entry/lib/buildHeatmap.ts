@@ -1,7 +1,7 @@
 import { Entry } from "@habits/shared/entry";
 import { HabitType } from "@habits/shared/habit";
 
-type Cell = {
+export type Cell = {
   date: string;
   level: 0 | 1 | 2 | 3 | 4;
   label: string;
