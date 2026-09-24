@@ -9,17 +9,17 @@ import {
   handleDeleteHabit,
 } from "./habit.controller";
 import {
-  HabitSchema,
+  CreateHabitSchema,
   HabitUpdateSchema,
   HabitDeleteSchema,
-} from "./habit.types";
+} from "@habits/shared/habit";
 
 const habitRouter: Router = Router();
 habitRouter.use(authMiddleware);
 
 habitRouter.get("/", handleGetAllHabits);
 
-habitRouter.post("/", validate(HabitSchema), handleCreateHabit);
+habitRouter.post("/", validate({ body: CreateHabitSchema }), handleCreateHabit);
 
 habitRouter.patch(
   "/:habitId",
