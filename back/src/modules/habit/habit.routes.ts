@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { validate } from "../../middleware/validate";
-import { authMiddleware, validateHabitOwner } from "../../middleware/auth";
+import { authMiddleware } from "../../middleware/auth";
 import { validateHabitOwner } from "../../middleware/validateHabitOwner";
 import {
   handleGetAllHabits,
