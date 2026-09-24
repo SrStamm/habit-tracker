@@ -4,6 +4,7 @@ import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { Tag } from "../../../components/ui/Tag";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
+import { useCreateEntry } from "../../entry/hooks/useEntries";
 
 type HabitCardProps = {
   data: Habit;
@@ -13,15 +14,22 @@ type HabitCardProps = {
 function HabitCard({ data, onSelect }: HabitCardProps) {
   const [completedToday, setCompletedToday] = useState(false);
   const [value, setValue] = useState<number | "">("");
+  const { isPending, error, mutate } = useCreateEntry();
 
   // Handler para marcar hábitos simples/booleanos
   const handleToggleCheck = () => {
     // TODO: Llamar a POST /entries
+    mutate({ completed: !completedToday }, data._id);
+
+    if (!error) setCompletedToday(!completedToday);
   };
 
   // Handler para hábitos cuantitativos o de tiempo
-  const handleValueSubmit = () => {
-    // TODO: Llamar a POST /entries { value }
+  const handleValueSubmit = async () => {
+    if (!value) return;
+
+    const created = await mutate({ completed: true }, data._id);
+    if (created) setCompletedToday(true);
   };
 
   return (
@@ -46,14 +54,21 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
           <Button
             size="sm"
             variant={completedToday ? "primary" : "outline"}
-            onClick={() => handleToggleCheck()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleCheck();
+            }}
+            disabled={isPending}
             className="text-xs"
           >
             {completedToday ? "✓ Cumplido" : "Marcar hoy"}
           </Button>
         ) : (
           <form
-            onSubmit={() => handleValueSubmit()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleValueSubmit();
+            }}
             className="flex items-center gap-2"
             onClick={(e) => e.stopPropagation()}
           >
@@ -65,7 +80,7 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
               className="w-16 px-2 py-1 text-xs bg-background"
             />
             <Button size="sm" type="submit" disabled={!value}>
-              Guardar
+              {isPending ? "Guardando..." : "Guardar"}
             </Button>
           </form>
         )}
