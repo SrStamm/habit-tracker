@@ -7,3 +7,8 @@ export const createHabit = async (
   const token = localStorage.getItem("token");
   return api("/habits", { method: "POST", body: data, token });
 };
+
+export const getAllHabits = async (): Promise<{ allHabits: Habit[] }> => {
+  const token = localStorage.getItem("token");
+  return api("/habits", { method: "GET", token });
+};
