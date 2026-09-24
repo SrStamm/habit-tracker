@@ -3,7 +3,7 @@ import { LoginSchema } from "@habits/shared/auth";
 import { handleLogin, handleRegister } from "./auth.controller";
 import { validate } from "../../middleware/validate";
 
-const authRouter = Router();
+const authRouter: Router = Router();
 
 authRouter.post("/login", validate({ body: LoginSchema }), handleLogin);
 
