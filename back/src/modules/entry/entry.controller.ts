@@ -1,5 +1,6 @@
 import { type Response, type Request } from "express";
-import { createEntry, getEntries, getAllEntries } from "./entry.service";
+import { getEntries, getAllEntries, upsertEntry } from "./entry.service";
+import { buildCreateEntrySchema } from "@habits/shared/entry";
 
 export const handleGetAllEntries = async (req: Request, res: Response) => {
   const from = req.query.from ? new Date(String(req.query.from)) : undefined;
@@ -19,7 +20,7 @@ export const handleGetEntries = async (req: Request, res: Response) => {
   const to = req.query.to ? new Date(String(req.query.to)) : undefined;
 
   try {
-    const entries = await getEntries(req.userId, habitId, from, to);
+    const entries = await getEntries(req.userId, String(habitId), from, to);
     res.status(200).json({ entries });
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
@@ -27,12 +28,30 @@ export const handleGetEntries = async (req: Request, res: Response) => {
 };
 
 export const handleCreateEntry = async (req: Request, res: Response) => {
-  const { value, completed } = req.body;
-  const habitId = req.params.habitId;
+  const parsed = buildCreateEntrySchema(req.habit!.type).safeParse(req.body);
+
+  if (!parsed.success) {
+    return res.status(400).json({
+      error: "Validation failed: body",
+      issues: parsed.error.issues,
+    });
+  }
+
+  const data = parsed.data;
+  const value = "value" in data ? data.value : undefined;
+  const completed = "completed" in data ? data.completed : undefined;
+  const at = data.at ? new Date(data.at) : undefined;
 
   try {
-    const newEntry = await createEntry(req.userId, habitId, value, completed);
-    res.status(201).json({ newEntry });
+    const { entry: newEntry, updatedExisting } = await upsertEntry(
+      req.userId,
+      String(req.params.habitId),
+      value,
+      completed,
+      at,
+    );
+
+    res.status(updatedExisting ? 200 : 201).json({ newEntry });
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
   }

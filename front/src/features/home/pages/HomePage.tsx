@@ -58,6 +58,7 @@ export default function HomePage() {
           selectedHabit.type,
           fmtDayKey(fromDate),
           fmtDayKey(toDate),
+          selectedHabit.target,
         )
       : [];
 
@@ -101,9 +102,7 @@ export default function HomePage() {
                 {selectedHabit.name} · últimos {DAYS} dias
               </p>
               {entries.isPending && (
-                <p className="text-sm text-text-muted">
-                  Carregando entries...
-                </p>
+                <p className="text-sm text-text-muted">Carregando entries...</p>
               )}
               {entries.error && (
                 <p role="alert" className="text-sm text-red-600">

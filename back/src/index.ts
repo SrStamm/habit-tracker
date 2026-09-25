@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import { APP_TIMEZONE } from "./config/timeZone";
 import authRouter from "./modules/auth/auth.routes";
 import habitRouter from "./modules/habit/habit.routes";
 import entryRouter from "./modules/entry/entry.routes";
@@ -24,4 +25,5 @@ app.get("/api/health", (_req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🕓 Day keys resolved in ${APP_TIMEZONE}`);
 });

@@ -28,19 +28,19 @@ const groupEntriesByDay = (
   const valueEntries: Map<string, number> = new Map();
 
   entries.forEach((m) => {
-    const previous = valueEntries.get(m.date) ?? 0;
+    const previous = valueEntries.get(m.dayKey) ?? 0;
     let newValue = 0;
 
     switch (typeHabit) {
       case HabitType.BOOLEAN:
-        valueEntries.set(m.date, Math.max(previous, m.completed ? 1 : 0));
+        valueEntries.set(m.dayKey, Math.max(previous, m.completed ? 1 : 0));
         break;
 
       case HabitType.QUANTITY:
       case HabitType.DURATION:
         newValue = previous + (m.value ?? 0);
 
-        valueEntries.set(m.date, newValue);
+        valueEntries.set(m.dayKey, newValue);
         break;
     }
   });
@@ -65,7 +65,7 @@ const valueToLevel = (value: number, max: number): 0 | 1 | 2 | 3 | 4 => {
 
   // value/max está en [0,1], por lo que Math.ceil(bucket) nunca sale de [0,4];
   // TS no puede probar esa cota, por eso el cast explícito.
-  return (Math.min(4, clamp)) as 0 | 1 | 2 | 3 | 4;
+  return Math.min(4, clamp) as 0 | 1 | 2 | 3 | 4;
 };
 
 const addOneDay = (date: string): string => {
@@ -171,20 +171,15 @@ export const buildHeatmap = (
   typeHabit: HabitType,
   from: string,
   to: string,
+  target?: number,
 ): (Cell | null)[][] => {
   from = toLocalDayKey(from);
   to = toLocalDayKey(to);
 
-  // Normaliza os dates dos entries
-  const normalizedEntries = entries.map((entry) => ({
-    ...entry,
-    date: toLocalDayKey(entry.date),
-  }));
-
   // Generar el array de dias entre from a to
-  const entriesGrouped = groupEntriesByDay(normalizedEntries, typeHabit);
+  const entriesGrouped = groupEntriesByDay(entries, typeHabit);
 
-  const max = getMaxValue(entriesGrouped);
+  const max = target ?? getMaxValue(entriesGrouped);
 
   const dayRange = buildDayRange(from, to);
 

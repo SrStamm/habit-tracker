@@ -16,7 +16,7 @@ export const authMiddleware = async (
     const payload = await verificarToken(token);
 
     // Extender Request type para incluir userId
-    (req as any).userId = payload.userId;
+    req.userId = payload.userId;
 
     next();
   } catch {

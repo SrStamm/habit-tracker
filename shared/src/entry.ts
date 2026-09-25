@@ -1,10 +1,14 @@
 import { z } from "zod";
+import { HabitType } from "./habit";
 
-export const CreateEntrySchema = z.object({
-  value: z.number().optional(),
-  completed: z.boolean(),
-});
-export type CreateEntryDTO = z.infer<typeof CreateEntrySchema>;
+const base = { at: z.iso.datetime().optional() };
+
+export const buildCreateEntrySchema = (type: HabitType) =>
+  type === HabitType.BOOLEAN
+    ? z.object({ ...base, completed: z.boolean() }).strict()
+    : z.object({ ...base, value: z.number().min(0) }).strict();
+
+export type CreateEntryDTO = z.infer<ReturnType<typeof buildCreateEntrySchema>>;
 
 export const GetEntriesQuerySchema = z.object({
   from: z.coerce.date().optional(),
@@ -16,9 +20,11 @@ export const EntryParamsSchema = z.object({
   habitId: z.string(),
 });
 
-export type Entry = CreateEntryDTO & {
+export type Entry = {
   _id: string;
   userId: string;
   habitId: string;
-  date: string;
+  dayKey: string;
+  value?: number;
+  completed?: boolean;
 };
