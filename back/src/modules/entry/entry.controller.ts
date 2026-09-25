@@ -1,5 +1,5 @@
 import { type Response, type Request } from "express";
-import { createEntry, getEntries, getAllEntries } from "./entry.service";
+import { getEntries, getAllEntries, upsertEntry } from "./entry.service";
 import { buildCreateEntrySchema } from "@habits/shared/entry";
 
 export const handleGetAllEntries = async (req: Request, res: Response) => {
@@ -40,15 +40,18 @@ export const handleCreateEntry = async (req: Request, res: Response) => {
   const data = parsed.data;
   const value = "value" in data ? data.value : undefined;
   const completed = "completed" in data ? data.completed : undefined;
+  const at = data.at ? new Date(data.at) : undefined;
 
   try {
-    const newEntry = await createEntry(
+    const { entry: newEntry, updatedExisting } = await upsertEntry(
       req.userId,
       String(req.params.habitId),
       value,
       completed,
+      at,
     );
-    res.status(201).json({ newEntry });
+
+    res.status(updatedExisting ? 200 : 201).json({ newEntry });
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
   }

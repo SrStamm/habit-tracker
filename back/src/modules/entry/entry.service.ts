@@ -30,18 +30,42 @@ export const getEntries = async (
   return Entry.find(filter).sort({ dayKey: 1 });
 };
 
-export const createEntry = async (
+const DUPLICATE_KEY = 11000;
+
+const isDuplicateKey = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  (error as { code?: number }).code === DUPLICATE_KEY;
+
+export const upsertEntry = async (
   userId: string,
   habitId: string,
   value?: number,
   completed?: boolean,
+  at?: Date,
 ) => {
-  const newEntry = new Entry({
-    userId,
-    habitId,
-    value,
-    completed,
-    date: new Date(),
-  });
-  return newEntry.save();
+  const dayKey = dayKeyFrom(at ?? new Date(), APP_TIMEZONE);
+  const filter = { userId, habitId, dayKey };
+  const update = { $set: { value, completed } };
+  const options = {
+    new: true,
+    runValidators: true,
+    includeResultMetadata: true,
+  } as const;
+
+  const apply = async (upsert: boolean) => {
+    const { value: entry, lastErrorObject } = await Entry.findOneAndUpdate(
+      filter,
+      update,
+      { ...options, upsert },
+    );
+    return { entry, updatedExisting: lastErrorObject?.updatedExisting ?? false };
+  };
+
+  try {
+    return await apply(true);
+  } catch (error) {
+    if (!isDuplicateKey(error)) throw error;
+    return apply(false);
+  }
 };
