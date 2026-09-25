@@ -13,14 +13,14 @@ const entrySchema = new mongoose.Schema(
       required: true,
     },
 
-    dateKey: { type: String, required: true },
+    dayKey: { type: String, required: true },
     value: { type: Number },
     completed: { type: Boolean },
   },
   { timestamps: true },
 );
 
-entrySchema.index({ userId: 1, habitId: 1, dateKey: 1 }, { unique: true });
+entrySchema.index({ userId: 1, habitId: 1, dayKey: 1 }, { unique: true });
 
 const Entry = mongoose.model("Entry", entrySchema);
 

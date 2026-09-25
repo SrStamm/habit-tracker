@@ -1,28 +1,33 @@
 import Entry from "../../models/Entry";
+import { dayKeyFrom } from "../../lib/dayKey";
+import { APP_TIMEZONE } from "../../config/timeZone";
 
-export const getAllEntries = async (userId: String, from?: Date, to?: Date) => {
+const dayKeyRange = (from?: Date, to?: Date) => {
+  if (!from && !to) return undefined;
+
+  const range: Record<string, string> = {};
+  if (from) range.$gte = dayKeyFrom(from, APP_TIMEZONE);
+  if (to) range.$lte = dayKeyFrom(to, APP_TIMEZONE);
+  return range;
+};
+
+export const getAllEntries = async (userId: string, from?: Date, to?: Date) => {
   const filter: Record<string, unknown> = { userId };
-  if (from || to) {
-    filter.date = {};
-    if (from) filter.date.$gte = from;
-    if (to) filter.date.$lte = to;
-  }
-  return Entry.find(filter).sort({ date: 1 });
+  const dayKey = dayKeyRange(from, to);
+  if (dayKey) filter.dayKey = dayKey;
+  return Entry.find(filter).sort({ dayKey: 1 });
 };
 
 export const getEntries = async (
-  userId: String,
-  habitId: String,
+  userId: string,
+  habitId: string,
   from?: Date,
   to?: Date,
 ) => {
   const filter: Record<string, unknown> = { userId, habitId };
-  if (from || to) {
-    filter.date = {};
-    if (from) filter.date.$gte = from;
-    if (to) filter.date.$lte = to;
-  }
-  return Entry.find(filter).sort({ date: 1 });
+  const dayKey = dayKeyRange(from, to);
+  if (dayKey) filter.dayKey = dayKey;
+  return Entry.find(filter).sort({ dayKey: 1 });
 };
 
 export const createEntry = async (
