@@ -18,7 +18,6 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
 
   // Handler para marcar hábitos simples/booleanos
   const handleToggleCheck = () => {
-    // TODO: Llamar a POST /entries
     mutate({ completed: !completedToday }, data._id);
 
     if (!error) setCompletedToday(!completedToday);
@@ -28,7 +27,7 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
   const handleValueSubmit = async () => {
     if (!value) return;
 
-    const created = await mutate({ completed: true }, data._id);
+    const created = await mutate({ value }, data._id);
     if (created) setCompletedToday(true);
   };
 

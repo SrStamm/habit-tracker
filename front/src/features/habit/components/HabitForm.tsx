@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Select } from "../../../components/ui/Select";
-import { Habit, HabitType } from "@habits/shared/habit";
+import { CreateHabitDTO, Habit, HabitType } from "@habits/shared/habit";
 import { useCreateHabit } from "../hooks/useHabits";
 import { Button } from "../../../components/ui/Button";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
@@ -16,10 +16,23 @@ function HabitForm({ onSuccess }: HabitFormProps) {
   const [description, setDescription] = useState<string>("");
   const [category, setCategory] = useState<string>("");
   const [type, setType] = useState<HabitType>(HabitType.BOOLEAN);
+  const [target, setTarget] = useState<number | "">("");
+
   const { error, isPending, mutate } = useCreateHabit();
 
   const handleCreate = async () => {
-    const created = await mutate({ name: nome, description, category, type });
+    // target solo aplica a QUANTITY/DURATION; mandarlo con BOOLEAN lo rechaza el schema
+    const measurableTarget = type === HabitType.BOOLEAN ? undefined : target;
+
+    const payload: CreateHabitDTO = {
+      name: nome,
+      description,
+      category,
+      type,
+      ...(typeof measurableTarget === "number" ? { target: measurableTarget } : {}),
+    };
+
+    const created = await mutate(payload);
     if (created) onSuccess?.(created);
   };
 
@@ -69,6 +82,20 @@ function HabitForm({ onSuccess }: HabitFormProps) {
           </option>
         ))}
       </Select>
+
+      {type !== HabitType.BOOLEAN && (
+        <>
+          <Label htmlFor="target">Meta:</Label>
+          <Input
+            id="target"
+            type="number"
+            min={1}
+            value={target}
+            onChange={(e) => setTarget(e.target.valueAsNumber || "")}
+          />
+        </>
+      )}
+
       {error ? (
         <p role="alert" className="text-sm text-red-600">
           {error}
