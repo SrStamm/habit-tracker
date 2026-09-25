@@ -2,11 +2,7 @@ import { Router } from "express";
 import { validate } from "../../middleware/validate";
 import { authMiddleware } from "../../middleware/auth";
 import { validateHabitOwner } from "../../middleware/validateHabitOwner";
-import {
-  CreateEntrySchema,
-  GetEntriesQuerySchema,
-  EntryParamsSchema,
-} from "@habits/shared/entry";
+import { GetEntriesQuerySchema, EntryParamsSchema } from "@habits/shared/entry";
 import {
   handleCreateEntry,
   handleGetAllEntries,
@@ -31,7 +27,7 @@ entryRouter.get(
 
 entryRouter.post(
   "/:habitId/entries",
-  validate({ params: EntryParamsSchema, body: CreateEntrySchema }),
+  validate({ params: EntryParamsSchema }),
   validateHabitOwner,
   handleCreateEntry,
 );

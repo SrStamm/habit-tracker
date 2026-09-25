@@ -26,10 +26,10 @@ export const getEntries = async (
 };
 
 export const createEntry = async (
-  userId: String,
-  habitId: String,
-  value: String,
-  completed: boolean,
+  userId: string,
+  habitId: string,
+  value?: number,
+  completed?: boolean,
 ) => {
   const newEntry = new Entry({
     userId,
