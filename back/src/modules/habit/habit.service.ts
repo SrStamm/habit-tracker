@@ -17,8 +17,16 @@ export const createHabit = async (
   type: HabitType,
   description?: string,
   category?: string,
+  target?: number,
 ) => {
-  const novoHabito = new Habit({ userId, name, description, category, type });
+  const novoHabito = new Habit({
+    userId,
+    name,
+    description,
+    category,
+    type,
+    target,
+  });
   return await novoHabito.save();
 };
 
@@ -28,19 +36,25 @@ export const updateHabit = async (
   type?: HabitType,
   description?: string,
   category?: string,
+  target?: number | null,
 ) => {
-  const updateData: Record<string, any> = {};
+  const setData: Record<string, any> = {};
+  const unsetData: Record<string, any> = {};
 
-  if (name !== undefined) updateData.name = name;
-  if (type !== undefined) updateData.type = type;
-  if (description !== undefined) updateData.description = description;
-  if (category !== undefined) updateData.category = category;
+  if (name !== undefined) setData.name = name;
+  if (type !== undefined) setData.type = type;
+  if (description !== undefined) setData.description = description;
+  if (category !== undefined) setData.category = category;
+  if (target === null) unsetData.target = 1;
+  else if (target !== undefined) setData.target = target;
 
-  return await Habit.findOneAndUpdate(
-    { _id: habitId },
-    { $set: updateData },
-    { returnDocument: true },
-  );
+  const update: Record<string, any> = {};
+  if (Object.keys(setData).length > 0) update.$set = setData;
+  if (Object.keys(unsetData).length > 0) update.$unset = unsetData;
+
+  return await Habit.findOneAndUpdate({ _id: habitId }, update, {
+    returnDocument: true,
+  });
 };
 
 export const deleteHabit = async (habitId: string) => {

@@ -18,7 +18,7 @@ export const handleGetAllHabits = async (req: Request, res: Response) => {
 };
 
 export const handleCreateHabit = async (req: Request, res: Response) => {
-  const { name, description, category, type } = req.body;
+  const { name, description, category, type, target } = req.body;
   try {
     const novoHabito = await createHabit(
       req.userId,
@@ -26,6 +26,7 @@ export const handleCreateHabit = async (req: Request, res: Response) => {
       type,
       description,
       category,
+      target,
     );
     return res.status(201).json({ novoHabito });
   } catch (error) {
@@ -34,7 +35,7 @@ export const handleCreateHabit = async (req: Request, res: Response) => {
 };
 
 export const handleUpdateHabit = async (req: Request, res: Response) => {
-  const { name, description, category, type } = req.body;
+  const { name, description, category, type, target } = req.body;
   const { habitId } = req.params;
 
   try {
@@ -44,6 +45,7 @@ export const handleUpdateHabit = async (req: Request, res: Response) => {
       type,
       description,
       category,
+      target,
     );
 
     return res.status(201).json({ habitoAtualizado });
