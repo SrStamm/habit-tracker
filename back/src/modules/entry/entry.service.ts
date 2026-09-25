@@ -48,9 +48,9 @@ export const upsertEntry = async (
   const filter = { userId, habitId, dayKey };
   const update = { $set: { value, completed } };
   const options = {
-    new: true,
     runValidators: true,
     includeResultMetadata: true,
+    returnDocument: "after",
   } as const;
 
   const apply = async (upsert: boolean) => {
@@ -59,7 +59,10 @@ export const upsertEntry = async (
       update,
       { ...options, upsert },
     );
-    return { entry, updatedExisting: lastErrorObject?.updatedExisting ?? false };
+    return {
+      entry,
+      updatedExisting: lastErrorObject?.updatedExisting ?? false,
+    };
   };
 
   try {
