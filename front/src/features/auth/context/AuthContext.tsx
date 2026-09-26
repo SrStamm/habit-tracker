@@ -12,11 +12,12 @@ import {
   setToken as persistToken,
 } from "../../../lib/authToken";
 import { LoginDTO } from "@habits/shared/auth";
-import { login as loginRequest } from "../api";
+import { login as loginRequest, register as registerRequest } from "../api";
 
 type ContextValue = {
   isAuthenticated: boolean;
   login: (input: LoginDTO) => Promise<void>;
+  register: (input: LoginDTO) => Promise<void>;
   logout: () => void;
 };
 
@@ -36,10 +37,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persistToken(result.token);
   };
 
+  const register = async (input: LoginDTO) => {
+    const result = await registerRequest(input);
+    persistToken(result.token);
+  };
+
   const logout = () => clearToken();
 
   return (
-    <AuthContext value={{ isAuthenticated, login, logout }}>
+    <AuthContext value={{ isAuthenticated, login, register, logout }}>
       {children}
     </AuthContext>
   );

@@ -1,30 +1,27 @@
 import { useState } from "react";
-import { register } from "../api";
 import { LoginDTO } from "@habits/shared/auth";
-import { UserResponseDTO } from "@habits/shared/user";
+import { useAuth } from "../context/AuthContext";
 
 export function useRegister() {
-  const [data, setData] = useState<UserResponseDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  const mutate = async (input: LoginDTO) => {
-    if (isPending) return;
+  const { register } = useAuth();
 
-    setData(null);
+  const mutate = async (input: LoginDTO) => {
+    if (isPending) return false;
     setIsPending(true);
     setError(null);
-
     try {
-      const result = await register(input);
-      setData(result);
-      return result;
+      await register(input);
+      return true;
     } catch (e) {
       setError((e as Error).message);
+      return false;
     } finally {
       setIsPending(false);
     }
   };
 
-  return { data, error, isPending, mutate };
+  return { error, isPending, mutate };
 }

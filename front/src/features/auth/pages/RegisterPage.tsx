@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Button } from "../../../components/ui/Button";
@@ -8,13 +8,10 @@ import { useState } from "react";
 function RegisterPage() {
   const [nome, setNome] = useState<string>("");
   const [senha, setSenha] = useState<string>("");
-  const { data, error, isPending, mutate } = useRegister();
-
-  const navigate = useNavigate();
+  const { error, isPending, mutate } = useRegister();
 
   const handleRegister = async () => {
-    const result = await mutate({ nome, password: senha });
-    if (result) navigate("/login");
+    await mutate({ nome, password: senha });
   };
 
   return (

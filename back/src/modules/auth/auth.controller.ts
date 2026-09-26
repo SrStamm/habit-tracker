@@ -18,7 +18,8 @@ export const handleRegister = async (req: Request, res: Response) => {
 
   try {
     const user = await createUser(nome, password);
-    return res.status(201).json(user);
+    const token = await firmarToken(user._id.toString());
+    return res.status(201).json({ user, token });
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
   }
