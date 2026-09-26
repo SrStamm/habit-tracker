@@ -14,7 +14,7 @@ function LoginPage() {
 
   const handleLogin = async () => {
     const result = await mutate({ nome, password: senha });
-    if (result) navigate("/home");
+    if (result) navigate("/");
   };
 
   return (
