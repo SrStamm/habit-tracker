@@ -69,6 +69,18 @@ export const upsertEntry = async (
     return await apply(true);
   } catch (error) {
     if (!isDuplicateKey(error)) throw error;
-    return apply(false);
+
+    const result = await apply(false);
+
+    // El reintento sin upsert solo sirve si el documento ya existia. Si tampoco
+    // matchea, la escritura se perdio: devolver entry: null hacia al controller
+    // un 201 con newEntry null, y el cliente creia que habia guardado.
+    if (!result.entry) {
+      throw new Error(
+        "Falha ao gravar a entry: o upsert conflitou e nenhum documento corresponde ao filtro",
+      );
+    }
+
+    return result;
   }
 };

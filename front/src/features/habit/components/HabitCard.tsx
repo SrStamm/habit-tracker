@@ -17,10 +17,12 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
   const { isPending, error, mutate } = useCreateEntry();
 
   // Handler para marcar hábitos simples/booleanos
-  const handleToggleCheck = () => {
-    mutate({ completed: !completedToday }, data._id);
+  const handleToggleCheck = async () => {
+    const saved = await mutate({ completed: !completedToday }, data._id);
 
-    if (!error) setCompletedToday(!completedToday);
+    // Refleja solo lo que quedo guardado. El flip optimista anterior movia el
+    // boton a "Cumprido" aunque la API no hubiera escrito nada.
+    if (saved) setCompletedToday(saved.completed ?? false);
   };
 
   // Handler para hábitos cuantitativos o de tiempo
@@ -84,6 +86,12 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
           </form>
         )}
       </div>
+
+      {error ? (
+        <p role="alert" className="mt-2 text-xs text-red-600">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
