@@ -7,6 +7,7 @@ import Heatmap from "../../habit/components/Heatmap";
 import { useGetHabits } from "../../habit/hooks/useHabits";
 import { useEntries } from "../../entry/hooks/useEntries";
 import { buildHeatmap } from "../../entry/lib/buildHeatmap";
+import { useAuth } from "../../auth/context/AuthContext";
 
 const DAYS = 90;
 
@@ -20,6 +21,8 @@ export default function HomePage() {
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const { data, error, mutate } = useGetHabits();
   const entries = useEntries();
+
+  const { logout } = useAuth();
 
   useEffect(() => {
     mutate();
@@ -81,6 +84,14 @@ export default function HomePage() {
             className="self-start sm:self-auto shadow-sm"
           >
             + Novo Hábito
+          </Button>
+
+          <Button
+            onClick={logout}
+            className="self-start sm:self-auto"
+            variant="danger"
+          >
+            Sair
           </Button>
         </header>
 
