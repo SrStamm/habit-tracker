@@ -27,6 +27,7 @@ export const CreateHabitSchema = z
     type: z.enum(HabitType),
     target: z.number().min(1).optional(),
   })
+  .strict()
   .superRefine(targetOnlyForMeasurable);
 
 export type CreateHabitDTO = z.infer<typeof CreateHabitSchema>;
@@ -42,14 +43,14 @@ export const HabitUpdateSchema = z.object({
     })
     .superRefine(targetOnlyForMeasurable),
   params: z.object({
-    habitId: z.string(),
+    habitId: z.string().min(1),
   }),
 });
 
 export type UpdateHabitDTO = z.infer<typeof HabitUpdateSchema>;
 
 export const HabitDeleteSchema = z.object({
-  habitId: z.string(),
+  habitId: z.string().min(1),
 });
 
 export type DeleteHabitDTO = z.infer<typeof HabitDeleteSchema>;
