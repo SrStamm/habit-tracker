@@ -53,7 +53,7 @@ export const updateHabit = async (
   if (Object.keys(unsetData).length > 0) update.$unset = unsetData;
 
   return await Habit.findOneAndUpdate({ _id: habitId }, update, {
-    returnDocument: true,
+    returnDocument: "after",
   });
 };
 
