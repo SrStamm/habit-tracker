@@ -1,6 +1,7 @@
 import { AuthResponseDTO, LoginDTO } from "@habits/shared/auth";
 import { useState } from "react";
 import { login } from "../api";
+import { setToken } from "../../../lib/authToken";
 
 export function useLogin() {
   const [data, setData] = useState<AuthResponseDTO | null>(null);
@@ -17,7 +18,7 @@ export function useLogin() {
     try {
       const result = await login(input);
       setData(result);
-      localStorage.setItem("token", result.token);
+      setToken(result.token);
       return result;
     } catch (e) {
       setError((e as Error).message);
