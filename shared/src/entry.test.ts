@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   buildCreateEntrySchema,
   GetEntriesQuerySchema,
@@ -6,54 +6,161 @@ import {
 } from "./entry";
 import { HabitType } from "./habit";
 
-// Estos schemas son el contrato del POST /habits/:habitId/entries.
-// A diferencia de CreateHabitSchema, este SI es .strict(): una key de mas
-// se rechaza en vez de descartarse. Esa asimetria es intencional y hay que
-// defenderla con tests, no dejarla al azar.
-describe("buildCreateEntrySchema con HabitType.BOOLEAN", () => {
-  it.todo("acepta completed booleano");
-  it.todo("rechaza completed ausente");
-  it.todo("rechaza completed como string");
-  it.todo("rechaza value, porque BOOLEAN no lleva value");
-  it.todo("rechaza una key desconocida, por ser .strict()");
+// Estes schemas são o contrato do POST /habits/:habitId/entries.
+// Ao contrário de CreateHabitSchema, este É .strict(): uma key a mais
+// é rejeitada em vez de descartada. Essa assimetria é intencional e precisa
+// ser defendida com testes, não deixada ao acaso.
+describe("buildCreateEntrySchema com HabitType.BOOLEAN", () => {
+  const schema = buildCreateEntrySchema(HabitType.BOOLEAN);
 
-  // LANDMINE: z.iso.datetime() sin { offset: true } rechaza cualquier
-  // datetime con timezone, tipo 2026-01-01T10:00:00+02:00. Y tambien
-  // rechaza date-only, tipo 2026-01-01.
-  // Hoy no explota porque el front nunca manda `at` (HabitCard no lo
-  // incluye). Explotara el dia que alguien registre un dia pasado, que
-  // es justo el caso de uso de Entry por dia.
-  // Probalo y decide: agregar offset, o documentar que `at` es UTC Z.
-  it.todo("acepta at como ISO 8601 con Z");
-  it.todo("detecta que at con offset horario se rechaza");
-  it.todo("detecta que at date-only se rechaza");
+  it("acepta completed booleano", () => {
+    const result = schema.safeParse({
+      completed: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita completed ausente", () => {
+    const result = schema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita completed como string", () => {
+    const result = schema.safeParse({ completed: "true" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita value, porque BOOLEAN não leva value", () => {
+    const result = schema.safeParse({ completed: true, value: 100 });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita uma key desconhecida, por ser .strict()", () => {
+    const result = schema.safeParse({ completed: true, target: 100 });
+    expect(result.success).toBe(false);
+  });
+
+  // `at` aceita offset de propósito. Antes z.iso.datetime() vinha sem
+  // { offset: true } e rejeitava qualquer datetime com timezone. Não
+  // estourava porque o front nunca mandava `at` (HabitCard não inclui),
+  // mas o backend já lidava bem: normaliza para instante absoluto e
+  // agrupa por APP_TIMEZONE. O schema era o único mais restritivo que a
+  // semântica do sistema.
+  it("aceita at como ISO 8601 com Z", () => {
+    const result = schema.safeParse({
+      completed: true,
+      at: "2026-01-01T10:00:00Z",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita at com offset horário, não só UTC Z", () => {
+    const result = schema.safeParse({
+      completed: true,
+      at: "2026-01-01T10:00:00+02:00",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita at date-only, porque não diz hora", () => {
+    const result = schema.safeParse({
+      completed: true,
+      at: "2026-01-01",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita at sem timezone, porque não se sabe qual instante é", () => {
+    const result = schema.safeParse({
+      completed: true,
+      at: "2026-01-01T10:00:00",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
-describe("buildCreateEntrySchema con QUANTITY y DURATION", () => {
-  it.todo("acepta value numerico");
-  it.todo("acepta value 0, porque el min es 0 y no 1");
-  it.todo("rechaza value negativo");
-  it.todo("rechaza value como string, porque no hay coerce");
-  it.todo("rechaza completed, porque QUANTITY y DURATION no llevan completed");
-  it.todo("DURATION genera el mismo shape que QUANTITY");
+describe("buildCreateEntrySchema com QUANTITY e DURATION", () => {
+  const schema = buildCreateEntrySchema(HabitType.DURATION);
+
+  it("aceita value numérico", () => {
+    const result = schema.safeParse({ value: 1 });
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita value 0, pelo min ser 0 e não 1", () => {
+    const result = schema.safeParse({ value: 0 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita value negativo", () => {
+    const result = schema.safeParse({ value: -1 });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita value como string, porque não há coerce", () => {
+    const result = schema.safeParse({ value: "0" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita completed, porque QUANTITY e DURATION não levam completed", () => {
+    const result = schema.safeParse({ value: 0, completed: true });
+    expect(result.success).toBe(false);
+  });
+
+  it("DURATION gera o mesmo shape que QUANTITY", () => {
+    const quantitySchema = buildCreateEntrySchema(HabitType.QUANTITY);
+    expect(quantitySchema.shape).toEqual(schema.shape);
+  });
 });
 
 describe("GetEntriesQuerySchema", () => {
-  // OJO: es z.coerce.date(), no z.date(). El front manda
-  // filter.from.toISOString() (un string) y por eso funciona. Sin el
-  // coerce, GET /habits/entries?from=... seria un 400.
-  it.todo("coacciona from y to de string a Date");
-  it.todo("rechaza from con una fecha invalida");
-  it.todo("acepta query vacio, porque from y to son opcionales");
-  it.todo("acepta solo from, sin to");
+  // Atenção: é z.coerce.date(), não z.date(). O front manda
+  // filter.from.toISOString() (uma string) e por isso funciona. Sem o
+  // coerce, GET /habits/entries?from=... seria um 400.
+  it("coage from e to de string para Date", () => {
+    const result = GetEntriesQuerySchema.safeParse({
+      from: "2025-12-1",
+      to: "2025-12-31",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita from com uma data inválida", () => {
+    const result = GetEntriesQuerySchema.safeParse({
+      from: "2025-12-32",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("aceita query vazio, porque from e to são opcionais", () => {
+    const result = GetEntriesQuerySchema.safeParse({});
+
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita só from, sem to", () => {
+    const result = GetEntriesQuerySchema.safeParse({
+      from: "2025-12-1",
+    });
+
+    expect(result.success).toBe(true);
+  });
 });
 
 describe("EntryParamsSchema", () => {
-  it.todo("acepta un habitId normal");
+  it("aceita um habitId normal", () => {
+    const result = EntryParamsSchema.safeParse({ habitId: "asfasf" });
+    expect(result.success).toBe(true);
+  });
 
-  // GAP CONFIRMADO: aca sigue z.string() sin .min(1), y HabitDeleteSchema
-  // ya fue corregido a z.string().min(1). O sea que hoy los tres schemas
-  // de params se comportan distinto entre si: delete rechaza el vacio,
-  // update y entries lo aceptan. Vale la pena unificar.
-  it.todo("detecta que habitId vacio pasa la validacion");
+  // Os três schemas de params já exigem .min(1): update, delete e entries.
+  // Este teste trava esse comportamento. Se alguém reintroduzir um z.string()
+  // pelado aqui, ele cai — e o gap volta em silêncio, porque um habitId vazio
+  // só estouraria no meio da query do Mongo.
+  it("detecta que habitId vazio é rejeitado na validação", () => {
+    const result = EntryParamsSchema.safeParse({ habitId: "" });
+    expect(result.success).toBe(false);
+  });
 });
