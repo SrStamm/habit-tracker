@@ -27,11 +27,9 @@ export const createEntry = async (
   input: CreateEntryDTO,
   habitId: string,
 ): Promise<{ newEntry: Entry }> => {
-  const token = localStorage.getItem("token");
   return api(`/habits/${habitId}/entries`, {
     method: "POST",
     body: input,
-    token,
   });
 };
 
@@ -39,11 +37,7 @@ export const getAllEntries = async (
   filter?: GetEntriesQueryDTO,
   habitId?: string,
 ): Promise<{ entries: Entry[] }> => {
-  const token = localStorage.getItem("token");
   const url = createURL(filter, habitId);
 
-  return api(url, {
-    method: "GET",
-    token,
-  });
+  return api(url, { method: "GET" });
 };

@@ -1,7 +1,7 @@
 import { cn } from "../../lib/cn";
 
 type ButtonProps = React.ComponentProps<"button"> & {
-  variant?: "primary" | "ghost" | "outline";
+  variant?: "primary" | "ghost" | "outline" | "danger";
   size?: "sm" | "md";
 };
 
@@ -15,6 +15,7 @@ export function Button({
     primary: "bg-primary text-white hover:bg-primary/90 active:scale-95",
     ghost: "text-text hover:bg-slate-100",
     outline: "border border-slate-300 text-text hover:bg-slate-50",
+    danger: "bg-danger text-white hover:bg-danger/90 active:scale-95",
   };
   const sizes = {
     sm: "px-2.5 py-1.5 text-xs",

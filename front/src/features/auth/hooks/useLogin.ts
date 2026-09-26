@@ -1,30 +1,27 @@
-import { AuthResponseDTO, LoginDTO } from "@habits/shared/auth";
+import { LoginDTO } from "@habits/shared/auth";
 import { useState } from "react";
-import { login } from "../api";
+import { useAuth } from "../context/AuthContext";
 
 export function useLogin() {
-  const [data, setData] = useState<AuthResponseDTO | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  const mutate = async (input: LoginDTO) => {
-    if (isPending) return;
+  const { login } = useAuth();
 
-    setData(null);
+  const mutate = async (input: LoginDTO) => {
+    if (isPending) return false;
     setIsPending(true);
     setError(null);
-
     try {
-      const result = await login(input);
-      setData(result);
-      localStorage.setItem("token", result.token);
-      return result;
+      await login(input);
+      return true;
     } catch (e) {
       setError((e as Error).message);
+      return false;
     } finally {
       setIsPending(false);
     }
   };
 
-  return { data, error, isPending, mutate };
+  return { error, isPending, mutate };
 }

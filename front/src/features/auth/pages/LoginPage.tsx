@@ -14,8 +14,9 @@ function LoginPage() {
 
   const handleLogin = async () => {
     const result = await mutate({ nome, password: senha });
-    if (result) navigate("/home");
+    if (result) navigate("/");
   };
+
   return (
     <main className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
