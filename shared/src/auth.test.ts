@@ -1,39 +1,113 @@
-import { describe, it } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   LoginSchema,
   AuthResponseSchema,
   RegisterResponseSchema,
 } from "./auth";
 
-// LoginSchema es el unico schema de auth que el back consume de verdad:
-// auth.routes.ts lo pasa a validate({ body: LoginSchema }) en /login Y en
-// /register. O sea, el mismo schema valida las dos operaciones.
-//
-// OJO: /register comparte LoginSchema, asi que la password de registro
-// tiene el mismo min(8) que la de login. No hay schema aparte para register.
 describe("LoginSchema", () => {
-  it.todo("acepta nome y password de 8 caracteres o mas");
-  it.todo("rechaza password de 7 caracteres, por el min(8)");
-  it.todo("rechaza nome vacio, por el min(1)");
-  it.todo("rechaza body vacio");
-  it.todo("rechaza password ausente");
-  it.todo("rechaza nome no string");
+  it("aceita nome e password de 8 caracteres ou mais", () => {
+    const result = LoginSchema.safeParse({
+      nome: "hola",
+      password: "12345678",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita password de 7 caracteres, pelo min(8)", () => {
+    const result = LoginSchema.safeParse({
+      nome: "hola",
+      password: "1234567",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita nome vazio, pelo min(1)", () => {
+    const result = LoginSchema.safeParse({
+      nome: "",
+      password: "12345678",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita body vazio", () => {
+    const result = LoginSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita password ausente", () => {
+    const result = LoginSchema.safeParse({
+      nome: "hola",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita nome não string", () => {
+    const result = LoginSchema.safeParse({
+      name: "hola",
+      password: "12345678",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
-// Los tres schemas siguientes NO los usa nadie: ni back ni front los
-// importan. AuthResponseSchema, RegisterResponseSchema y UserResponseSchema
-// existen pero el back arma la respuesta a mano en el controller. Probalos
-// igual, son el contrato documentado de lo que el back deberia devolver,
-// pero anotalo: hoy un cambio en la forma de la respuesta no rompe ningun test.
+// Os três schemas seguintes NÃO são usados por ninguém: nem back nem front
+// os importam. AuthResponseSchema, RegisterResponseSchema e UserResponseSchema
+// existem, mas o back monta a resposta à mão no controller. Testa-os
+// mesmo: são o contrato documentado do que o back deveria devolver,
+// mas anota: hoje uma mudança na forma da resposta não quebra nenhum teste.
 describe("AuthResponseSchema", () => {
-  it.todo("acepta un token no vacio");
-  it.todo("rechaza token vacio, por el min(1)");
-  it.todo("rechaza token ausente");
+  it("aceita um token não vazio", () => {
+    const result = AuthResponseSchema.safeParse({
+      token: "a",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita token vazio, pelo min(1)", () => {
+    const result = AuthResponseSchema.safeParse({ token: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita token ausente", () => {
+    const result = AuthResponseSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("RegisterResponseSchema", () => {
-  it.todo("acepta user y token");
-  it.todo("rechaza respuesta sin token");
-  it.todo("rechaza respuesta sin user");
-  it.todo("descarta la password que venga anidada en user");
+  it("aceita user e token", () => {
+    const result = RegisterResponseSchema.safeParse({
+      user: { nome: "hola", _id: "gasf" },
+      token: "asfasf",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita resposta sem token", () => {
+    const result = RegisterResponseSchema.safeParse({
+      user: { nome: "hola", _id: "gasf" },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita resposta sem user", () => {
+    const result = RegisterResponseSchema.safeParse({
+      token: "asfasf",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("descarta a password que venha aninhada em user", () => {
+    const result = RegisterResponseSchema.safeParse({
+      user: { nome: "hola", _id: "gasf", password: "123456" },
+      token: "asfasf",
+    });
+
+    expect(result.success).toBe(true);
+
+    if (result.success) {
+      expect(result.data.user).toEqual({ nome: "hola", _id: "gasf" });
+    }
+  });
 });
