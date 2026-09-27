@@ -2,7 +2,8 @@ import { Router } from "express";
 import { validate } from "../../middleware/validate";
 import { authMiddleware } from "../../middleware/auth";
 import { validateHabitOwner } from "../../middleware/validateHabitOwner";
-import { GetEntriesQuerySchema, EntryParamsSchema } from "@habits/shared/entry";
+import { GetEntriesQuerySchema } from "@habits/shared/entry";
+import { HabitParamsSchema as EntryParamsSchema } from "@habits/shared/habit";
 import {
   handleCreateEntry,
   handleGetAllEntries,

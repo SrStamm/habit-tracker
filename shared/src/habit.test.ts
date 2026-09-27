@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   CreateHabitSchema,
-  HabitDeleteSchema,
+  HabitParamsSchema,
   HabitUpdateSchema,
 } from "./habit";
 
@@ -97,36 +97,22 @@ describe("CreateHabitSchema", () => {
 });
 
 describe("HabitUpdateSchema", () => {
-  // Cuidado: esta é a forma legada, o schema embrulha { body, query, params }.
-  // O validate.ts ramifica sobre isso (isZodSchema). Um teste que passe só o
-  // body pelado fica verde e não está testando o update.
-  it("rejeita params sem habitId", () => {
-    const result = HabitUpdateSchema.safeParse({
-      body: { name: "Treinar na academia" },
-    });
-    expect(result.success).toBe(false);
-  });
-
   it("aceita body vazio (patch sem mudanças)", () => {
-    const result = HabitUpdateSchema.safeParse({
-      body: {},
-      params: { habitId: "asd" },
-    });
+    const result = HabitUpdateSchema.safeParse({});
     expect(result.success).toBe(true);
   });
 
   it("aceita target null, que é o sinal de unset", () => {
     const result = HabitUpdateSchema.safeParse({
-      body: { target: null },
-      params: { habitId: "asd" },
+      target: null,
     });
     expect(result.success).toBe(true);
   });
 
   it("rejeita BOOLEAN com target no body", () => {
     const result = HabitUpdateSchema.safeParse({
-      body: { type: "BOOLEAN", target: 10 },
-      params: { habitId: "asd" },
+      type: "BOOLEAN",
+      target: 10,
     });
     expect(result.success).toBe(false);
   });
@@ -137,24 +123,23 @@ describe("HabitUpdateSchema", () => {
   // precisa olhar o data, senão um regresso de strip passa verde.
   it("aceita mudar só o name, sem type nem target", () => {
     const result = HabitUpdateSchema.safeParse({
-      body: { name: "Treinar na academia" },
-      params: { habitId: "asd" },
+      name: "Treinar na academia",
     });
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.body).toEqual({ name: "Treinar na academia" });
+      expect(result.data).toEqual({ name: "Treinar na academia" });
     }
   });
 });
 
-describe("HabitDeleteSchema", () => {
+describe("HabitParamsSchema", () => {
   it("aceita um habitId normal", () => {
-    const result = HabitDeleteSchema.safeParse({ habitId: "1" });
+    const result = HabitParamsSchema.safeParse({ habitId: "1" });
     expect(result.success).toBe(true);
   });
 
   it("habitId vacio não pasa validação", () => {
-    const result = HabitDeleteSchema.safeParse({ habitId: "" });
+    const result = HabitParamsSchema.safeParse({ habitId: "" });
     expect(result.success).toBe(false);
   });
 });

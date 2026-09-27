@@ -14,22 +14,17 @@ const createMockReq = (
   parts: Partial<{ body: unknown; query: unknown; params: unknown }> = {},
 ) => ({ body: {}, query: {}, params: {}, ...parts }) as unknown as Request;
 
-// validate tem DUAS formas, e a segunda foi adicionada depois da primeira
-// sem tirar a primeira. O branch e isZodSchema (validate.ts:11):
+// validate recebe um mapa de schemas por parte: { body?, query?, params? }.
 //
-// - forma legada: recebe um ZodSchema que embrulha { body, query, params }
-// - forma nova:   recebe um mapa { body?, query?, params? }
+// A forma legada (um ZodSchema solto embrulhando { body, query, params }) foi
+// removida: nenhuma rota a usava, e ela quebrava em silencio, porque so
+// reatribuia req.body e descartava o parse de query e params. Nao reintroduzir.
 //
-// As duas nao se equiparam: a mensagem de erro da legada nao nomeia a parte
-// ("Validation failed"), a da nova nomeia ("Validation failed: body").
-//
-// Atenção: na forma legada so o body e reatribuido no req (linha 30).
-// query e params sao validados, mas o parse NAO e aplicado. Isso e
-// intencional (no Express so body e gravavel), mas precisa ficar fixado
-// num teste: se alguem passar a reatribuir params, ninguem avisa.
+// Restricao real do Express 5: req.query e req.params sao somente leitura, por
+// isso so o body e reatribuido com o resultado do parse. query e params sao
+// validados, mas nao transformados: um schema com coerce ali nao tem efeito
+// no que o handler le.
 describe("validateMiddleware", () => {
-  // --- forma nova ---
-
   it("chama next() quando todas as partes com schema sao validas", async () => {
     const req = createMockReq({ body: { token: "asfasf" } });
     const res = createMockResponse();
@@ -81,10 +76,4 @@ describe("validateMiddleware", () => {
     expect(req.body).toEqual({ token: "abc" });
     expect(next).toHaveBeenCalledWith();
   });
-
-  // --- forma legada ---
-
-  it.todo("valida body e params de uma vez, pelo schema embrulhado");
-
-  it.todo("reatribui so o body na forma legada, nunca query nem params");
 });

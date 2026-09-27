@@ -11,7 +11,7 @@ import {
 import {
   CreateHabitSchema,
   HabitUpdateSchema,
-  HabitDeleteSchema,
+  HabitParamsSchema,
 } from "@habits/shared/habit";
 
 const habitRouter: Router = Router();
@@ -23,14 +23,14 @@ habitRouter.post("/", validate({ body: CreateHabitSchema }), handleCreateHabit);
 
 habitRouter.patch(
   "/:habitId",
-  validate(HabitUpdateSchema),
+  validate({ body: HabitUpdateSchema, params: HabitParamsSchema }),
   validateHabitOwner,
   handleUpdateHabit,
 );
 
 habitRouter.delete(
   "/:habitId",
-  validate(HabitDeleteSchema),
+  validate({ params: HabitParamsSchema }),
   validateHabitOwner,
   handleDeleteHabit,
 );

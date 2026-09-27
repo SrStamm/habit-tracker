@@ -21,10 +21,6 @@ export const GetEntriesQuerySchema = z.object({
 });
 export type GetEntriesQueryDTO = z.infer<typeof GetEntriesQuerySchema>;
 
-export const EntryParamsSchema = z.object({
-  habitId: z.string().min(1),
-});
-
 export type Entry = {
   _id: string;
   userId: string;
