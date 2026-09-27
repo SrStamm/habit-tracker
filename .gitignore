@@ -1,3 +1,14 @@
 node_modules
+
+# Local environment
 */.env
 *.env
+
+# Build output (back: tsc outDir, front: vite build)
+dist/
+
+# TypeScript incremental build state (front: tsc -b)
+*.tsbuildinfo
+
+# Test output
+coverage/
