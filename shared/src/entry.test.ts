@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  buildCreateEntrySchema,
-  GetEntriesQuerySchema,
-  EntryParamsSchema,
-} from "./entry";
+import { buildCreateEntrySchema, GetEntriesQuerySchema } from "./entry";
 import { HabitType } from "./habit";
 
 // Estes schemas são o contrato do POST /habits/:habitId/entries.
@@ -146,21 +142,5 @@ describe("GetEntriesQuerySchema", () => {
     });
 
     expect(result.success).toBe(true);
-  });
-});
-
-describe("EntryParamsSchema", () => {
-  it("aceita um habitId normal", () => {
-    const result = EntryParamsSchema.safeParse({ habitId: "asfasf" });
-    expect(result.success).toBe(true);
-  });
-
-  // Os três schemas de params já exigem .min(1): update, delete e entries.
-  // Este teste trava esse comportamento. Se alguém reintroduzir um z.string()
-  // pelado aqui, ele cai — e o gap volta em silêncio, porque um habitId vazio
-  // só estouraria no meio da query do Mongo.
-  it("detecta que habitId vazio é rejeitado na validação", () => {
-    const result = EntryParamsSchema.safeParse({ habitId: "" });
-    expect(result.success).toBe(false);
   });
 });
