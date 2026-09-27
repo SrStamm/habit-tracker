@@ -15,7 +15,7 @@ export const authMiddleware = async (
     const token = header.split(" ")[1];
     const payload = await verificarToken(token);
 
-    if (typeof payload.userId !== "string") {
+    if (!payload.userId || typeof payload.userId !== "string") {
       throw new Error("Token sem userId");
     }
 
