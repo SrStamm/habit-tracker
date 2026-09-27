@@ -34,7 +34,10 @@ export const handleCreateHabit = async (req: Request, res: Response) => {
   }
 };
 
-export const handleUpdateHabit = async (req: Request, res: Response) => {
+export const handleUpdateHabit = async (
+  req: Request<{ habitId: string }>,
+  res: Response,
+) => {
   const { name, description, category, type, target } = req.body;
   const { habitId } = req.params;
 
@@ -54,12 +57,14 @@ export const handleUpdateHabit = async (req: Request, res: Response) => {
   }
 };
 
-export const handleDeleteHabit = async (req: Request, res: Response) => {
+export const handleDeleteHabit = async (
+  req: Request<{ habitId: string }>,
+  res: Response,
+) => {
   const { habitId } = req.params;
 
   try {
     await deleteHabit(habitId);
-
     return res.status(204).send();
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
