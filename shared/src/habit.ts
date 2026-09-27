@@ -32,28 +32,23 @@ export const CreateHabitSchema = z
 
 export type CreateHabitDTO = z.infer<typeof CreateHabitSchema>;
 
-export const HabitUpdateSchema = z.object({
-  body: z
-    .object({
-      name: z.string().optional(),
-      description: z.string().optional(),
-      category: z.string().optional(),
-      type: z.enum(HabitType).optional(),
-      target: z.number().min(1).nullable().optional(),
-    })
-    .superRefine(targetOnlyForMeasurable),
-  params: z.object({
-    habitId: z.string().min(1),
-  }),
-});
+export const HabitUpdateSchema = z
+  .object({
+    name: z.string().optional(),
+    description: z.string().optional(),
+    category: z.string().optional(),
+    type: z.enum(HabitType).optional(),
+    target: z.number().min(1).nullable().optional(),
+  })
+  .superRefine(targetOnlyForMeasurable);
 
 export type UpdateHabitDTO = z.infer<typeof HabitUpdateSchema>;
 
-export const HabitDeleteSchema = z.object({
+export const HabitParamsSchema = z.object({
   habitId: z.string().min(1),
 });
 
-export type DeleteHabitDTO = z.infer<typeof HabitDeleteSchema>;
+export type ParamsHabitDTO = z.infer<typeof HabitParamsSchema>;
 
 export type Habit = CreateHabitDTO & {
   _id: string;
