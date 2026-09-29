@@ -1,20 +1,11 @@
 import express from "express";
-import mongoose from "mongoose";
 import { APP_TIMEZONE } from "./config/timeZone";
 import authRouter from "./modules/auth/auth.routes";
 import habitRouter from "./modules/habit/habit.routes";
 import entryRouter from "./modules/entry/entry.routes";
+import { connect } from "./db/connection";
 
-const MONGO_URI = process.env.MONGO_URI;
-
-if (!MONGO_URI) {
-  throw new Error("MONGO_URI is missing. Set it on .env");
-} else {
-  mongoose
-    .connect(MONGO_URI)
-    .then(() => console.log("Ligado ao MongoDB Atlas!"))
-    .catch((erro) => console.error("Erro ao ligar:", erro));
-}
+await connect();
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
