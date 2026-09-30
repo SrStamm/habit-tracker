@@ -3,11 +3,13 @@ import { HabitType } from "@habits/shared/habit";
 
 export const findAllHabits = async (userId: string) => {
   const allHabits = await Habit.find({ userId });
+  if (!allHabits.length) return [];
+  return allHabits;
+};
 
-  if (allHabits.length == 0 || allHabits == null) {
-    return [];
-  }
-
+export const findAllActiveHabits = async (userId: string) => {
+  const allHabits = await Habit.find({ userId, active: true });
+  if (!allHabits.length) return [];
   return allHabits;
 };
 

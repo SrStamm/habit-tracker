@@ -12,12 +12,13 @@ import {
   CreateHabitSchema,
   HabitUpdateSchema,
   HabitParamsSchema,
+  QueryGetHabits,
 } from "@habits/shared/habit";
 
 const habitRouter: Router = Router();
 habitRouter.use(authMiddleware);
 
-habitRouter.get("/", handleGetAllHabits);
+habitRouter.get("/", validate({ query: QueryGetHabits }), handleGetAllHabits);
 
 habitRouter.post("/", validate({ body: CreateHabitSchema }), handleCreateHabit);
 
