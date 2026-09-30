@@ -3,11 +3,13 @@ import { HabitType } from "@habits/shared/habit";
 
 export const findAllHabits = async (userId: string) => {
   const allHabits = await Habit.find({ userId });
+  if (!allHabits.length) return [];
+  return allHabits;
+};
 
-  if (allHabits.length == 0 || allHabits == null) {
-    return [];
-  }
-
+export const findAllActiveHabits = async (userId: string) => {
+  const allHabits = await Habit.find({ userId, active: true });
+  if (!allHabits.length) return [];
   return allHabits;
 };
 
@@ -26,6 +28,7 @@ export const createHabit = async (
     category,
     type,
     target,
+    active: true,
   });
   return await novoHabito.save();
 };
@@ -57,6 +60,9 @@ export const updateHabit = async (
   });
 };
 
-export const deleteHabit = async (habitId: string) => {
-  return await Habit.findOneAndDelete({ _id: habitId });
+export const archiveHabit = async (habitId: string) => {
+  return await Habit.findOneAndUpdate(
+    { _id: habitId },
+    { $set: { active: false } },
+  );
 };

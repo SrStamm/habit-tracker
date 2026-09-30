@@ -6,18 +6,19 @@ import {
   handleGetAllHabits,
   handleCreateHabit,
   handleUpdateHabit,
-  handleDeleteHabit,
+  handleArchiveHabit,
 } from "./habit.controller";
 import {
   CreateHabitSchema,
   HabitUpdateSchema,
   HabitParamsSchema,
+  QueryGetHabits,
 } from "@habits/shared/habit";
 
 const habitRouter: Router = Router();
 habitRouter.use(authMiddleware);
 
-habitRouter.get("/", handleGetAllHabits);
+habitRouter.get("/", validate({ query: QueryGetHabits }), handleGetAllHabits);
 
 habitRouter.post("/", validate({ body: CreateHabitSchema }), handleCreateHabit);
 
@@ -32,7 +33,7 @@ habitRouter.delete(
   "/:habitId",
   validate({ params: HabitParamsSchema }),
   validateHabitOwner,
-  handleDeleteHabit,
+  handleArchiveHabit,
 );
 
 export default habitRouter;

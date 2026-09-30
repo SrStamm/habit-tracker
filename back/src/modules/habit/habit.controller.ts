@@ -3,14 +3,21 @@ import {
   findAllHabits,
   createHabit,
   updateHabit,
-  deleteHabit,
+  archiveHabit,
+  findAllActiveHabits,
 } from "./habit.service";
 
 export const handleGetAllHabits = async (req: Request, res: Response) => {
   const userId = req.userId;
 
+  const rawAll = (req.query as { all?: string | string[] }).all;
+  const wantAll = rawAll === "true";
+
   try {
-    const allHabits = await findAllHabits(userId);
+    const allHabits = wantAll
+      ? await findAllHabits(userId)
+      : await findAllActiveHabits(userId);
+
     return res.status(200).json({ allHabits });
   } catch (error) {
     return res.status(404).json({ error: (error as Error).message });
@@ -57,14 +64,14 @@ export const handleUpdateHabit = async (
   }
 };
 
-export const handleDeleteHabit = async (
+export const handleArchiveHabit = async (
   req: Request<{ habitId: string }>,
   res: Response,
 ) => {
   const { habitId } = req.params;
 
   try {
-    await deleteHabit(habitId);
+    await archiveHabit(habitId);
     return res.status(204).send();
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
