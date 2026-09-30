@@ -3,7 +3,7 @@ import {
   findAllHabits,
   createHabit,
   updateHabit,
-  deleteHabit,
+  archiveHabit,
 } from "./habit.service";
 
 export const handleGetAllHabits = async (req: Request, res: Response) => {
@@ -57,14 +57,14 @@ export const handleUpdateHabit = async (
   }
 };
 
-export const handleDeleteHabit = async (
+export const handleArchiveHabit = async (
   req: Request<{ habitId: string }>,
   res: Response,
 ) => {
   const { habitId } = req.params;
 
   try {
-    await deleteHabit(habitId);
+    await archiveHabit(habitId);
     return res.status(204).send();
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });

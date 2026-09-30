@@ -6,7 +6,7 @@ import {
   handleGetAllHabits,
   handleCreateHabit,
   handleUpdateHabit,
-  handleDeleteHabit,
+  handleArchiveHabit,
 } from "./habit.controller";
 import {
   CreateHabitSchema,
@@ -32,7 +32,7 @@ habitRouter.delete(
   "/:habitId",
   validate({ params: HabitParamsSchema }),
   validateHabitOwner,
-  handleDeleteHabit,
+  handleArchiveHabit,
 );
 
 export default habitRouter;

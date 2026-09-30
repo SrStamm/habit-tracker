@@ -26,6 +26,7 @@ export const createHabit = async (
     category,
     type,
     target,
+    active: true,
   });
   return await novoHabito.save();
 };
@@ -57,6 +58,9 @@ export const updateHabit = async (
   });
 };
 
-export const deleteHabit = async (habitId: string) => {
-  return await Habit.findOneAndDelete({ _id: habitId });
+export const archiveHabit = async (habitId: string) => {
+  return await Habit.findOneAndUpdate(
+    { _id: habitId },
+    { $set: { active: false } },
+  );
 };
