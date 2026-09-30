@@ -6,6 +6,18 @@ export enum HabitType {
   DURATION = "DURATION",
 }
 
+const QueryBoolean = z
+  .union([z.boolean(), z.enum(["true", "false"])])
+  .transform((v) => v === true || v === "true");
+
+export const QueryGetHabits = z
+  .object({
+    all: QueryBoolean.optional(),
+  })
+  .strict();
+
+export type QueryGetHabitsDTO = z.infer<typeof QueryGetHabits>;
+
 const targetOnlyForMeasurable = (
   habit: { type?: HabitType; target?: number | null },
   ctx: z.RefinementCtx,
@@ -53,4 +65,5 @@ export type ParamsHabitDTO = z.infer<typeof HabitParamsSchema>;
 export type Habit = CreateHabitDTO & {
   _id: string;
   userId: string;
+  active: boolean;
 };
