@@ -25,16 +25,16 @@ export const handleGetAllHabits = async (req: Request, res: Response) => {
 };
 
 export const handleCreateHabit = async (req: Request, res: Response) => {
-  const { name, description, category, type, target } = req.body;
+  const { name, description, category, type, target, unit } = req.body;
   try {
-    const novoHabito = await createHabit(
-      req.userId,
+    const novoHabito = await createHabit(req.userId, {
       name,
-      type,
       description,
       category,
+      type,
       target,
-    );
+      unit,
+    });
     return res.status(201).json({ novoHabito });
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
@@ -45,18 +45,19 @@ export const handleUpdateHabit = async (
   req: Request<{ habitId: string }>,
   res: Response,
 ) => {
-  const { name, description, category, type, target } = req.body;
+  const { name, description, category, type, target, unit } = req.body;
   const { habitId } = req.params;
+  const userId = req.userId;
 
   try {
-    const habitoAtualizado = await updateHabit(
-      habitId,
+    const habitoAtualizado = await updateHabit(habitId, userId, {
       name,
-      type,
       description,
       category,
+      type,
       target,
-    );
+      unit,
+    });
 
     return res.status(201).json({ habitoAtualizado });
   } catch (error) {
@@ -68,10 +69,11 @@ export const handleArchiveHabit = async (
   req: Request<{ habitId: string }>,
   res: Response,
 ) => {
+  const userId = req.userId;
   const { habitId } = req.params;
 
   try {
-    await archiveHabit(habitId);
+    await archiveHabit(habitId, userId);
     return res.status(204).send();
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
