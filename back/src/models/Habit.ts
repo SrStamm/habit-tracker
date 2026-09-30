@@ -13,6 +13,7 @@ const habitSchema = new mongoose.Schema(
     category: { type: String, trim: true },
     type: { type: String, enum: Object.values(HabitType), required: true },
     target: { type: Number, min: 1 },
+    unit: { type: String, min: 1 },
     active: { type: Boolean, required: true },
   },
   { timestamps: true },
