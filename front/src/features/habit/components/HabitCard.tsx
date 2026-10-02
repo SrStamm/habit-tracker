@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Habit, HabitType } from "@habits/shared/habit";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
@@ -6,18 +6,32 @@ import { Tag } from "../../../components/ui/Tag";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
+import { Entry } from "@habits/shared/entry";
 
 type HabitCardProps = {
   data: Habit;
   onSelect?: (habitId: string) => void;
+  todayEntry?: Entry;
+  onEntrySaved?: () => void;
 };
 
-function HabitCard({ data, onSelect }: HabitCardProps) {
-  const [completedToday, setCompletedToday] = useState(false);
+function HabitCard({
+  data,
+  onSelect,
+  todayEntry,
+  onEntrySaved,
+}: HabitCardProps) {
+  const [completedToday, setCompletedToday] = useState(
+    todayEntry?.completed ?? false,
+  );
   const [value, setValue] = useState<number | "">("");
   const { isPending, error, mutate } = useCreateEntry();
 
   const dayKey = fmtDayKey(new Date());
+
+  useEffect(() => {
+    setCompletedToday(todayEntry?.completed ?? false);
+  }, [todayEntry]);
 
   // Handler para marcar hábitos simples/booleanos
   const handleToggleCheck = async () => {
@@ -28,7 +42,10 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
 
     // Refleja solo lo que quedo guardado. El flip optimista anterior movia el
     // boton a "Cumprido" aunque la API no hubiera escrito nada.
-    if (saved) setCompletedToday(saved.completed ?? false);
+    if (saved) {
+      setCompletedToday(saved.completed ?? false);
+      onEntrySaved?.();
+    }
   };
 
   // Handler para hábitos cuantitativos o de tiempo
@@ -36,7 +53,10 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
     if (!value) return;
 
     const created = await mutate({ value, dayKey }, data._id);
-    if (created) setCompletedToday(true);
+    if (created) {
+      setCompletedToday(true);
+      onEntrySaved?.();
+    }
   };
 
   return (
