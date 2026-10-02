@@ -40,11 +40,10 @@ const isDuplicateKey = (error: unknown) =>
 export const upsertEntry = async (
   userId: string,
   habitId: string,
+  dayKey: string,
   value?: number,
   completed?: boolean,
-  at?: Date,
 ) => {
-  const dayKey = dayKeyFrom(at ?? new Date(), APP_TIMEZONE);
   const filter = { userId, habitId, dayKey };
   const update = { $set: { value, completed } };
   const options = {
