@@ -37,7 +37,7 @@ function HabitList({
           onSelect={onSelect}
           todayEntry={todayByHabit.get(habit._id)}
           onEntrySaved={onEntrySaved}
-          streak={streaks?.get(habit._id!)}
+          streak={streaks?.get(habit._id)}
         />
       ))}
     </div>

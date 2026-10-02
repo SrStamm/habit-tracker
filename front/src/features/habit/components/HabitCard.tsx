@@ -73,11 +73,23 @@ function HabitCard({
           <h3 className="text-base font-medium text-text mt-1 group-hover:text-primary transition-colors">
             {habit.name}
           </h3>
-
-          <p className="text-xs text-text-muted">
-            {streak === undefined ? "…" : `🔥 ${streak} dias`}
-          </p>
         </div>
+
+        {/* Badge de Streak a la derecha */}
+        {streak !== undefined && (
+          <div
+            className={`inline-flex items-center gap-1 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+              streak > 0
+                ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                : "bg-muted/50 text-text-muted border border-border/40"
+            }`}
+          >
+            <span>{streak > 0 ? "🔥" : "💤"}</span>
+            <span>
+              {streak} {streak === 1 ? "dia" : "dias"}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Controles de registro diario segun el tipo de hábito */}
