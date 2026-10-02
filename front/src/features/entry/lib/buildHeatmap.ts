@@ -38,8 +38,6 @@ const groupEntriesByDay = (
 
       case HabitType.QUANTITY:
       case HabitType.DURATION:
-        newValue = previous + (m.value ?? 0);
-
         valueEntries.set(m.dayKey, newValue);
         break;
     }
