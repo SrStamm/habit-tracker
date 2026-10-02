@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "../../../components/ui/Modal";
-import HabitForm from "../../habit/components/HabitForm";
 import { Button } from "../../../components/ui/Button";
+import HabitForm from "../../habit/components/HabitForm";
 import HabitList from "../../habit/components/HabitList";
+import TodaySummary from "../components/TodaySummary";
 import { useGetHabits } from "../../habit/hooks/useHabits";
 import { useEntries } from "../../entry/hooks/useEntries";
 import { useAuth } from "../../auth/context/AuthContext";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
-import TodaySummary from "../components/TodaySummary";
+import { groupByHabitId } from "../../habit/lib/groupById";
+import { calculateStreak } from "../../habit/lib/calculateStreak";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -33,6 +35,29 @@ export default function HomePage() {
     () => new Map((todayEntries.data ?? []).map((e) => [e.habitId, e])),
     [todayEntries.data],
   );
+
+  const hace90d = new Date();
+  hace90d.setDate(hace90d.getDate() - 90);
+
+  const historyEntries = useEntries();
+  useEffect(() => {
+    void historyEntries.mutate({ from: hace90d, to: new Date() });
+  }, []);
+
+  const historyByHabit = useMemo(
+    () => groupByHabitId(historyEntries.data ?? []),
+    [historyEntries.data],
+  );
+
+  const streaks = useMemo(() => {
+    if (data === null || historyEntries.data === null) return undefined;
+    return new Map(
+      data.map((h) => [
+        h._id,
+        calculateStreak(h, historyByHabit.get(h._id) ?? []),
+      ]),
+    );
+  }, [historyByHabit, data, historyEntries.data]);
 
   return (
     <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8 flex justify-center">
@@ -97,6 +122,7 @@ export default function HomePage() {
             habits={data ?? []}
             todayByHabit={todayByHabit}
             onEntrySaved={() => refreshToday()}
+            streaks={streaks}
           />
 
           {error && (

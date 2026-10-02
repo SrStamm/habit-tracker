@@ -14,6 +14,7 @@ type HabitCardProps = {
   onSelect?: (habitId: string) => void;
   todayEntry?: Entry;
   onEntrySaved?: () => void;
+  streak?: number;
 };
 
 function HabitCard({
@@ -21,6 +22,7 @@ function HabitCard({
   onSelect,
   todayEntry,
   onEntrySaved,
+  streak,
 }: HabitCardProps) {
   const [completedToday, setCompletedToday] = useState(
     todayEntry?.completed ?? false,
@@ -71,6 +73,10 @@ function HabitCard({
           <h3 className="text-base font-medium text-text mt-1 group-hover:text-primary transition-colors">
             {habit.name}
           </h3>
+
+          <p className="text-xs text-text-muted">
+            {streak === undefined ? "…" : `🔥 ${streak} dias`}
+          </p>
         </div>
       </div>
 
