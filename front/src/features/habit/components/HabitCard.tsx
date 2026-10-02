@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Habit, HabitType } from "@habits/shared/habit";
+import { DurationOptions, Habit, HabitType } from "@habits/shared/habit";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { Tag } from "../../../components/ui/Tag";
@@ -7,16 +7,17 @@ import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import { Entry } from "@habits/shared/entry";
+import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 
 type HabitCardProps = {
-  data: Habit;
+  habit: Habit;
   onSelect?: (habitId: string) => void;
   todayEntry?: Entry;
   onEntrySaved?: () => void;
 };
 
 function HabitCard({
-  data,
+  habit,
   onSelect,
   todayEntry,
   onEntrySaved,
@@ -37,7 +38,7 @@ function HabitCard({
   const handleToggleCheck = async () => {
     const saved = await mutate(
       { completed: !completedToday, dayKey },
-      data._id,
+      habit._id,
     );
 
     // Refleja solo lo que quedo guardado. El flip optimista anterior movia el
@@ -52,7 +53,7 @@ function HabitCard({
   const handleValueSubmit = async () => {
     if (!value) return;
 
-    const created = await mutate({ value, dayKey }, data._id);
+    const created = await mutate({ value, dayKey }, habit._id);
     if (created) {
       setCompletedToday(true);
       onEntrySaved?.();
@@ -61,14 +62,14 @@ function HabitCard({
 
   return (
     <div
-      onClick={() => onSelect?.(data._id)}
+      onClick={() => onSelect?.(habit._id)}
       className="group relative flex flex-col justify-between p-4 rounded-xl bg-card border border-border hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <Tag>{HABIT_TYPE_LABELS[data.type]}</Tag>
+          <Tag>{HABIT_TYPE_LABELS[habit.type]}</Tag>
           <h3 className="text-base font-medium text-text mt-1 group-hover:text-primary transition-colors">
-            {data.name}
+            {habit.name}
           </h3>
         </div>
       </div>
@@ -77,7 +78,7 @@ function HabitCard({
       <div className="mt-2 pt-3 border-t border-border/40 flex items-center justify-between">
         <span className="text-xs text-text-muted">Hoje:</span>
 
-        {data.type === HabitType.BOOLEAN ? (
+        {habit.type === HabitType.BOOLEAN ? (
           <Button
             size="sm"
             variant={completedToday ? "primary" : "outline"}
@@ -101,10 +102,14 @@ function HabitCard({
           >
             <Input
               type="number"
-              placeholder="Cant."
+              placeholder={
+                habit.type === HabitType.DURATION && habit.unit
+                  ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
+                  : habit.unit
+              }
               value={value}
               onChange={(e) => setValue(e.target.valueAsNumber || "")}
-              className="w-16 px-2 py-1 text-xs bg-background"
+              className="w-24 px-2 py-1 text-xs bg-background"
             />
             <Button size="sm" type="submit" disabled={!value}>
               {isPending ? "Guardando..." : "Guardar"}
