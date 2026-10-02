@@ -1,6 +1,7 @@
 import Entry from "../../models/Entry";
 import { dayKeyFrom } from "../../lib/dayKey";
 import { APP_TIMEZONE } from "../../config/timeZone";
+import { CreateEntryDTO } from "@habits/shared/entry";
 
 const dayKeyRange = (from?: Date, to?: Date) => {
   if (!from && !to) return undefined;
@@ -40,10 +41,12 @@ const isDuplicateKey = (error: unknown) =>
 export const upsertEntry = async (
   userId: string,
   habitId: string,
-  dayKey: string,
-  value?: number,
-  completed?: boolean,
+  input: CreateEntryDTO,
 ) => {
+  const { dayKey } = input;
+  const value = "value" in input ? input.value : undefined;
+  const completed = "completed" in input ? input.completed : undefined;
+
   const filter = { userId, habitId, dayKey };
   const update = { $set: { value, completed } };
   const options = {

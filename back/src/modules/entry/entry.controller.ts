@@ -37,17 +37,11 @@ export const handleCreateEntry = async (req: Request, res: Response) => {
     });
   }
 
-  const data = parsed.data;
-  const value = "value" in data ? data.value : undefined;
-  const completed = "completed" in data ? data.completed : undefined;
-
   try {
     const { entry: newEntry, updatedExisting } = await upsertEntry(
       req.userId,
       String(req.params.habitId),
-      value,
-      completed,
-      data.dayKey,
+      parsed.data,
     );
 
     res.status(updatedExisting ? 200 : 201).json({ newEntry });
