@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Modal } from "../../../components/ui/Modal";
 import HabitForm from "../../habit/components/HabitForm";
 import { Button } from "../../../components/ui/Button";
@@ -9,6 +9,7 @@ import { useEntries } from "../../entry/hooks/useEntries";
 import { buildHeatmap } from "../../entry/lib/buildHeatmap";
 import { useAuth } from "../../auth/context/AuthContext";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
+import TodaySummary from "../components/TodaySummary";
 
 const DAYS = 90;
 
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const { data, error, mutate } = useGetHabits();
   const entries = useEntries();
+  const todayEntries = useEntries();
 
   const today = fmtDayKey(new Date());
 
@@ -25,6 +27,18 @@ export default function HomePage() {
   useEffect(() => {
     mutate();
   }, []);
+
+  useEffect(() => {
+    void todayEntries.mutate({ from: new Date(), to: new Date() });
+  }, []);
+
+  const refreshToday = () =>
+    void todayEntries.mutate({ from: new Date(), to: new Date() });
+
+  const todayByHabit = useMemo(
+    () => new Map((todayEntries.data ?? []).map((e) => [e.habitId, e])),
+    [todayEntries.data],
+  );
 
   // Auto-selecta el primer hábito para ver su heatmap apenas carga
   useEffect(() => {
@@ -93,6 +107,16 @@ export default function HomePage() {
           </Button>
         </header>
 
+        <section>
+          <TodaySummary
+            habits={data ?? []}
+            entriesByHabit={todayByHabit}
+            isPending={todayEntries.isPending}
+            error={todayEntries.error}
+            onRefresh={() => refreshToday()}
+          />
+        </section>
+
         {/* Modal */}
         <Modal
           isOpen={isModalOpen}
@@ -134,7 +158,12 @@ export default function HomePage() {
             </span>
           </div>
 
-          <HabitList data={data ?? []} onSelect={setSelectedHabitId} />
+          <HabitList
+            data={data ?? []}
+            todayByHabit={todayByHabit}
+            onSelect={setSelectedHabitId}
+            onEntrySaved={() => refreshToday()}
+          />
 
           {error && (
             <p role="alert" className="text-sm text-red-600">

@@ -1,13 +1,12 @@
 import { Entry } from "@habits/shared/entry";
 import { Habit, HabitType } from "@habits/shared/habit";
-import { useMemo } from "react";
 import { isCompleted } from "../../habit/lib/isCompleted";
 import { Button } from "../../../components/ui/Button";
 import { DURATION_OPTIONS_LABELS } from "../../habit/lib/durationOptionsLabels";
 
 type Props = {
   habits: Habit[];
-  entries: Entry[];
+  entriesByHabit: Map<string, Entry>;
   isPending: boolean;
   error: string | null;
   onRefresh: () => void;
@@ -15,16 +14,11 @@ type Props = {
 
 export default function TodaySummary({
   habits,
-  entries,
+  entriesByHabit,
   isPending,
   error,
   onRefresh,
 }: Props) {
-  const entriesByHabit = useMemo(
-    () => new Map(entries.map((e) => [e.habitId, e])),
-    [entries],
-  );
-
   const total = habits.length;
   const completedHabits = habits.filter((h) =>
     isCompleted(h, entriesByHabit.get(h._id)),
