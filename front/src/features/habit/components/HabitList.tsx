@@ -7,6 +7,7 @@ type ListHabitCardProps = {
   todayByHabit: Map<string, Entry>;
   onSelect?: (habitId: string) => void;
   onEntrySaved?: () => void;
+  streaks?: Map<string, number>;
 };
 
 function HabitList({
@@ -14,6 +15,7 @@ function HabitList({
   onSelect,
   todayByHabit,
   onEntrySaved,
+  streaks,
 }: ListHabitCardProps) {
   if (habits.length === 0) {
     return (
@@ -35,6 +37,7 @@ function HabitList({
           onSelect={onSelect}
           todayEntry={todayByHabit.get(habit._id)}
           onEntrySaved={onEntrySaved}
+          streak={streaks?.get(habit._id)}
         />
       ))}
     </div>
