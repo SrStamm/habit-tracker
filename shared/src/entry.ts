@@ -6,7 +6,7 @@ import { HabitType } from "./habit";
 // um offset não compete com essa semântica: rejeitá-lo só deixava um 400
 // esperando o dia que alguém registrasse um dia passado de um navegador
 // não-UTC, que é exatamente o caso de uso de Entry por dia.
-const base = { at: z.iso.datetime({ offset: true }).optional() };
+const base = { dayKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) };
 
 export const buildCreateEntrySchema = (type: HabitType) =>
   type === HabitType.BOOLEAN

@@ -8,19 +8,17 @@ import { useGetHabits } from "../../habit/hooks/useHabits";
 import { useEntries } from "../../entry/hooks/useEntries";
 import { buildHeatmap } from "../../entry/lib/buildHeatmap";
 import { useAuth } from "../../auth/context/AuthContext";
+import { fmtDayKey } from "../../../lib/fmtDayKey";
 
 const DAYS = 90;
-
-const fmtDayKey = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`;
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
   const { data, error, mutate } = useGetHabits();
   const entries = useEntries();
+
+  const today = fmtDayKey(new Date());
 
   const { logout } = useAuth();
 
@@ -68,7 +66,6 @@ export default function HomePage() {
   return (
     <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8 flex justify-center">
       <div className="w-full max-w-4xl flex flex-col gap-8">
-        {/* Header */}
         <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border/40 pb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-text tracking-tight">
@@ -77,6 +74,7 @@ export default function HomePage() {
             <p className="text-text-muted text-sm mt-1">
               Track your habits, one day at a time.
             </p>
+            <p>{today}</p>
           </div>
 
           <Button
@@ -104,7 +102,6 @@ export default function HomePage() {
           <HabitForm onSuccess={() => setIsModalOpen(false)} />
         </Modal>
 
-        {/* Sección del Heatmap del hábito seleccionado */}
         <section className="flex flex-col gap-3">
           <h2 className="text-xl font-semibold text-text">Heatmap</h2>
           {selectedHabit ? (
@@ -129,7 +126,6 @@ export default function HomePage() {
           )}
         </section>
 
-        {/* Sección de Hábitos */}
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-text">Meus Hábitos</h2>

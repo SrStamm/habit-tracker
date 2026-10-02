@@ -5,6 +5,7 @@ import { Input } from "../../../components/ui/Input";
 import { Tag } from "../../../components/ui/Tag";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
+import { fmtDayKey } from "../../../lib/fmtDayKey";
 
 type HabitCardProps = {
   data: Habit;
@@ -16,9 +17,14 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
   const [value, setValue] = useState<number | "">("");
   const { isPending, error, mutate } = useCreateEntry();
 
+  const dayKey = fmtDayKey(new Date());
+
   // Handler para marcar hábitos simples/booleanos
   const handleToggleCheck = async () => {
-    const saved = await mutate({ completed: !completedToday }, data._id);
+    const saved = await mutate(
+      { completed: !completedToday, dayKey },
+      data._id,
+    );
 
     // Refleja solo lo que quedo guardado. El flip optimista anterior movia el
     // boton a "Cumprido" aunque la API no hubiera escrito nada.
@@ -29,7 +35,7 @@ function HabitCard({ data, onSelect }: HabitCardProps) {
   const handleValueSubmit = async () => {
     if (!value) return;
 
-    const created = await mutate({ value }, data._id);
+    const created = await mutate({ value, dayKey }, data._id);
     if (created) setCompletedToday(true);
   };
 

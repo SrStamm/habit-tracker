@@ -31,6 +31,7 @@ describe("CreateHabitSchema", () => {
       name: "Beber água",
       type: "QUANTITY",
       target: 5,
+      unit: "Lts",
     });
     expect(result.success).toBe(true);
   });
@@ -40,6 +41,7 @@ describe("CreateHabitSchema", () => {
       name: "Treinar",
       type: "DURATION",
       target: 40,
+      unit: "MINUTES",
     });
     expect(result.success).toBe(true);
   });
