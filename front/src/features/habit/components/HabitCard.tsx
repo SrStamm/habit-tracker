@@ -42,7 +42,10 @@ function HabitCard({
 
     // Refleja solo lo que quedo guardado. El flip optimista anterior movia el
     // boton a "Cumprido" aunque la API no hubiera escrito nada.
-    if (saved) setCompletedToday(saved.completed ?? false);
+    if (saved) {
+      setCompletedToday(saved.completed ?? false);
+      onEntrySaved?.();
+    }
   };
 
   // Handler para hábitos cuantitativos o de tiempo

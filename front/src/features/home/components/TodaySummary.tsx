@@ -1,5 +1,5 @@
 import { Entry } from "@habits/shared/entry";
-import { Habit, HabitType } from "@habits/shared/habit";
+import { DurationOptions, Habit, HabitType } from "@habits/shared/habit";
 import { isCompleted } from "../../habit/lib/isCompleted";
 import { Button } from "../../../components/ui/Button";
 import { DURATION_OPTIONS_LABELS } from "../../habit/lib/durationOptionsLabels";
@@ -93,7 +93,7 @@ export default function TodaySummary({
             </div>
 
             {/* 2. Secção de Hábitos Pendientes */}
-            <div className="flex flex-col gap-3 mt-3">
+            <div className="flex flex-col gap-3 ">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted">
                 Faltam por completar ({pendingHabits.length})
               </h3>
@@ -128,9 +128,13 @@ export default function TodaySummary({
                           </span>
                         ) : (
                           <span className="text-xs text-text-muted shrink-0">
-                            {currentEntry?.value ?? 0} / {habit.target}{" "}
-                            {habit.type === HabitType.DURATION
-                              ? DURATION_OPTIONS_LABELS[habit.unit]
+                            {habit.target
+                              ? `${currentEntry?.value ?? 0} / ${habit.target}`
+                              : "Pendente"}{" "}
+                            {habit.type === HabitType.DURATION && habit.unit
+                              ? DURATION_OPTIONS_LABELS[
+                                  habit.unit as DurationOptions
+                                ]
                               : habit.unit}
                           </span>
                         )}

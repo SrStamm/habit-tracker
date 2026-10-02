@@ -113,7 +113,7 @@ export default function HomePage() {
             entriesByHabit={todayByHabit}
             isPending={todayEntries.isPending}
             error={todayEntries.error}
-            onRefresh={() => refreshToday()}
+            onRefresh={refreshToday}
           />
         </section>
 
