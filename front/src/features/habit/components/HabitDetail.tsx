@@ -1,4 +1,4 @@
-import { Habit } from "@habits/shared/habit";
+import { DurationOptions, Habit, HabitType } from "@habits/shared/habit";
 import { Entry } from "@habits/shared/entry";
 import { Tag } from "../../../components/ui/Tag";
 import { Button } from "../../../components/ui/Button";
@@ -10,16 +10,27 @@ import Legend from "./Legend";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { useState } from "react";
 import { Select } from "../../../components/ui/Select";
+import { Input } from "../../../components/ui/Input";
+import { Label } from "../../../components/ui/Label";
+import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
+import { useCreateEntry } from "../../entry/hooks/useEntries";
 
 type Props = {
   habit: Habit;
   entries: Entry[];
   streak?: number;
+  onEntrySaved?: () => void;
 };
 
-function HabitDetail({ habit, streak, entries }: Props) {
-  const [selectedCell, setSelectedCell] = useState<Cell | null>();
+function HabitDetail({ habit, streak, entries, onEntrySaved }: Props) {
+  const todayKey = fmtDayKey(new Date());
+
+  const [selectedDate, setSelectedDate] = useState<string>();
   const [days, setDays] = useState<number>(90);
+  const [value, setValue] = useState<number | "">("");
+  const [dayKey, setDayKey] = useState<string>(todayKey);
+  const [completed, setCompleted] = useState<boolean>(false);
+  const { isPending, mutate } = useCreateEntry();
 
   const today = new Date();
   const hace90d = new Date();
@@ -31,6 +42,43 @@ function HabitDetail({ habit, streak, entries }: Props) {
     fmtDayKey(hace90d),
     fmtDayKey(today),
   );
+
+  const selectedLabel = weeks
+    .flat()
+    .find((c) => c?.date === selectedDate)?.label;
+
+  const syncDay = (next: string) => {
+    if (!next || next > todayKey) return;
+    setDayKey(next);
+    const found = entries.find((e) => e.dayKey === next);
+    setValue(found?.value ?? "");
+    setCompleted(found?.completed ?? false);
+  };
+
+  const onCellSelect = (cell: Cell) => {
+    setSelectedDate(cell.date);
+    syncDay(cell.date);
+  };
+
+  const handleSubmit = async () => {
+    if (habit.type === HabitType.BOOLEAN) {
+      const saved = await mutate({ completed: !completed, dayKey }, habit._id);
+
+      if (saved) {
+        setCompleted(saved.completed ?? false);
+        onEntrySaved?.();
+      }
+    } else {
+      if (value === "" || Number.isNaN(value)) return;
+
+      const created = await mutate({ value, dayKey }, habit._id);
+
+      if (created) {
+        setCompleted(true);
+        onEntrySaved?.();
+      }
+    }
+  };
 
   return (
     <div>
@@ -122,18 +170,18 @@ function HabitDetail({ habit, streak, entries }: Props) {
           <div className="flex gap-2 w-fit mx-auto mb-2">
             <WeekLabels />
 
-            <HeatmapGrid weeks={weeks} onCellSelect={setSelectedCell} />
+            <HeatmapGrid weeks={weeks} onCellSelect={onCellSelect} />
           </div>
         </div>
 
         <div className="flex items-center justify-between text-xs text-text-muted mt-1">
           <Legend />
 
-          {selectedCell && (
-            <div className="text-right text-text ">
-              <span className="font-medium">{selectedCell.date}: </span>
+          {selectedDate && (
+            <div className="text-right text-text">
+              <span className="font-medium">{selectedDate}: </span>
               <span className="text-primary font-semibold">
-                {selectedCell.label}
+                {selectedLabel}
               </span>
             </div>
           )}
@@ -148,6 +196,57 @@ function HabitDetail({ habit, streak, entries }: Props) {
       - Histórico reciente (Lista de entradas): Una pequeña lista de los últimos
         días con registros para poder modificar un valor rápido si cometió un error.
       */}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+        className="flex flex-row items-center justify-center gap-2"
+      >
+        <Label htmlFor="modificar-value">Modificar data:</Label>
+
+        <Input
+          type="date"
+          max={todayKey}
+          value={dayKey}
+          onChange={(e) => {
+            if (e.target.value > todayKey) return; // el back no valida, acá sí
+            setDayKey(e.target.value);
+            syncDay(e.target.value);
+          }}
+        />
+
+        {habit.type === HabitType.BOOLEAN ? (
+          <Button
+            size="sm"
+            variant={completed ? "primary" : "outline"}
+            disabled={isPending}
+            className="text-xs"
+            type="submit"
+          >
+            {completed ? "✓ Cumprido" : "Marcar hoje"}
+          </Button>
+        ) : (
+          <>
+            <Input
+              type="number"
+              placeholder={
+                habit.type === HabitType.DURATION && habit.unit
+                  ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
+                  : habit.unit
+              }
+              value={value}
+              onChange={(e) => setValue(e.target.valueAsNumber || "")}
+              className="w-24 px-2 py-1 text-xs bg-background"
+            />
+
+            <Button size="sm" type="submit" disabled={!value}>
+              {isPending ? "Guardando..." : "Guardar"}
+            </Button>
+          </>
+        )}
+      </form>
 
       {/*
       # Configuración y Acciones

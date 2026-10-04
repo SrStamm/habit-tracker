@@ -156,7 +156,8 @@ export default function HomePage() {
           <HabitDetail
             habit={habitSelected}
             streak={streaks?.get(habitSelected._id)}
-            entries={historyByHabit.get(habitSelected._id)!}
+            entries={historyByHabit.get(habitSelected._id) ?? []}
+            onEntrySaved={refreshHistory}
           />
         </Modal>
       ) : (
