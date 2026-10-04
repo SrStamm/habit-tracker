@@ -4,7 +4,7 @@ import { Button } from "../../../components/ui/Button";
 import HabitForm from "../../habit/components/HabitForm";
 import HabitList from "../../habit/components/HabitList";
 import TodaySummary from "../components/TodaySummary";
-import { useGetHabits } from "../../habit/hooks/useHabits";
+import { useArchiveHabit, useGetHabits } from "../../habit/hooks/useHabits";
 import { useEntries } from "../../entry/hooks/useEntries";
 import { useAuth } from "../../auth/context/AuthContext";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
@@ -17,9 +17,16 @@ export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [habitSelected, setHabitSelected] = useState<Habit | null>();
-  const { data: habitData, error, mutate: habitMutate } = useGetHabits();
+  const {
+    data: habitData,
+    error,
+    mutate: habitMutate,
+    removeLocal,
+  } = useGetHabits();
   const historyEntries = useEntries();
   const { logout } = useAuth();
+  const { isPending: isArchivePending, mutate: archiveMutate } =
+    useArchiveHabit();
 
   const selectHabit = (_id: string) => {
     const habitFinded = habitData?.find((h) => h._id === _id);
@@ -70,6 +77,17 @@ export default function HomePage() {
       ]),
     );
   }, [historyByHabit, habitData, historyEntries.data]);
+
+  const onArchive = async (habitId: string) => {
+    if (isArchivePending) return;
+
+    const ok = await archiveMutate({ habitId });
+    if (!ok) return;
+
+    setHabitSelected(null);
+    setIsDetailOpen(false);
+    removeLocal(habitId);
+  };
 
   return (
     <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8 flex justify-center">
@@ -158,6 +176,7 @@ export default function HomePage() {
             streak={streaks?.get(habitSelected._id)}
             entries={historyByHabit.get(habitSelected._id) ?? []}
             onEntrySaved={refreshHistory}
+            onArchive={onArchive}
           />
         </Modal>
       ) : (

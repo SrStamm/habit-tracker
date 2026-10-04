@@ -1,9 +1,5 @@
 import Habit from "../../models/Habit";
-import {
-  HabitType,
-  CreateHabitDTO,
-  UpdateHabitDTO,
-} from "@habits/shared/habit";
+import { CreateHabitDTO, UpdateHabitDTO } from "@habits/shared/habit";
 
 export const findAllHabits = async (userId: string) => {
   const allHabits = await Habit.find({ userId });

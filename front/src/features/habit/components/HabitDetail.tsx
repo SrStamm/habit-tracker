@@ -20,9 +20,16 @@ type Props = {
   entries: Entry[];
   streak?: number;
   onEntrySaved?: () => void;
+  onArchive: (habitId: string) => void;
 };
 
-function HabitDetail({ habit, streak, entries, onEntrySaved }: Props) {
+function HabitDetail({
+  habit,
+  streak,
+  entries,
+  onEntrySaved,
+  onArchive,
+}: Props) {
   const todayKey = fmtDayKey(new Date());
 
   const [selectedDate, setSelectedDate] = useState<string>();
@@ -256,7 +263,16 @@ function HabitDetail({ habit, streak, entries, onEntrySaved }: Props) {
 
       <div className="flex flex-row justify-center gap-3 p-3 border-a border-border/40">
         <Button>Editar</Button>
-        <Button variant="danger">Arquivar</Button>
+        <Button
+          variant="danger"
+          type="submit"
+          onClick={(e) => {
+            e.preventDefault();
+            onArchive(habit._id);
+          }}
+        >
+          Arquivar
+        </Button>
       </div>
     </div>
   );
