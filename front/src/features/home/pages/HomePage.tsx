@@ -10,12 +10,25 @@ import { useAuth } from "../../auth/context/AuthContext";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import { groupByHabitId } from "../../habit/lib/groupById";
 import { calculateStreak } from "../../habit/lib/calculateStreak";
+import HabitDetail from "../../habit/components/HabitDetail";
+import { Habit } from "@habits/shared/habit";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+  const [habitSelected, setHabitSelected] = useState<Habit | null>();
   const { data: habitData, error, mutate: habitMutate } = useGetHabits();
   const historyEntries = useEntries();
   const { logout } = useAuth();
+
+  const selectHabit = (_id: string) => {
+    const habitFinded = habitData?.find((h) => h._id === _id);
+
+    if (habitFinded) {
+      setHabitSelected(habitFinded);
+      setIsDetailOpen(true);
+    }
+  };
 
   const today = fmtDayKey(new Date());
 
@@ -122,6 +135,7 @@ export default function HomePage() {
             todayByHabit={todayByHabit}
             onEntrySaved={refreshHistory}
             streaks={streaks}
+            onSelect={selectHabit}
           />
 
           {error && (
@@ -131,6 +145,23 @@ export default function HomePage() {
           )}
         </section>
       </div>
+
+      {habitSelected ? (
+        <Modal
+          isOpen={isDetailOpen}
+          onClose={() => {
+            setIsDetailOpen(false);
+          }}
+        >
+          <HabitDetail
+            habit={habitSelected}
+            streak={streaks?.get(habitSelected._id)}
+            entries={historyByHabit.get(habitSelected._id)!}
+          />
+        </Modal>
+      ) : (
+        ""
+      )}
     </main>
   );
 }
