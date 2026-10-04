@@ -7,12 +7,11 @@ type ApiOptions = {
   body?: unknown;
 };
 
-export const api = async <T>(
+const request = async (
   path: string,
   { method = "GET", body }: ApiOptions = {},
-): Promise<T> => {
+): Promise<Response> => {
   const headers: Record<string, string> = {};
-
   if (body !== undefined) headers["Content-Type"] = "application/json";
 
   const token = getToken();
@@ -26,10 +25,21 @@ export const api = async <T>(
 
   if (!res.ok) {
     if (res.status === 401) clearToken();
-
     const error = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(error.error ?? `Request failed: ${res.status}`);
   }
 
+  return res;
+};
+
+export const api = async <T>(path: string, opts?: ApiOptions): Promise<T> => {
+  const res = await request(path, opts);
   return res.json() as Promise<T>;
+};
+
+export const apiVoid = async (
+  path: string,
+  opts?: ApiOptions,
+): Promise<void> => {
+  await request(path, opts);
 };

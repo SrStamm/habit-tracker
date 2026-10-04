@@ -4,7 +4,7 @@ import { Button } from "../../../components/ui/Button";
 import HabitForm from "../../habit/components/HabitForm";
 import HabitList from "../../habit/components/HabitList";
 import TodaySummary from "../components/TodaySummary";
-import { useGetHabits } from "../../habit/hooks/useHabits";
+import { useArchiveHabit, useGetHabits } from "../../habit/hooks/useHabits";
 import { useEntries } from "../../entry/hooks/useEntries";
 import { useAuth } from "../../auth/context/AuthContext";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
@@ -15,11 +15,19 @@ import { Habit } from "@habits/shared/habit";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [stateModal, setStateModal] = useState<"create" | "edit">("create");
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [habitSelected, setHabitSelected] = useState<Habit | null>();
-  const { data: habitData, error, mutate: habitMutate } = useGetHabits();
+  const {
+    data: habitData,
+    error,
+    mutate: habitMutate,
+    removeLocal,
+  } = useGetHabits();
   const historyEntries = useEntries();
   const { logout } = useAuth();
+  const { isPending: isArchivePending, mutate: archiveMutate } =
+    useArchiveHabit();
 
   const selectHabit = (_id: string) => {
     const habitFinded = habitData?.find((h) => h._id === _id);
@@ -71,6 +79,40 @@ export default function HomePage() {
     );
   }, [historyByHabit, habitData, historyEntries.data]);
 
+  const onArchive = async (habitId: string) => {
+    if (isArchivePending) return;
+
+    const ok = await archiveMutate({ habitId });
+    if (!ok) return;
+
+    setHabitSelected(null);
+    setIsDetailOpen(false);
+    removeLocal(habitId);
+  };
+
+  const onCreateHabit = () => {
+    setIsDetailOpen(false);
+    setIsModalOpen(true);
+    setStateModal("create");
+  };
+
+  const onEditHabit = (habit: Habit) => {
+    setIsDetailOpen(false);
+    setIsModalOpen(true);
+    setStateModal("edit");
+    setHabitSelected(habit);
+  };
+
+  const onSuccess = () => {
+    setIsModalOpen(false);
+    habitMutate();
+  };
+
+  const formProps =
+    stateModal === "edit" && habitSelected
+      ? ({ state: "edit", habit: habitSelected } as const)
+      : ({ state: "create" } as const);
+
   return (
     <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8 flex justify-center">
       <div className="w-full max-w-4xl flex flex-col gap-8">
@@ -87,7 +129,7 @@ export default function HomePage() {
 
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => setIsModalOpen(true)}
+              onClick={onCreateHabit}
               className="self-start sm:self-auto shadow-sm"
             >
               + Novo Hábito
@@ -117,9 +159,9 @@ export default function HomePage() {
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title="Criar Hábito"
+          title={stateModal === "create" ? "Criar Hábito" : "Atualizar Hábito"}
         >
-          <HabitForm onSuccess={() => setIsModalOpen(false)} />
+          <HabitForm {...formProps} onSuccess={onSuccess} />
         </Modal>
 
         <section className="flex flex-col gap-4">
@@ -158,6 +200,8 @@ export default function HomePage() {
             streak={streaks?.get(habitSelected._id)}
             entries={historyByHabit.get(habitSelected._id) ?? []}
             onEntrySaved={refreshHistory}
+            onArchive={onArchive}
+            onEdit={onEditHabit}
           />
         </Modal>
       ) : (

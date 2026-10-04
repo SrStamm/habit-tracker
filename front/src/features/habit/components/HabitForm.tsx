@@ -8,27 +8,36 @@ import {
   Habit,
   HabitType,
 } from "@habits/shared/habit";
-import { useCreateHabit } from "../hooks/useHabits";
+import { useCreateHabit, useUpdateHabit } from "../hooks/useHabits";
 import { Button } from "../../../components/ui/Button";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 
 type HabitFormProps = {
   onSuccess?: (habit: Habit) => void;
-};
+} & ({ state: "create"; habit?: undefined } | { state: "edit"; habit: Habit });
 
-function HabitForm({ onSuccess }: HabitFormProps) {
-  const [nome, setNome] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
-  const [type, setType] = useState<HabitType>(HabitType.BOOLEAN);
-  const [target, setTarget] = useState<number | "">("");
-  const [unit, setUnit] = useState<string | DurationOptions>("");
+function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
+  const [nome, setNome] = useState(() => habit?.name ?? "");
+  const [description, setDescription] = useState(
+    () => habit?.description ?? "",
+  );
+  const [category, setCategory] = useState(() => habit?.category ?? "");
+  const [type, setType] = useState(() => habit?.type ?? HabitType.BOOLEAN);
+  const [target, setTarget] = useState(() => habit?.target ?? "");
+  const [unit, setUnit] = useState(() => habit?.unit ?? "");
 
   const { error, isPending, mutate } = useCreateHabit();
+  const {
+    error: updateError,
+    isPending: updateIsPending,
+    mutate: updateMutate,
+  } = useUpdateHabit();
 
-  const handleCreate = async () => {
-    // target solo aplica a QUANTITY/DURATION; mandarlo con BOOLEAN lo rechaza el schema
+  const activeError = state === "edit" ? updateError : error;
+  const activeIsPending = state === "edit" ? updateIsPending : isPending;
+
+  const handleSubmit = async () => {
     const measurableTarget = type === HabitType.BOOLEAN ? undefined : target;
 
     const payload: CreateHabitDTO = {
@@ -42,8 +51,12 @@ function HabitForm({ onSuccess }: HabitFormProps) {
       ...(type !== HabitType.BOOLEAN && unit ? { unit } : {}),
     };
 
-    const created = await mutate(payload);
-    if (created) onSuccess?.(created);
+    const saved =
+      state === "edit"
+        ? await updateMutate(habit._id, payload) // CreateHabitDTO es asignable a UpdateHabitDTO
+        : await mutate(payload);
+
+    if (saved) onSuccess?.(saved);
   };
 
   return (
@@ -51,7 +64,7 @@ function HabitForm({ onSuccess }: HabitFormProps) {
       className="flex flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault();
-        handleCreate();
+        handleSubmit();
       }}
     >
       <Label htmlFor="nome">Nome:</Label>
@@ -134,14 +147,20 @@ function HabitForm({ onSuccess }: HabitFormProps) {
         </>
       )}
 
-      {error ? (
+      {activeError ? (
         <p role="alert" className="text-sm text-red-600">
-          {error}
+          {activeError}
         </p>
       ) : null}
 
-      <Button disabled={isPending}>
-        {isPending ? "Criando...." : "Criar"}
+      <Button disabled={activeIsPending}>
+        {state === "create"
+          ? activeIsPending
+            ? "Criando...."
+            : "Criar"
+          : activeIsPending
+            ? "Atualizando..."
+            : "Atualizar"}
       </Button>
     </form>
   );
