@@ -2,18 +2,18 @@ import { DurationOptions, Habit, HabitType } from "@habits/shared/habit";
 import { Entry } from "@habits/shared/entry";
 import { Tag } from "../../../components/ui/Tag";
 import { Button } from "../../../components/ui/Button";
+import { Select } from "../../../components/ui/Select";
+import { Input } from "../../../components/ui/Input";
+import { Label } from "../../../components/ui/Label";
 import { buildHeatmap, Cell } from "../../entry/lib/buildHeatmap";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import WeekLabels from "./WeekLabels";
 import HeatmapGrid from "./HeatmapGrid";
 import Legend from "./Legend";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
-import { useState } from "react";
-import { Select } from "../../../components/ui/Select";
-import { Input } from "../../../components/ui/Input";
-import { Label } from "../../../components/ui/Label";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
+import { useState } from "react";
 
 type Props = {
   habit: Habit;
@@ -21,6 +21,7 @@ type Props = {
   streak?: number;
   onEntrySaved?: () => void;
   onArchive: (habitId: string) => void;
+  onEdit: (habit: Habit) => void;
 };
 
 function HabitDetail({
@@ -29,6 +30,7 @@ function HabitDetail({
   entries,
   onEntrySaved,
   onArchive,
+  onEdit,
 }: Props) {
   const todayKey = fmtDayKey(new Date());
 
@@ -94,8 +96,8 @@ function HabitDetail({
       - Información identitaria: Nombre, categoría y tipo
       - Meta u objetivo configurado
       - Métricas rápidas:
-        - Racha actual vs Mejor racha histórica
-        - Porcentaje global de cumplimiento (ej: 78% en los últimos 3 meses)
+        # TODO: Racha actual vs Mejor racha histórica
+        # TODO: Porcentaje global de cumplimiento (ej: 78% en los últimos 3 meses)
     */}
 
       <div className="flex flex-col gap-6 p-6 bg-card border-b border-border/40">
@@ -200,7 +202,7 @@ function HabitDetail({
       - Selector de fecha: Permite elegir cualquier día del pasado
       - Formulario de ajuste manual: un control para cargar o corregir
         la entrada de esa fecha seleccionada (marcar/desmarcar o cambiar cantidad)
-      - Histórico reciente (Lista de entradas): Una pequeña lista de los últimos
+      # TODO: Histórico reciente (Lista de entradas): Una pequeña lista de los últimos
         días con registros para poder modificar un valor rápido si cometió un error.
       */}
 
@@ -218,7 +220,7 @@ function HabitDetail({
           max={todayKey}
           value={dayKey}
           onChange={(e) => {
-            if (e.target.value > todayKey) return; // el back no valida, acá sí
+            if (e.target.value > todayKey) return;
             setDayKey(e.target.value);
             syncDay(e.target.value);
           }}
@@ -262,12 +264,18 @@ function HabitDetail({
       */}
 
       <div className="flex flex-row justify-center gap-3 p-3 border-a border-border/40">
-        <Button>Editar</Button>
+        <Button
+          type="button"
+          onClick={() => {
+            onEdit(habit);
+          }}
+        >
+          Editar
+        </Button>
         <Button
           variant="danger"
-          type="submit"
-          onClick={(e) => {
-            e.preventDefault();
+          type="button"
+          onClick={() => {
             onArchive(habit._id);
           }}
         >

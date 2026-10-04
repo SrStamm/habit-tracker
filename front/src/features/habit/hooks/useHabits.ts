@@ -1,6 +1,11 @@
-import { CreateHabitDTO, Habit, ParamsHabitDTO } from "@habits/shared/habit";
+import {
+  CreateHabitDTO,
+  Habit,
+  ParamsHabitDTO,
+  UpdateHabitDTO,
+} from "@habits/shared/habit";
 import { useState } from "react";
-import { archiveHabit, createHabit, getAllHabits } from "../api";
+import { archiveHabit, createHabit, getAllHabits, updateHabit } from "../api";
 
 export const useCreateHabit = () => {
   const [data, setData] = useState<CreateHabitDTO | null>(null);
@@ -80,4 +85,33 @@ export const useArchiveHabit = () => {
   };
 
   return { error, isPending, mutate };
+};
+
+export const useUpdateHabit = () => {
+  const [data, setData] = useState<Habit | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const mutate = async (
+    habitId: string,
+    input: UpdateHabitDTO,
+  ): Promise<Habit | undefined> => {
+    if (isPending) return;
+
+    setData(null);
+    setIsPending(true);
+    setError(null);
+
+    try {
+      const result = await updateHabit(habitId, input);
+      setData(result.habitoAtualizado);
+      return result.habitoAtualizado;
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { data, error, isPending, mutate };
 };
