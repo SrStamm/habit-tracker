@@ -9,6 +9,7 @@ import HeatmapGrid from "./HeatmapGrid";
 import Legend from "./Legend";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { useState } from "react";
+import { Select } from "../../../components/ui/Select";
 
 type Props = {
   habit: Habit;
@@ -18,10 +19,11 @@ type Props = {
 
 function HabitDetail({ habit, streak, entries }: Props) {
   const [selectedCell, setSelectedCell] = useState<Cell | null>();
+  const [days, setDays] = useState<number>(90);
 
   const today = new Date();
   const hace90d = new Date();
-  hace90d.setDate(hace90d.getDate() - 90);
+  hace90d.setDate(hace90d.getDate() - days);
 
   const weeks = buildHeatmap(
     entries,
@@ -97,9 +99,24 @@ function HabitDetail({ habit, streak, entries }: Props) {
       */}
 
       <div className="flex flex-col gap-3 p-6 border-b border-border/40">
-        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-          Histórico de Actividade (Últimos 90 días)
-        </span>
+        <div className="flex flex-row items-center gap-2 justify-center">
+          <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+            Histórico de Actividade
+          </span>
+          <Select
+            className="py-0.5 w-auto text-xs px-2"
+            onChange={(e) => setDays(Number(e.target.value))}
+            value={days}
+          >
+            <option value={7}>1 semana</option>
+            <option value={15}>15 días</option>
+            <option value={30}>1 mês</option>
+            <option value={90}>3 meses</option>
+            <option value={180}>6 meses</option>
+            <option value={270}>9 meses</option>
+            <option value={365}>12 meses</option>
+          </Select>
+        </div>
 
         <div className="overflow-x-auto pb-2">
           <div className="flex gap-2 w-fit mx-auto mb-2">
