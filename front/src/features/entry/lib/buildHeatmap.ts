@@ -29,7 +29,6 @@ const groupEntriesByDay = (
 
   entries.forEach((m) => {
     const previous = valueEntries.get(m.dayKey) ?? 0;
-    let newValue = 0;
 
     switch (typeHabit) {
       case HabitType.BOOLEAN:
@@ -38,7 +37,9 @@ const groupEntriesByDay = (
 
       case HabitType.QUANTITY:
       case HabitType.DURATION:
-        valueEntries.set(m.dayKey, newValue);
+        // Soma em vez de substituir: se algum dia tiver mais de uma entry
+        // (migração, edição manual), o valor do dia é o total, não o último.
+        valueEntries.set(m.dayKey, previous + (m.value ?? 0));
         break;
     }
   });
@@ -97,6 +98,7 @@ const createCells = (
   values: Map<string, number>,
   max: number,
   typeHabit: HabitType,
+  unit?: string,
 ): Cell[] => {
   const cellArray: Cell[] = [];
 
@@ -113,10 +115,10 @@ const createCells = (
           label = value === 1 ? "Completado" : "No completado";
           break;
         case HabitType.QUANTITY:
-          label = value + " repeticiones";
+          label = `${value} ${unit ?? "unidades"}`;
           break;
         case HabitType.DURATION:
-          label = value + " min";
+          label = `${value} ${unit ?? "min"}`;
           break;
       }
     }
@@ -170,6 +172,7 @@ export const buildHeatmap = (
   from: string,
   to: string,
   target?: number,
+  unit?: string,
 ): (Cell | null)[][] => {
   from = toLocalDayKey(from);
   to = toLocalDayKey(to);
@@ -181,7 +184,7 @@ export const buildHeatmap = (
 
   const dayRange = buildDayRange(from, to);
 
-  const cells = createCells(dayRange, entriesGrouped, max, typeHabit);
+  const cells = createCells(dayRange, entriesGrouped, max, typeHabit, unit);
 
   return createPadding(cells, from);
 };
