@@ -39,6 +39,7 @@ function LoginPage() {
           <Input
             id="nome"
             type="text"
+            autoComplete="off"
             required
             value={nome}
             onChange={(e) => setNome(e.target.value)}
@@ -48,6 +49,7 @@ function LoginPage() {
           <Input
             id="senha"
             type="password"
+            autoComplete="off"
             required
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
