@@ -1,5 +1,5 @@
-import { CreateHabitDTO, Habit } from "@habits/shared/habit";
-import { api } from "../../lib/api";
+import { CreateHabitDTO, Habit, ParamsHabitDTO } from "@habits/shared/habit";
+import { api, apiVoid } from "../../lib/api";
 
 export const createHabit = async (
   data: CreateHabitDTO,
@@ -9,4 +9,8 @@ export const createHabit = async (
 
 export const getAllHabits = async (): Promise<{ allHabits: Habit[] }> => {
   return api("/habits", { method: "GET" });
+};
+
+export const archiveHabit = async (params: ParamsHabitDTO): Promise<void> => {
+  return apiVoid(`/habits/${params.habitId}`, { method: "DELETE" });
 };

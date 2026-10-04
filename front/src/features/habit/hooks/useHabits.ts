@@ -1,6 +1,6 @@
-import { CreateHabitDTO, Habit } from "@habits/shared/habit";
+import { CreateHabitDTO, Habit, ParamsHabitDTO } from "@habits/shared/habit";
 import { useState } from "react";
-import { createHabit, getAllHabits } from "../api";
+import { archiveHabit, createHabit, getAllHabits } from "../api";
 
 export const useCreateHabit = () => {
   const [data, setData] = useState<CreateHabitDTO | null>(null);
@@ -51,5 +51,33 @@ export const useGetHabits = () => {
     }
   };
 
-  return { data, error, isPending, mutate };
+  const removeLocal = (habitId: string) =>
+    setData((prev) => prev?.filter((h) => h._id !== habitId) ?? null);
+
+  return { data, error, isPending, mutate, removeLocal };
+};
+
+export const useArchiveHabit = () => {
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  const mutate = async (
+    input: ParamsHabitDTO,
+  ): Promise<boolean | undefined> => {
+    if (isPending) return;
+
+    setIsPending(true);
+    setError(null);
+
+    try {
+      await archiveHabit(input);
+      return true;
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { error, isPending, mutate };
 };
