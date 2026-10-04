@@ -46,7 +46,6 @@ export const useCreateEntry = () => {
   ): Promise<Entry | undefined> => {
     if (isPending) return;
 
-    setData(null);
     setIsPending(true);
     setError(null);
 
