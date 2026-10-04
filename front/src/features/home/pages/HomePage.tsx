@@ -15,6 +15,7 @@ import { Habit } from "@habits/shared/habit";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [stateModal, setStateModal] = useState<"create" | "edit">("create");
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [habitSelected, setHabitSelected] = useState<Habit | null>();
   const {
@@ -89,6 +90,29 @@ export default function HomePage() {
     removeLocal(habitId);
   };
 
+  const onCreateHabit = () => {
+    setIsDetailOpen(false);
+    setIsModalOpen(true);
+    setStateModal("create");
+  };
+
+  const onEditHabit = (habit: Habit) => {
+    setIsDetailOpen(false);
+    setIsModalOpen(true);
+    setStateModal("edit");
+    setHabitSelected(habit);
+  };
+
+  const onSuccess = () => {
+    setIsModalOpen(false);
+    habitMutate();
+  };
+
+  const formProps =
+    stateModal === "edit" && habitSelected
+      ? ({ state: "edit", habit: habitSelected } as const)
+      : ({ state: "create" } as const);
+
   return (
     <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8 flex justify-center">
       <div className="w-full max-w-4xl flex flex-col gap-8">
@@ -105,7 +129,7 @@ export default function HomePage() {
 
           <div className="flex items-center gap-2">
             <Button
-              onClick={() => setIsModalOpen(true)}
+              onClick={onCreateHabit}
               className="self-start sm:self-auto shadow-sm"
             >
               + Novo Hábito
@@ -135,9 +159,9 @@ export default function HomePage() {
         <Modal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-          title="Criar Hábito"
+          title={stateModal === "create" ? "Criar Hábito" : "Atualizar Hábito"}
         >
-          <HabitForm onSuccess={() => setIsModalOpen(false)} />
+          <HabitForm {...formProps} onSuccess={onSuccess} />
         </Modal>
 
         <section className="flex flex-col gap-4">
@@ -177,6 +201,7 @@ export default function HomePage() {
             entries={historyByHabit.get(habitSelected._id) ?? []}
             onEntrySaved={refreshHistory}
             onArchive={onArchive}
+            onEdit={onEditHabit}
           />
         </Modal>
       ) : (
