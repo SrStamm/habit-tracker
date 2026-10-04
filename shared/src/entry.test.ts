@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildCreateEntrySchema, GetEntriesQuerySchema } from "./entry";
+import {
+  buildCreateEntrySchema,
+  GetAllEntriesQuerySchema,
+  GetEntriesQuerySchema,
+} from "./entry";
 import { HabitType } from "./habit";
 
 // Estes schemas são o contrato do POST /habits/:habitId/entries.
@@ -9,67 +13,63 @@ import { HabitType } from "./habit";
 describe("buildCreateEntrySchema com HabitType.BOOLEAN", () => {
   const schema = buildCreateEntrySchema(HabitType.BOOLEAN);
 
-  it("acepta completed booleano", () => {
+  it("aceita completed booleano com dayKey", () => {
     const result = schema.safeParse({
+      dayKey: "2026-01-01",
       completed: true,
     });
     expect(result.success).toBe(true);
   });
 
+  it("aceita dayKey, que é o contrato desde que a entry passou a ser por dia", () => {
+    const result = schema.safeParse({ dayKey: "2026-01-01", completed: false });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita dayKey fora do formato YYYY-MM-DD", () => {
+    const result = schema.safeParse({
+      dayKey: "01-01-2026",
+      completed: true,
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("rejeita completed ausente", () => {
-    const result = schema.safeParse({});
+    const result = schema.safeParse({ dayKey: "2026-01-01" });
     expect(result.success).toBe(false);
   });
 
   it("rejeita completed como string", () => {
-    const result = schema.safeParse({ completed: "true" });
+    const result = schema.safeParse({ dayKey: "2026-01-01", completed: "true" });
     expect(result.success).toBe(false);
   });
 
   it("rejeita value, porque BOOLEAN não leva value", () => {
-    const result = schema.safeParse({ completed: true, value: 100 });
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      completed: true,
+      value: 100,
+    });
     expect(result.success).toBe(false);
   });
 
   it("rejeita uma key desconhecida, por ser .strict()", () => {
-    const result = schema.safeParse({ completed: true, target: 100 });
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      completed: true,
+      target: 100,
+    });
     expect(result.success).toBe(false);
   });
 
-  // `at` aceita offset de propósito. Antes z.iso.datetime() vinha sem
-  // { offset: true } e rejeitava qualquer datetime com timezone. Não
-  // estourava porque o front nunca mandava `at` (HabitCard não inclui),
-  // mas o backend já lidava bem: normaliza para instante absoluto e
-  // agrupa por APP_TIMEZONE. O schema era o único mais restritivo que a
-  // semântica do sistema.
-  it("aceita at como ISO 8601 com Z", () => {
+  // `at` era o contrato antigo (instante absoluto agrupado por APP_TIMEZONE).
+  // Desde que a entry passou a ser uma-por-dia via dayKey, `at` deixou de
+  // existir: rejeitá-lo aqui é o comportamento certo, não um regressão.
+  it("rejeita at, porque a entry é por dayKey e não por instante", () => {
     const result = schema.safeParse({
+      dayKey: "2026-01-01",
       completed: true,
       at: "2026-01-01T10:00:00Z",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("aceita at com offset horário, não só UTC Z", () => {
-    const result = schema.safeParse({
-      completed: true,
-      at: "2026-01-01T10:00:00+02:00",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejeita at date-only, porque não diz hora", () => {
-    const result = schema.safeParse({
-      completed: true,
-      at: "2026-01-01",
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejeita at sem timezone, porque não se sabe qual instante é", () => {
-    const result = schema.safeParse({
-      completed: true,
-      at: "2026-01-01T10:00:00",
     });
     expect(result.success).toBe(false);
   });
@@ -79,27 +79,31 @@ describe("buildCreateEntrySchema com QUANTITY e DURATION", () => {
   const schema = buildCreateEntrySchema(HabitType.DURATION);
 
   it("aceita value numérico", () => {
-    const result = schema.safeParse({ value: 1 });
+    const result = schema.safeParse({ dayKey: "2026-01-01", value: 1 });
     expect(result.success).toBe(true);
   });
 
   it("aceita value 0, pelo min ser 0 e não 1", () => {
-    const result = schema.safeParse({ value: 0 });
+    const result = schema.safeParse({ dayKey: "2026-01-01", value: 0 });
     expect(result.success).toBe(true);
   });
 
   it("rejeita value negativo", () => {
-    const result = schema.safeParse({ value: -1 });
+    const result = schema.safeParse({ dayKey: "2026-01-01", value: -1 });
     expect(result.success).toBe(false);
   });
 
   it("rejeita value como string, porque não há coerce", () => {
-    const result = schema.safeParse({ value: "0" });
+    const result = schema.safeParse({ dayKey: "2026-01-01", value: "0" });
     expect(result.success).toBe(false);
   });
 
   it("rejeita completed, porque QUANTITY e DURATION não levam completed", () => {
-    const result = schema.safeParse({ value: 0, completed: true });
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      value: 0,
+      completed: true,
+    });
     expect(result.success).toBe(false);
   });
 
@@ -142,5 +146,42 @@ describe("GetEntriesQuerySchema", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+// GET /habits/entries?habitId=&from=&to= — o habitId é opcional porque a
+// home pede as entries de todos os hábitos para o heatmap geral.
+describe("GetAllEntriesQuerySchema", () => {
+  const habitId = "65f1c0e0a1b2c3d4e5f60718";
+
+  it("aceita habitId como ObjectId de 24 chars", () => {
+    const result = GetAllEntriesQuerySchema.safeParse({ habitId });
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita habitId junto com from e to", () => {
+    const result = GetAllEntriesQuerySchema.safeParse({
+      habitId,
+      from: "2025-12-01",
+      to: "2025-12-31",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita query sem habitId, porque o filtro é opcional", () => {
+    const result = GetAllEntriesQuerySchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita habitId que não é um ObjectId", () => {
+    const result = GetAllEntriesQuerySchema.safeParse({ habitId: "nope" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita habitId com 23 chars, para não mandar filter inválido ao Mongo", () => {
+    const result = GetAllEntriesQuerySchema.safeParse({
+      habitId: habitId.slice(0, 23),
+    });
+    expect(result.success).toBe(false);
   });
 });

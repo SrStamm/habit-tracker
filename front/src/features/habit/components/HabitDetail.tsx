@@ -50,6 +50,8 @@ function HabitDetail({
     habit.type,
     fmtDayKey(hace90d),
     fmtDayKey(today),
+    undefined,
+    habit.unit ?? undefined,
   );
 
   const selectedLabel = weeks
