@@ -21,6 +21,18 @@ export const GetEntriesQuerySchema = z.object({
 });
 export type GetEntriesQueryDTO = z.infer<typeof GetEntriesQuerySchema>;
 
+// ObjectId do Mongo. O filtro é opcional: sem habitId, o endpoint devolve
+// entries de todos os hábitos do utilizador (é o que o heatmap da home usa).
+// Só a rota global leva este schema; /habits/:habitId/entries recebe o hábito
+// pelo path e não deve aceitar um habitId conflitante no query.
+export const GetAllEntriesQuerySchema = GetEntriesQuerySchema.extend({
+  habitId: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/, "habitId must be a 24-char ObjectId")
+    .optional(),
+});
+export type GetAllEntriesQueryDTO = z.infer<typeof GetAllEntriesQuerySchema>;
+
 export type Entry = {
   _id: string;
   userId: string;

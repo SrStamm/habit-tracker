@@ -12,8 +12,14 @@ const dayKeyRange = (from?: Date, to?: Date) => {
   return range;
 };
 
-export const getAllEntries = async (userId: string, from?: Date, to?: Date) => {
+export const getAllEntries = async (
+  userId: string,
+  from?: Date,
+  to?: Date,
+  habitId?: string,
+) => {
   const filter: Record<string, unknown> = { userId };
+  if (habitId) filter.habitId = habitId;
   const dayKey = dayKeyRange(from, to);
   if (dayKey) filter.dayKey = dayKey;
   return Entry.find(filter).sort({ dayKey: 1 });

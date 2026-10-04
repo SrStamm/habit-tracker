@@ -5,9 +5,10 @@ import { buildCreateEntrySchema } from "@habits/shared/entry";
 export const handleGetAllEntries = async (req: Request, res: Response) => {
   const from = req.query.from ? new Date(String(req.query.from)) : undefined;
   const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+  const habitId = req.query.habitId ? String(req.query.habitId) : undefined;
 
   try {
-    const entries = await getAllEntries(req.userId, from, to);
+    const entries = await getAllEntries(req.userId, from, to, habitId);
     res.status(200).json({ entries });
   } catch (error) {
     return res.status(400).json({ error: (error as Error).message });
