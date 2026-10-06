@@ -1,0 +1,23 @@
+services:
+  back:
+    build:
+      context: .
+      dockerfile: back/Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - path: back/.env
+        required: false
+    environment:
+      PORT: 3000
+  front:
+    build:
+      context: .
+      dockerfile: front/Dockerfile
+    ports:
+      - "5173:5173"
+    env_file:
+      - path: front/.env
+        required: false
+    environment:
+      API_PROXY: http://back:3000

@@ -1,0 +1,12 @@
+# Never ship host state or secrets into image layers
+**/node_modules
+**/dist
+**/.env
+**/coverage
+**/*.tsbuildinfo
+
+.git
+.codegraph
+.atl
+odd
+docs
