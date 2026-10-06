@@ -1,6 +1,6 @@
 import { clearToken, getToken } from "./authToken";
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
+const API_BASE = "/api";
 
 type ApiOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
