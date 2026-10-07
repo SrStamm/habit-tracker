@@ -4,5 +4,6 @@ packages:
   - shared
 
 allowBuilds:
+  '@scarf/scarf': false
   bcrypt: true
   esbuild: true
