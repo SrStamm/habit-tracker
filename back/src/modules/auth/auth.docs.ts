@@ -7,6 +7,9 @@ import {
 
 export function registerAuthDocs(r: OpenAPIRegistry) {
   r.registerPath({
+    summary: "Login",
+    tags: ["Auth"],
+    operationId: "loginUser",
     method: "post",
     path: "/auth/login",
     request: {
@@ -21,6 +24,9 @@ export function registerAuthDocs(r: OpenAPIRegistry) {
   });
 
   r.registerPath({
+    summary: "Criar um User",
+    tags: ["Auth"],
+    operationId: "registerUser",
     method: "post",
     path: "/auth/register",
     request: {
@@ -28,7 +34,7 @@ export function registerAuthDocs(r: OpenAPIRegistry) {
     },
     responses: {
       201: {
-        description: "Login exitoso",
+        description: "Register exitoso",
         content: { "application/json": { schema: RegisterResponseSchema } },
       },
     },

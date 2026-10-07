@@ -10,6 +10,9 @@ import z from "zod";
 
 export function registerHabitDocs(r: OpenAPIRegistry) {
   r.registerPath({
+    summary: "Listar todos os Hábitos",
+    tags: ["Habit"],
+    operationId: "listHabits",
     method: "get",
     path: "/habits",
     security: [{ bearerAuth: [] }],
@@ -29,6 +32,9 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
   });
 
   r.registerPath({
+    summary: "Criar um Hábito",
+    tags: ["Habit"],
+    operationId: "createHabit",
     method: "post",
     path: "/habits",
     security: [{ bearerAuth: [] }],
@@ -48,6 +54,9 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
   });
 
   r.registerPath({
+    summary: "Atualizar um Hábito",
+    tags: ["Habit"],
+    operationId: "updateHabit",
     method: "patch",
     path: "/habits/{habitId}",
     security: [{ bearerAuth: [] }],
@@ -70,6 +79,9 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
   });
 
   r.registerPath({
+    summary: "Arquivar um Hábito",
+    tags: ["Habit"],
+    operationId: "archiveHabit",
     method: "delete",
     path: "/habits/{habitId}",
     security: [{ bearerAuth: [] }],
