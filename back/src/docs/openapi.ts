@@ -6,6 +6,12 @@ import {
 
 export const registry = new OpenAPIRegistry();
 
+registry.registerComponent("securitySchemes", "bearerAuth", {
+  type: "http",
+  scheme: "bearer",
+  bearerFormat: "JWT",
+});
+
 export function buildDocument(): OpenAPIObject {
   return new OpenApiGeneratorV3(registry.definitions).generateDocument({
     openapi: "3.0.0",

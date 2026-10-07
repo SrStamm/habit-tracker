@@ -12,6 +12,7 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
   r.registerPath({
     method: "get",
     path: "/habits",
+    security: [{ bearerAuth: [] }],
     request: {
       query: QueryGetHabits,
     },
@@ -30,6 +31,7 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
   r.registerPath({
     method: "post",
     path: "/habits",
+    security: [{ bearerAuth: [] }],
     request: {
       body: { content: { "application/json": { schema: CreateHabitSchema } } },
     },
@@ -48,6 +50,7 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
   r.registerPath({
     method: "patch",
     path: "/habits/{habitId}",
+    security: [{ bearerAuth: [] }],
     request: {
       params: HabitParamsSchema,
       body: { content: { "application/json": { schema: HabitUpdateSchema } } },
@@ -69,6 +72,7 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
   r.registerPath({
     method: "delete",
     path: "/habits/{habitId}",
+    security: [{ bearerAuth: [] }],
     request: {
       params: HabitParamsSchema,
     },
