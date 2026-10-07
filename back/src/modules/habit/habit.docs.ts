@@ -38,7 +38,7 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
         description: "Criado de forma exitosa",
         content: {
           "application/json": {
-            schema: z.object({ allHabits: HabitResponseSchema }),
+            schema: z.object({ novoHabito: HabitResponseSchema }),
           },
         },
       },
@@ -49,6 +49,7 @@ export function registerHabitDocs(r: OpenAPIRegistry) {
     method: "patch",
     path: "/habits/{habitId}",
     request: {
+      params: HabitParamsSchema,
       body: { content: { "application/json": { schema: HabitUpdateSchema } } },
     },
     responses: {
