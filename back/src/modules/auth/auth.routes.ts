@@ -10,3 +10,4 @@ authRouter.post("/login", validate({ body: LoginSchema }), handleLogin);
 authRouter.post("/register", validate({ body: LoginSchema }), handleRegister);
 
 export default authRouter;
+export const authRoutes = { basePath: "/auth", router: authRouter };
