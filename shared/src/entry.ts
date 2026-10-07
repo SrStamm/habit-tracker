@@ -33,11 +33,15 @@ export const GetAllEntriesQuerySchema = GetEntriesQuerySchema.extend({
 });
 export type GetAllEntriesQueryDTO = z.infer<typeof GetAllEntriesQuerySchema>;
 
-export type Entry = {
-  _id: string;
-  userId: string;
-  habitId: string;
-  dayKey: string;
-  value?: number;
-  completed?: boolean;
-};
+export const EntryResponseSchema = z.object({
+  _id: z.string(),
+  userId: z.string(),
+  habitId: z.string(),
+  dayKey: z.string(),
+  value: z.number().optional(),
+  completed: z.boolean().optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type Entry = z.infer<typeof EntryResponseSchema>;
