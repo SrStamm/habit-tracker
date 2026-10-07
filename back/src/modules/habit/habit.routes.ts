@@ -36,4 +36,4 @@ habitRouter.delete(
   handleArchiveHabit,
 );
 
-export default habitRouter;
+export const habitRoutes = { basePath: "/habits", router: habitRouter };

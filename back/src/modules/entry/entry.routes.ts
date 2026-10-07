@@ -36,4 +36,4 @@ entryRouter.post(
   handleCreateEntry,
 );
 
-export default entryRouter;
+export const entryRoutes = { basePath: "/habits", router: entryRouter };

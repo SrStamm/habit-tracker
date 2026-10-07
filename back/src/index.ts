@@ -1,24 +1,11 @@
-import express from "express";
 import { APP_TIMEZONE } from "./config/timeZone";
-import authRouter from "./modules/auth/auth.routes";
-import habitRouter from "./modules/habit/habit.routes";
-import entryRouter from "./modules/entry/entry.routes";
 import { connect } from "./db/connection";
+import { createApp } from "./app";
 
 await connect();
 
-const app = express();
+const app = createApp();
 const PORT = process.env.PORT ?? 3000;
-
-app.use(express.json());
-
-app.use("/auth", authRouter);
-app.use("/habits", habitRouter);
-app.use("/habits", entryRouter);
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);

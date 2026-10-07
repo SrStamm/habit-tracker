@@ -12,3 +12,6 @@ dist/
 
 # Test output
 coverage/
+
+# Generated OpenAPI spec (regenerate with `pnpm openapi`)
+back/src/docs/openapi.json

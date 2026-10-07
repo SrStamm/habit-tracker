@@ -119,8 +119,18 @@ export const HabitParamsSchema = z.object({
 
 export type ParamsHabitDTO = z.infer<typeof HabitParamsSchema>;
 
-export type Habit = CreateHabitDTO & {
-  _id: string;
-  userId: string;
-  active: boolean;
-};
+export const HabitResponseSchema = z.object({
+  _id: z.string(),
+  userId: z.string(),
+  name: z.string(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+  type: z.enum(HabitType),
+  target: z.number().optional(),
+  unit: z.string().optional(),
+  active: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+export type Habit = z.infer<typeof HabitResponseSchema>;
