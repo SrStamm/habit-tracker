@@ -92,7 +92,9 @@ describe("ida e volta do token — assinar e depois verificar", async () => {
   it("um token adulterado/expirado lança erro", async () => {
     // --- adulterado: assinatura real, assinatura corrupta ---
     const token = await firmarToken("u1");
-    const adulterado = token.slice(0, -1) + (token.endsWith("A") ? "B" : "A");
+    const i = Math.floor(token.length / 2);
+    const adulterado =
+      token.slice(0, i) + (token[i] === "A" ? "B" : "A") + token.slice(i + 1);
     await expect(verificarToken(adulterado)).rejects.toThrow(
       "Token inválido ou expirado",
     );
