@@ -1,11 +1,12 @@
 import { SignJWT, jwtVerify } from "jose";
 import User from "../../models/User";
 import bcrypt from "bcrypt";
+import { HttpError } from "../../lib/errors";
 
 export const createUser = async (nome: string, password: string) => {
   // Valida que o usuario não exista
   const existing = await User.findOne({ nome });
-  if (existing) throw new Error("Usuario ja existe");
+  if (existing) throw new HttpError("Usuario ja existe", 409);
 
   // Hashea o password e cria o novo User
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -45,10 +46,10 @@ export const verificarToken = async (token: string) => {
 export const validarUsuario = async (nome: string, password: string) => {
   // Valida que o usuario existe
   const existing = await User.findOne({ nome });
-  if (!existing) throw new Error("Usuario não existe");
+  if (!existing) throw new HttpError("Credenciais inválidas", 401);
 
   const isMatch = await bcrypt.compare(password, existing.password);
-  if (!isMatch) throw new Error("Credenciais inválidas");
+  if (!isMatch) throw new HttpError("Credenciais inválidas", 401);
 
   const { password: _, ...usuarioSinPassword } = existing.toObject();
   return usuarioSinPassword;
