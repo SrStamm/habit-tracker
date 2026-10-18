@@ -3,6 +3,7 @@ import { type Request, type Response } from "express";
 import { createUser, firmarToken, validarUsuario } from "./auth.service";
 
 import { handleLogin, handleRegister } from "./auth.controller";
+import { HttpError } from "../../lib/errors";
 
 // Contrato HTTP dos handlers de auth: código de estado + forma do JSON.
 // Mock do service (nunca do modelo) — a lógica do service pertence a
@@ -64,20 +65,20 @@ describe("handleRegister", () => {
     expect(firmarToken).toHaveBeenCalledWith(userMocked._id.toString());
   });
 
-  // TODO(KAN-38): 409 — outra task Jira vai diferenciar "utilizador já
-  // existe" no controller. Hoje o catch devolve 400 para todo erro.
-  it("400 + { error } quando o utilizador já existe", async () => {
+  it("409 + { error } quando o utilizador já existe", async () => {
     const req = { body: { nome: "test", password: "test" } } as Request;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(createUser).mockRejectedValue(new Error("Usuario ja existe"));
+    vi.mocked(createUser).mockRejectedValue(
+      new HttpError("Usuario ja existe", 409),
+    );
 
     await handleRegister(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith({ error: "Usuario ja existe" });
     expect(firmarToken).not.toHaveBeenCalled();
   });
@@ -149,9 +150,7 @@ describe("handleLogin", () => {
     expect(firmarToken).toHaveBeenCalledWith(userMocked._id.toString());
   });
 
-  // TODO(KAN-38): 401 — outra task Jira vai diferenciar "credenciais
-  // inválidas" no controller. Hoje o catch devolve 400 para todo erro.
-  it("400 + { error } quando as credenciais são erradas", async () => {
+  it("401 + { error } quando as credenciais são erradas", async () => {
     const req = { body: { nome: "test", password: "errado" } } as Request;
     const res = {
       status: vi.fn().mockReturnThis(),
@@ -159,12 +158,12 @@ describe("handleLogin", () => {
     } as unknown as Response;
 
     vi.mocked(validarUsuario).mockRejectedValue(
-      new Error("Credenciais inválidas"),
+      new HttpError("Credenciais inválidas", 401),
     );
 
     await handleLogin(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ error: "Credenciais inválidas" });
     expect(firmarToken).not.toHaveBeenCalled();
   });
