@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import type { InferSchemaType } from "mongoose";
 import { GoalPeriod } from "@habits/shared/goal";
 
 const goalSchema = new mongoose.Schema(
@@ -24,3 +25,7 @@ goalSchema.index({ userId: 1, habitId: 1 });
 const Goal = mongoose.model("Goal", goalSchema);
 
 export default Goal;
+
+export type GoalDoc = mongoose.HydratedDocument<
+  InferSchemaType<typeof goalSchema>
+>;
