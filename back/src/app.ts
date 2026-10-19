@@ -5,6 +5,7 @@ import { entryRoutes } from "./modules/entry/entry.routes";
 import { buildDocument } from "./docs/openapi";
 import swaggerUi from "swagger-ui-express";
 import "./docs/index";
+import { goalRoutes } from "./modules/goal/goal.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -13,6 +14,7 @@ export function createApp(): Express {
   app.use(authRoutes.basePath, authRoutes.router);
   app.use(habitRoutes.basePath, habitRoutes.router);
   app.use(entryRoutes.basePath, entryRoutes.router);
+  app.use(goalRoutes.basePath, goalRoutes.router);
 
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(buildDocument()));
 
