@@ -9,6 +9,7 @@ import {
 } from "@habits/shared/goal";
 import {
   handleGetGoals,
+  handleGetGoalProgress,
   handleCreateGoal,
   handleDeleteGoal,
 } from "./goal.controller";
@@ -23,7 +24,12 @@ goalRouter.get(
   handleGetGoals,
 );
 
-// goalRouter.get("/:habitId/goals/:goalId/progress", validate({ params: GetGoalsProgressSchema }), validateHabitOwner);
+goalRouter.get(
+  "/:habitId/goals/:goalId/progress",
+  validate({ params: GetGoalsProgressSchema }),
+  validateHabitOwner,
+  handleGetGoalProgress,
+);
 
 goalRouter.post(
   "/:habitId/goals",

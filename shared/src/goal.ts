@@ -18,8 +18,6 @@ export const ParamsGoalsSchema = z
   })
   .strict();
 
-export type CreateGoalDTO = z.infer<typeof CreateGoalSchema>;
-
 export const GetGoalsProgressSchema = z
   .object({
     habitId: z.string().min(1),
@@ -35,4 +33,15 @@ export const GoalResponseSchema = z.object({
   period: z.enum(GoalPeriod),
 });
 
+export const GoalProgressResponseSchema = z.object({
+  goalId: z.string(),
+  amount: z.number(),
+  current: z.number(),
+  pct: z.number(),
+  unit: z.string(),
+  periodStart: z.string(),
+  periodEnd: z.string(),
+});
+
+export type CreateGoalDTO = z.infer<typeof CreateGoalSchema>;
 export type GoalResponseDTO = z.infer<typeof GoalResponseSchema>;
