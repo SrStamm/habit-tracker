@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { useGetGoals } from "../hooks/useGoal";
+import { useCreateGoal, useGetGoals } from "../hooks/useGoal";
 import { getGoalProgress } from "../api";
-import { GoalProgressResponseDTO } from "@habits/shared/goal";
+import { GoalPeriod, GoalProgressResponseDTO } from "@habits/shared/goal";
 import { GOAL_PERIOD_LABELS } from "../lib/periodLabels";
+import { Input } from "../../../components/ui/Input";
+import { Label } from "../../../components/ui/Label";
+import { Button } from "../../../components/ui/Button";
+import { Select } from "../../../components/ui/Select";
 
 interface Props {
   habitId: string;
@@ -13,6 +17,9 @@ function GoalList({ habitId }: Props) {
     Record<string, GoalProgressResponseDTO>
   >({});
   const { mutate, data: goals } = useGetGoals(habitId);
+  const { mutate: mutateCreate, isPending: isPendingCreate } = useCreateGoal();
+  const [amount, setAmount] = useState<number>(1);
+  const [period, setPeriod] = useState<GoalPeriod>(GoalPeriod.MONTH);
 
   useEffect(() => {
     mutate();
@@ -34,6 +41,14 @@ function GoalList({ habitId }: Props) {
       cancelled = true;
     };
   }, [goals]);
+
+  const handleSubmit = async () => {
+    const created = await mutateCreate(habitId, { amount, period });
+
+    if (created) {
+      mutate();
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 p-6 border-b border-border/40">
@@ -67,6 +82,48 @@ function GoalList({ habitId }: Props) {
           </div>
         );
       })}
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+        className="flex flex-row items-center justify-center gap-2"
+      >
+        <Label htmlFor="goal-amount">Valor:</Label>
+
+        <Input
+          id="goal-amount"
+          type="number"
+          value={amount}
+          onChange={(e) => {
+            setAmount(Number(e.target.value));
+          }}
+        />
+
+        <Label htmlFor="goal-period">Periodo:</Label>
+        <Select
+          id="goal-period"
+          required
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
+        >
+          {Object.values(GoalPeriod).map((goalPeriod) => (
+            <option key={goalPeriod} value={goalPeriod}>
+              {GOAL_PERIOD_LABELS[goalPeriod]}
+            </option>
+          ))}
+        </Select>
+
+        <Button
+          size="sm"
+          disabled={isPendingCreate || !amount || amount < 1}
+          className="text-xs"
+          type="submit"
+        >
+          {isPendingCreate ? "Criando" : "Criar"}
+        </Button>
+      </form>
     </div>
   );
 }
