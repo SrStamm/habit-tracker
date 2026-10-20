@@ -45,3 +45,7 @@ export const GoalProgressResponseSchema = z.object({
 
 export type CreateGoalDTO = z.infer<typeof CreateGoalSchema>;
 export type GoalResponseDTO = z.infer<typeof GoalResponseSchema>;
+export type GoalProgressResponseDTO = z.infer<
+  typeof GoalProgressResponseSchema
+>;
+export type ParamsGoalDTO = z.infer<typeof GetGoalsProgressSchema>;

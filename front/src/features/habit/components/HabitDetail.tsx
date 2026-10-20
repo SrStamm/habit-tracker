@@ -13,7 +13,8 @@ import Legend from "./Legend";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import GoalList from "../../goal/components/GoalList";
 
 type Props = {
   habit: Habit;
@@ -57,6 +58,24 @@ function HabitDetail({
   const selectedLabel = weeks
     .flat()
     .find((c) => c?.date === selectedDate)?.label;
+
+  // Total del período: recorte de entries según el rango del heatmap.
+  // BOOLEAN cuenta días cumplidos; QUANTITY/DURATION suman value en la
+  // unidad cruda del hábito (no hay conversión en el front).
+  const periodTotal = useMemo(() => {
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    const cutoff = fmtDayKey(start);
+    const inRange = entries.filter(
+      (e) => e.dayKey >= cutoff && e.dayKey <= todayKey,
+    );
+
+    if (habit.type === HabitType.BOOLEAN) {
+      return inRange.filter((e) => e.completed === true).length;
+    }
+
+    return inRange.reduce((sum, e) => sum + (e.value ?? 0), 0);
+  }, [entries, days, habit.type, todayKey]);
 
   const syncDay = (next: string) => {
     if (!next || next > todayKey) return;
@@ -123,7 +142,7 @@ function HabitDetail({
         </div>
 
         {/* Tarjetas de Métricas (KPIs) */}
-        <div className="grid grid-cols-2 gap-3 w-full">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
           {/* Racha Actual */}
           <div className="flex flex-col gap-1 rounded-xl border border-border/40 bg-background p-3.5">
             <span className="text-xs text-text-muted font-medium">
@@ -146,6 +165,18 @@ function HabitDetail({
               {habit.target
                 ? `${habit.target} ${habit.unit ?? ""}`
                 : "Sin meta"}
+            </span>
+          </div>
+
+          {/* Total del Período (últimos N días del selector del heatmap) */}
+          <div className="flex flex-col gap-1 rounded-xl border border-border/40 bg-background p-3.5">
+            <span className="text-xs text-text-muted font-medium">
+              Total do Período
+            </span>
+            <span className="text-xl font-bold text-primary">
+              {habit.type === HabitType.BOOLEAN
+                ? `${periodTotal} ${periodTotal === 1 ? "dia" : "dias"}`
+                : `${periodTotal} ${habit.unit ?? ""}`.trim()}
             </span>
           </div>
         </div>
@@ -198,6 +229,8 @@ function HabitDetail({
           )}
         </div>
       </div>
+
+      <GoalList habitId={habit._id} />
 
       {/*
       # Registro histórico e Edición retroactiva
