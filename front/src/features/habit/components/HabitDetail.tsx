@@ -14,6 +14,7 @@ import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { useState } from "react";
+import GoalList from "../../goal/components/GoalList";
 
 type Props = {
   habit: Habit;
@@ -198,6 +199,8 @@ function HabitDetail({
           )}
         </div>
       </div>
+
+      <GoalList habitId={habit._id} />
 
       {/*
       # Registro histórico e Edición retroactiva
