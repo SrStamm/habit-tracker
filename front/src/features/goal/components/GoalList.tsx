@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useCreateGoal, useGetGoals } from "../hooks/useGoal";
+import { useCreateGoal, useDeleteGoal, useGetGoals } from "../hooks/useGoal";
 import { getGoalProgress } from "../api";
 import { GoalPeriod, GoalProgressResponseDTO } from "@habits/shared/goal";
 import { GOAL_PERIOD_LABELS } from "../lib/periodLabels";
@@ -16,11 +16,13 @@ function GoalList({ habitId }: Props) {
   const [progressMap, setProgressMap] = useState<
     Record<string, GoalProgressResponseDTO>
   >({});
-  const { mutate, data: goals } = useGetGoals(habitId);
-  const { mutate: mutateCreate, isPending: isPendingCreate } = useCreateGoal();
   const [amount, setAmount] = useState<number>(1);
   const [period, setPeriod] = useState<GoalPeriod>(GoalPeriod.MONTH);
   const [showForm, setShowForm] = useState(false);
+
+  const { mutate, data: goals, removeLocal } = useGetGoals(habitId);
+  const { mutate: mutateCreate, isPending: isPendingCreate } = useCreateGoal();
+  const { mutate: mutateDelete, isPending: isPendingDelete } = useDeleteGoal();
 
   useEffect(() => {
     mutate();
@@ -50,6 +52,11 @@ function GoalList({ habitId }: Props) {
       mutate();
       setShowForm(false);
     }
+  };
+
+  const handleDelete = async (goalId: string) => {
+    const deleted = await mutateDelete({ habitId, goalId });
+    if (deleted) removeLocal(goalId);
   };
 
   return (
@@ -84,6 +91,16 @@ function GoalList({ habitId }: Props) {
                 {progress.current} / {progress.amount} ·{" "}
                 {Math.round(progress.pct)}%
               </span>
+
+              <Button
+                variant="danger"
+                size="sm"
+                className="text-xs"
+                disabled={isPendingDelete}
+                onClick={() => handleDelete(goal._id)}
+              >
+                ×
+              </Button>
             </div>
 
             <div className="h-2 w-full rounded-full bg-background border border-border/40 overflow-hidden">
