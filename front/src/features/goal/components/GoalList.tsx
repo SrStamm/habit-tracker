@@ -135,7 +135,7 @@ function GoalList({ habitId }: Props) {
               className="flex-1 min-w-0 px-2 py-1 text-xs bg-background"
             />
 
-            <Label htmlFor="goal-period">Periodo:</Label>
+            <Label htmlFor="goal-period">Período:</Label>
             <Select
               id="goal-period"
               required
