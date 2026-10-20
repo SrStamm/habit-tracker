@@ -76,6 +76,15 @@ function GoalList({ habitId }: Props) {
         </Button>
       </div>
 
+      {goals && goals.length === 0 && !showForm && (
+        <div className="text-center py-6 border border-dashed border-border rounded-xl text-text-muted">
+          <p className="text-sm">Ainda não tens nenhum objetivo.</p>
+          <p className="text-xs mt-1">
+            Cria o primeiro com o botão "+ Novo objetivo".
+          </p>
+        </div>
+      )}
+
       {goals?.map((goal) => {
         const progress = progressMap[goal._id];
         if (!progress) return null; // aún sin datos de progress
