@@ -87,34 +87,66 @@ function GoalList({ habitId }: Props) {
 
       {goals?.map((goal) => {
         const progress = progressMap[goal._id];
-        if (!progress) return null; // aún sin datos de progress
+
+        if (!progress) {
+          // Skeleton mientras carga el progress — evita el "parpadeo" de null.
+          return (
+            <div
+              key={goal._id}
+              className="relative p-4 rounded-xl border border-border/40 bg-card animate-pulse"
+            >
+              <div className="h-4 w-24 rounded bg-muted/60 mb-2" />
+              <div className="h-3 w-40 rounded bg-muted/40 mb-3" />
+              <div className="h-2 w-full rounded-full bg-muted/40" />
+            </div>
+          );
+        }
+
+        const pct = Math.round(progress.pct);
+        const done = progress.pct >= 100;
 
         return (
-          <div key={goal._id} className="flex flex-col gap-1">
-            <div className="flex justify-between text-xs text-text-muted">
-              <span>
-                {GOAL_PERIOD_LABELS[goal.period]}: {progress.periodStart} –{" "}
-                {progress.periodEnd}
-              </span>
-              <span>
-                {progress.current} / {progress.amount} ·{" "}
-                {Math.round(progress.pct)}%
-              </span>
+          <div
+            key={goal._id}
+            className="group/goal relative p-4 rounded-xl border border-border/40 bg-card"
+          >
+            {/* Delete — aparece al hover, arriba a la derecha */}
+            <Button
+              variant="danger"
+              size="sm"
+              className="absolute top-2 right-2 opacity-0 group-hover/goal:opacity-100 transition-opacity text-xs"
+              disabled={isPendingDelete}
+              onClick={() => handleDelete(goal._id)}
+            >
+              ×
+            </Button>
 
-              <Button
-                variant="danger"
-                size="sm"
-                className="text-xs"
-                disabled={isPendingDelete}
-                onClick={() => handleDelete(goal._id)}
-              >
-                ×
-              </Button>
+            {/* Encabezado: período protagonista, fechas en segundo plano */}
+            <div className="flex items-baseline justify-between pr-6">
+              <span className="text-sm font-medium text-text">
+                {GOAL_PERIOD_LABELS[goal.period]}
+              </span>
+              <span className="text-xs text-text-muted">
+                {progress.periodStart} – {progress.periodEnd}
+              </span>
             </div>
 
+            {/* Contador + porcentaje destacado */}
+            <div className="flex items-baseline justify-between mt-1 mb-2">
+              <span className="text-xs text-text-muted">
+                {progress.current} / {progress.amount}
+              </span>
+              <span
+                className={`text-lg font-bold ${done ? "text-emerald-500" : "text-primary"}`}
+              >
+                {pct}%
+              </span>
+            </div>
+
+            {/* Barra de progreso — transición suave + color de éxito al 100% */}
             <div className="h-2 w-full rounded-full bg-background border border-border/40 overflow-hidden">
               <div
-                className="h-full bg-primary"
+                className={`h-full rounded-full transition-all duration-300 ${done ? "bg-emerald-500" : "bg-primary"}`}
                 style={{ width: `${Math.min(progress.pct, 100)}%` }}
               />
             </div>
