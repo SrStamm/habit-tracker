@@ -39,10 +39,10 @@ Out of scope:
   semana/mes) dentro de `HabitDetail`.
 - [x] T4 — Botón de eliminar por objetivo, con actualización de la lista.
 - [x] T5 — Estado vacío cuando el hábito no tiene objetivos.
-- [ ] T6 — Bloco de stats del período: total del período (suma/conteúdo de las
+- [x] T6 — Bloco de stats del período: total del período (suma/conteúdo de las
   entradas) y sequencia de días consecutivos (ya implementada en
   `calculateStreak.ts`).
-- [ ] T7 — Estados de loading y error consistentes con los cartones existentes.
+- [x] T7 — Estados de loading y error consistentes con los cartones existentes.
 - [ ] T8 — Verificación: `pnpm -r build` pasa + manual:
   - crear objetivo → la barra refleja el progresso tras registrar entradas.
   - objetivo de hábito BOOLEAN cuenta días, no valores.
@@ -103,6 +103,16 @@ Engram). Runner disponible: **vitest** en `front`. Verificación principal:
 - 2026-10-20 — T5 completada: estado vacío en `GoalList.tsx` cuando `goals`
   es `[]` y el form está cerrado. Mismo patrón visual que `HabitList`
   (border-dashed + texto muted en portugués). `tsc` y `vite build` limpios.
+- 2026-10-20 — T6 completada: card "Total do Período" en `HabitDetail.tsx`
+  (grilla de KPIs pasó a 3 columnas en sm+). `periodTotal` con `useMemo`
+  sobre `entries` + rango del selector del heatmap (`days`). BOOLEAN cuenta
+  días cumplidos; QUANTITY/DURATION suman `value` en la unidad cruda del
+  hábito (sin conversión, decisión documentada). Streak ya venía como prop.
+- 2026-10-20 — T7 completada: loading (skeleton con `animate-pulse` cuando
+  `goals === null && isPendingGet`), error de lista (`role="alert"` con
+  `errorGet`), y error de progress (`.catch()` en el `Promise.all` que setea
+  `progressError` — el goal muestra el error en vez de quedarse en skeleton
+  eterno). Patrón visual consistente con `HabitCard`/`HabitForm`.
 
 ## Next step
 

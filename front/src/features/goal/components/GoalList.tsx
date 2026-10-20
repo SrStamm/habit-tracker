@@ -16,11 +16,18 @@ function GoalList({ habitId }: Props) {
   const [progressMap, setProgressMap] = useState<
     Record<string, GoalProgressResponseDTO>
   >({});
+  const [progressError, setProgressError] = useState<string | null>(null);
   const [amount, setAmount] = useState<number>(1);
   const [period, setPeriod] = useState<GoalPeriod>(GoalPeriod.MONTH);
   const [showForm, setShowForm] = useState(false);
 
-  const { mutate, data: goals, removeLocal } = useGetGoals(habitId);
+  const {
+    mutate,
+    data: goals,
+    removeLocal,
+    isPending: isPendingGet,
+    error: errorGet,
+  } = useGetGoals(habitId);
   const { mutate: mutateCreate, isPending: isPendingCreate } = useCreateGoal();
   const { mutate: mutateDelete, isPending: isPendingDelete } = useDeleteGoal();
 
@@ -31,15 +38,20 @@ function GoalList({ habitId }: Props) {
   useEffect(() => {
     if (!goals) return;
     let cancelled = false;
+    setProgressError(null);
     Promise.all(
       goals.map((g) =>
         getGoalProgress({ habitId, goalId: g._id }).then(
           (p) => [g._id, p] as const,
         ),
       ),
-    ).then((pairs) => {
-      if (!cancelled) setProgressMap(Object.fromEntries(pairs));
-    });
+    )
+      .then((pairs) => {
+        if (!cancelled) setProgressMap(Object.fromEntries(pairs));
+      })
+      .catch((e) => {
+        if (!cancelled) setProgressError((e as Error).message);
+      });
     return () => {
       cancelled = true;
     };
@@ -58,6 +70,16 @@ function GoalList({ habitId }: Props) {
     const deleted = await mutateDelete({ habitId, goalId });
     if (deleted) removeLocal(goalId);
   };
+
+  if (goals === null && isPendingGet) {
+    return (
+      <div className="relative p-4 rounded-xl border border-border/40 bg-card animate-pulse">
+        <div className="h-4 w-24 rounded bg-muted/60 mb-2" />
+        <div className="h-3 w-40 rounded bg-muted/40 mb-3" />
+        <div className="h-2 w-full rounded-full bg-muted/40" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 p-6 border-b border-border/40">
@@ -85,10 +107,33 @@ function GoalList({ habitId }: Props) {
         </div>
       )}
 
+      {goals === null && !isPendingGet && errorGet ? (
+        <div className="relative p-4 rounded-xl border border-border/40 bg-card animate-pulse">
+          <p role="alert" className="mt-2 text-xs text-red-600">
+            {errorGet}
+          </p>
+        </div>
+      ) : (
+        ""
+      )}
+
       {goals?.map((goal) => {
         const progress = progressMap[goal._id];
 
         if (!progress) {
+          if (progressError) {
+            return (
+              <div
+                key={goal._id}
+                className="p-4 rounded-xl border border-border/40 bg-card"
+              >
+                <p role="alert" className="text-xs text-red-600">
+                  {progressError}
+                </p>
+              </div>
+            );
+          }
+
           // Skeleton mientras carga el progress — evita el "parpadeo" de null.
           return (
             <div
