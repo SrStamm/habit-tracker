@@ -20,6 +20,7 @@ function GoalList({ habitId }: Props) {
   const { mutate: mutateCreate, isPending: isPendingCreate } = useCreateGoal();
   const [amount, setAmount] = useState<number>(1);
   const [period, setPeriod] = useState<GoalPeriod>(GoalPeriod.MONTH);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     mutate();
@@ -47,14 +48,26 @@ function GoalList({ habitId }: Props) {
 
     if (created) {
       mutate();
+      setShowForm(false);
     }
   };
 
   return (
     <div className="flex flex-col gap-4 p-6 border-b border-border/40">
-      <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
-        Objetivos
-      </span>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+          Objetivos
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs"
+          type="button"
+          onClick={() => setShowForm((v) => !v)}
+        >
+          {showForm ? "Cancelar" : "+ Novo objetivo"}
+        </Button>
+      </div>
 
       {goals?.map((goal) => {
         const progress = progressMap[goal._id];
@@ -83,47 +96,54 @@ function GoalList({ habitId }: Props) {
         );
       })}
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        className="flex flex-row items-center justify-center gap-2"
-      >
-        <Label htmlFor="goal-amount">Valor:</Label>
-
-        <Input
-          id="goal-amount"
-          type="number"
-          value={amount}
-          onChange={(e) => {
-            setAmount(Number(e.target.value));
+      {showForm && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
           }}
-        />
-
-        <Label htmlFor="goal-period">Periodo:</Label>
-        <Select
-          id="goal-period"
-          required
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
+          className="flex flex-col gap-2"
         >
-          {Object.values(GoalPeriod).map((goalPeriod) => (
-            <option key={goalPeriod} value={goalPeriod}>
-              {GOAL_PERIOD_LABELS[goalPeriod]}
-            </option>
-          ))}
-        </Select>
+          <div className="flex flex-row flex-wrap items-center gap-2">
+            <Label htmlFor="goal-amount">Valor:</Label>
 
-        <Button
-          size="sm"
-          disabled={isPendingCreate || !amount || amount < 1}
-          className="text-xs"
-          type="submit"
-        >
-          {isPendingCreate ? "Criando" : "Criar"}
-        </Button>
-      </form>
+            <Input
+              id="goal-amount"
+              type="number"
+              min={1}
+              value={amount}
+              onChange={(e) => {
+                setAmount(Number(e.target.value));
+              }}
+              className="flex-1 min-w-0 px-2 py-1 text-xs bg-background"
+            />
+
+            <Label htmlFor="goal-period">Periodo:</Label>
+            <Select
+              id="goal-period"
+              required
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
+              className="flex-1 min-w-0 px-2 py-1 text-xs bg-background"
+            >
+              {Object.values(GoalPeriod).map((goalPeriod) => (
+                <option key={goalPeriod} value={goalPeriod}>
+                  {GOAL_PERIOD_LABELS[goalPeriod]}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <Button
+            size="sm"
+            disabled={isPendingCreate || !amount || amount < 1}
+            className="text-xs self-center"
+            type="submit"
+          >
+            {isPendingCreate ? "Criando..." : "Criar"}
+          </Button>
+        </form>
+      )}
     </div>
   );
 }
