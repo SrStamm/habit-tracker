@@ -15,6 +15,7 @@ import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { useEffect, useMemo, useRef, useState } from "react";
 import GoalList from "../../goal/components/GoalList";
+import { cn } from "../../../lib/cn";
 
 type Props = {
   habit: Habit;
@@ -40,10 +41,11 @@ function HabitDetail({
   const [value, setValue] = useState<number | "">("");
   const [dayKey, setDayKey] = useState<string>(todayKey);
   const [completed, setCompleted] = useState<boolean>(false);
-  const { isPending, mutate } = useCreateEntry();
+  const [showEntryForm, setShowEntryForm] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuOpenRef = useRef(menuOpen);
+  const { isPending, error: errorCreate, mutate } = useCreateEntry();
 
   const today = new Date();
   const hace90d = new Date();
@@ -121,6 +123,7 @@ function HabitDetail({
   const onCellSelect = (cell: Cell) => {
     setSelectedDate(cell.date);
     syncDay(cell.date);
+    setShowEntryForm(true);
   };
 
   const handleSubmit = async () => {
@@ -129,6 +132,7 @@ function HabitDetail({
 
       if (saved) {
         setCompleted(saved.completed ?? false);
+        setShowEntryForm(false);
         onEntrySaved?.();
       }
     } else {
@@ -138,10 +142,17 @@ function HabitDetail({
 
       if (created) {
         setCompleted(true);
+        setShowEntryForm(false);
         onEntrySaved?.();
       }
     }
   };
+
+  const isToday = dayKey === todayKey;
+  const entryUnitLabel =
+    habit.type === HabitType.DURATION && habit.unit
+      ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
+      : (habit.unit ?? "");
 
   return (
     <div>
@@ -310,67 +321,147 @@ function HabitDetail({
         </div>
       </div>
 
-      <GoalList habitId={habit._id} habitType={habit.type} unit={habit.unit} />
+      <div className="flex flex-col p-6 border-b border-slate-200">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Entrada
+          </span>
 
-      {/*
-      # Registro histórico e Edición retroactiva
-      - Selector de fecha: Permite elegir cualquier día del pasado
-      - Formulario de ajuste manual: un control para cargar o corregir
-        la entrada de esa fecha seleccionada (marcar/desmarcar o cambiar cantidad)
-      # TODO: Histórico reciente (Lista de entradas): Una pequeña lista de los últimos
-        días con registros para poder modificar un valor rápido si cometió un error.
-      */}
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        className="flex flex-row items-center justify-center gap-2"
-      >
-        <Label htmlFor="modificar-value">Modificar data:</Label>
-
-        <Input
-          type="date"
-          max={todayKey}
-          value={dayKey}
-          onChange={(e) => {
-            if (e.target.value > todayKey) return;
-            setDayKey(e.target.value);
-            syncDay(e.target.value);
-          }}
-        />
-
-        {habit.type === HabitType.BOOLEAN ? (
-          <Button
-            size="sm"
-            variant={completed ? "primary" : "outline"}
-            disabled={isPending}
-            className="text-xs"
-            type="submit"
-          >
-            {completed ? "✓ Cumprido" : "Marcar hoje"}
-          </Button>
-        ) : (
-          <>
-            <Input
-              type="number"
-              placeholder={
-                habit.type === HabitType.DURATION && habit.unit
-                  ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
-                  : habit.unit
-              }
-              value={value}
-              onChange={(e) => setValue(e.target.valueAsNumber || "")}
-              className="w-24 px-2 py-1 text-xs bg-background"
-            />
-
-            <Button size="sm" type="submit" disabled={!value}>
-              {isPending ? "Guardando..." : "Guardar"}
+          {!showEntryForm && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              type="button"
+              onClick={() => setShowEntryForm(true)}
+            >
+              Registrar / Modificar data
             </Button>
-          </>
-        )}
-      </form>
+          )}
+        </div>
+
+        {/* Colapsable: CSS only, sin librería */}
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] duration-200 ease-out",
+            showEntryForm ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          )}
+        >
+          <div className="overflow-hidden">
+            <div
+              className={cn(
+                "pt-4 transition-opacity duration-200",
+                showEntryForm ? "opacity-100" : "opacity-0",
+              )}
+            >
+              <form
+                id="form-entry"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
+                className="flex flex-wrap items-end gap-3"
+              >
+                {/* Data */}
+                <div className="flex flex-col gap-1">
+                  <Label
+                    htmlFor="entry-date"
+                    className="text-xs text-slate-500"
+                  >
+                    Data
+                  </Label>
+                  <Input
+                    id="entry-date"
+                    type="date"
+                    max={todayKey}
+                    value={dayKey}
+                    onChange={(e) => {
+                      if (e.target.value > todayKey) return;
+                      setDayKey(e.target.value);
+                      syncDay(e.target.value);
+                    }}
+                    className="px-2 py-1.5 text-sm"
+                  />
+                </div>
+
+                {/* Valor + Unidade — solo QUANTITY / DURATION */}
+                {habit.type !== HabitType.BOOLEAN && (
+                  <div className="flex flex-col gap-1">
+                    <Label
+                      htmlFor="entry-value"
+                      className="text-xs text-slate-500"
+                    >
+                      Valor
+                    </Label>
+                    <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                      <Input
+                        id="entry-value"
+                        type="number"
+                        min={0}
+                        step={1}
+                        inputMode="numeric"
+                        value={value}
+                        onChange={(e) =>
+                          setValue(
+                            e.target.value === "" ? "" : Number(e.target.value),
+                          )
+                        }
+                        className="w-24 border-0 rounded-none px-2 py-1.5 text-sm focus:ring-0"
+                      />
+                      <span className="flex items-center border-l border-slate-200 bg-slate-50 px-2 text-xs text-slate-500">
+                        {entryUnitLabel}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Ações */}
+                <div className="flex items-center gap-2 ml-auto">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    disabled={isPending}
+                    onClick={() => setShowEntryForm(false)}
+                  >
+                    Cancelar
+                  </Button>
+
+                  <Button
+                    type="submit"
+                    size="sm"
+                    className="text-xs"
+                    disabled={
+                      isPending ||
+                      (habit.type !== HabitType.BOOLEAN &&
+                        (value === "" || Number.isNaN(value)))
+                    }
+                  >
+                    {isPending
+                      ? "Salvando..."
+                      : habit.type === HabitType.BOOLEAN
+                        ? completed
+                          ? "Desmarcar"
+                          : isToday
+                            ? "Marcar hoje"
+                            : "Marcar"
+                        : "Salvar"}
+                  </Button>
+                </div>
+              </form>
+
+              {errorCreate && (
+                <p role="alert" className="mt-2 text-xs text-red-600">
+                  {errorCreate}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <GoalList habitId={habit._id} habitType={habit.type} unit={habit.unit} />
     </div>
   );
 }
