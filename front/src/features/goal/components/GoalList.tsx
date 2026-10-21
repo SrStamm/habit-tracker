@@ -7,12 +7,16 @@ import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Button } from "../../../components/ui/Button";
 import { Select } from "../../../components/ui/Select";
+import { HabitType } from "@habits/shared/habit";
+import { goalAmountUnitLabel } from "../lib/amountUnitLabels";
 
 interface Props {
   habitId: string;
+  habitType: HabitType;
+  unit?: string;
 }
 
-function GoalList({ habitId }: Props) {
+function GoalList({ habitId, habitType, unit }: Props) {
   const [progressMap, setProgressMap] = useState<
     Record<string, GoalProgressResponseDTO>
   >({});
@@ -208,7 +212,9 @@ function GoalList({ habitId }: Props) {
           className="flex flex-col gap-2"
         >
           <div className="flex flex-row flex-wrap items-center gap-2">
-            <Label htmlFor="goal-amount">Valor:</Label>
+            <Label htmlFor="goal-amount">
+              Valor ({goalAmountUnitLabel(habitType, unit)}):
+            </Label>
 
             <Input
               id="goal-amount"

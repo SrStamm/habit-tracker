@@ -310,7 +310,7 @@ function HabitDetail({
         </div>
       </div>
 
-      <GoalList habitId={habit._id} />
+      <GoalList habitId={habit._id} habitType={habit.type} unit={habit.unit} />
 
       {/*
       # Registro histórico e Edición retroactiva
