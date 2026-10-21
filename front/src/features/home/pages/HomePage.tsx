@@ -194,6 +194,7 @@ export default function HomePage() {
           onClose={() => {
             setIsDetailOpen(false);
           }}
+          className="max-w-3xl"
         >
           <HabitDetail
             habit={habitSelected}
