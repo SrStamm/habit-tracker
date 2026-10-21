@@ -349,6 +349,7 @@ function HabitDetail({
         >
           <div className="overflow-hidden">
             <div
+              inert={!showEntryForm}
               className={cn(
                 "pt-4 transition-opacity duration-200",
                 showEntryForm ? "opacity-100" : "opacity-0",
