@@ -174,7 +174,7 @@ function HabitDetail({
 
             {habit.target && (
               <p className="text-xs text-slate-500">
-                Objetivo:{" "}
+                Meta:{" "}
                 <span className="font-medium text-text">
                   {habit.target} {habit.unit ?? ""}
                 </span>
@@ -310,7 +310,7 @@ function HabitDetail({
         </div>
       </div>
 
-      <GoalList habitId={habit._id} />
+      <GoalList habitId={habit._id} habitType={habit.type} unit={habit.unit} />
 
       {/*
       # Registro histórico e Edición retroactiva
