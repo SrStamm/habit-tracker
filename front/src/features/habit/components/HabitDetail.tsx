@@ -174,7 +174,7 @@ function HabitDetail({
 
             {habit.target && (
               <p className="text-xs text-slate-500">
-                Objetivo:{" "}
+                Meta:{" "}
                 <span className="font-medium text-text">
                   {habit.target} {habit.unit ?? ""}
                 </span>

@@ -85,18 +85,18 @@ function GoalList({ habitId, habitType, unit }: Props) {
 
   if (goals === null && isPendingGet) {
     return (
-      <div className="relative p-4 rounded-xl border border-border/40 bg-card animate-pulse">
-        <div className="h-4 w-24 rounded bg-muted/60 mb-2" />
-        <div className="h-3 w-40 rounded bg-muted/40 mb-3" />
-        <div className="h-2 w-full rounded-full bg-muted/40" />
+      <div className="relative p-4 rounded-xl border border-slate-200 bg-white animate-pulse">
+        <div className="h-4 w-24 rounded bg-slate-200 mb-2" />
+        <div className="h-3 w-40 rounded bg-slate-200/70 mb-3" />
+        <div className="h-2 w-full rounded-full bg-slate-200/70" />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 p-6 border-b border-border/40">
+    <div className="flex flex-col gap-4 p-6 border-b border-slate-200">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Objetivos
         </span>
         <Button
@@ -113,7 +113,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
       </div>
 
       {goals && goals.length === 0 && !showForm && (
-        <div className="text-center py-6 border border-dashed border-border rounded-xl text-text-muted">
+        <div className="text-center py-6 border border-dashed border-slate-300 rounded-xl text-slate-500">
           <p className="text-sm">Ainda não tens nenhum objetivo.</p>
           <p className="text-xs mt-1">
             Cria o primeiro com o botão "+ Novo objetivo".
@@ -122,7 +122,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
       )}
 
       {goals === null && !isPendingGet && errorGet ? (
-        <div className="relative p-4 rounded-xl border border-border/40 bg-card animate-pulse">
+        <div className="relative p-4 rounded-xl border border-slate-200 bg-white animate-pulse">
           <p role="alert" className="mt-2 text-xs text-red-600">
             {errorGet}
           </p>
@@ -139,7 +139,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
             return (
               <div
                 key={goal._id}
-                className="p-4 rounded-xl border border-border/40 bg-card"
+                className="p-4 rounded-xl border border-slate-200 bg-white"
               >
                 <p role="alert" className="text-xs text-red-600">
                   {progressError}
@@ -152,30 +152,30 @@ function GoalList({ habitId, habitType, unit }: Props) {
           return (
             <div
               key={goal._id}
-              className="relative p-4 rounded-xl border border-border/40 bg-card animate-pulse"
+              className="relative p-4 rounded-xl border border-slate-200 bg-white animate-pulse"
             >
-              <div className="h-4 w-24 rounded bg-muted/60 mb-2" />
-              <div className="h-3 w-40 rounded bg-muted/40 mb-3" />
-              <div className="h-2 w-full rounded-full bg-muted/40" />
+              <div className="h-4 w-24 rounded bg-slate-200 mb-2" />
+              <div className="h-3 w-40 rounded bg-slate-200 mb-3" />
+              <div className="h-2 w-full rounded-full bg-slate-200" />
             </div>
           );
         }
 
-        const pct = Math.round(progress.pct);
         const done = progress.pct >= 100;
 
         return (
           <div
             key={goal._id}
-            className="group/goal relative p-4 rounded-xl border border-border/40 bg-card"
+            className="group/goal relative p-4 rounded-xl border border-slate-200 bg-white"
           >
             {/* Delete — aparece al hover, arriba a la derecha */}
             <Button
               variant="danger"
               size="sm"
-              className="absolute top-2 right-2 opacity-0 group-hover/goal:opacity-100 transition-opacity text-xs"
+              className="absolute top-2 right-2 opacity-0 group-hover/goal:opacity-100 transition-opacity text-xs focus-visible:opacity-100"
               disabled={isPendingDelete}
               onClick={() => handleDelete(goal._id)}
+              aria-label="eliminar-objetivo"
             >
               ×
             </Button>
@@ -185,25 +185,26 @@ function GoalList({ habitId, habitType, unit }: Props) {
               <span className="text-sm font-medium text-text">
                 {GOAL_PERIOD_LABELS[goal.period]}
               </span>
-              <span className="text-xs text-text-muted">
+              <span className="text-xs text-slate-500">
                 {progress.periodStart} – {progress.periodEnd}
               </span>
             </div>
 
             {/* Contador + porcentaje destacado */}
             <div className="flex items-baseline justify-between mt-1 mb-2">
-              <span className="text-xs text-text-muted">
-                {progress.current} / {progress.amount}
+              <span className="text-xs text-slate-500">
+                {progress.current} / {progress.amount}{" "}
+                {goalAmountUnitLabel(habitType, unit)}
               </span>
               <span
                 className={`text-lg font-bold ${done ? "text-emerald-500" : "text-primary"}`}
               >
-                {pct}%
+                {`${Math.min(progress.pct, 100)}%`}
               </span>
             </div>
 
             {/* Barra de progreso — transición suave + color de éxito al 100% */}
-            <div className="h-2 w-full rounded-full bg-background border border-border/40 overflow-hidden">
+            <div className="h-2 w-full rounded-full bg-slate-100 border border-slate-200 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-300 ${done ? "bg-emerald-500" : "bg-primary"}`}
                 style={{ width: `${Math.min(progress.pct, 100)}%` }}
@@ -223,7 +224,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
           id="form-goal"
         >
           {!isPendingCreate && errorCreate ? (
-            <div className="relative p-4 rounded-xl animate-pulse">
+            <div className="relative p-4 rounded-xl border border-slate-200 bg-white animate-pulse">
               <p role="alert" className="mt-2 text-xs text-red-600">
                 {errorCreate}
               </p>
@@ -232,7 +233,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
             ""
           )}
 
-          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <Label htmlFor="goal-amount">
                 Valor ({goalAmountUnitLabel(habitType, unit)}):
@@ -249,7 +250,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
                     e.target.value === "" ? "" : Number(e.target.value),
                   );
                 }}
-                className="flex-1 min-w-0 px-2 py-1 text-sm bg-background"
+                className="flex-1 min-w-0 px-2 py-1 text-sm bg-white"
                 autoFocus
               />
             </div>
@@ -261,7 +262,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
                 required
                 value={period}
                 onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
-                className="flex-1 min-w-0 px-2 py-1 text-sm bg-background"
+                className="flex-1 min-w-0 px-2 py-1 text-sm bg-white"
               >
                 {Object.values(GoalPeriod).map((goalPeriod) => (
                   <option key={goalPeriod} value={goalPeriod}>
