@@ -35,11 +35,8 @@ services:
       dockerfile: front/Dockerfile
     ports:
       - "5173:5173"
-    env_file:
-      - path: front/.env
-        required: false
-    environment:
-      API_PROXY: http://back:3000
+    depends_on:
+      - back
 
 volumes:
   mongo-data:
