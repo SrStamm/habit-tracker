@@ -1,5 +1,5 @@
-# Etapa 1: Base
-FROM node:22-alpine AS base
+# Etapa 1: build de producción (tsc + vite build)
+FROM node:22-alpine AS build
 
 RUN npm install -g pnpm@11.22.0
 
@@ -17,6 +17,13 @@ COPY shared/ ./shared/
 
 WORKDIR /app/front
 
-EXPOSE 5173
+RUN pnpm build
 
-CMD ["pnpm", "exec", "vite", "--host"]
+# Etapa 2: nginx sirviendo dist/ — sin Node ni dev server en runtime
+FROM nginx:alpine
+
+COPY front/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/front/dist /usr/share/nginx/html
+
+# 5173 y no 80: mantiene el contrato con el cloudflared tunnel sin cambios
+EXPOSE 5173
