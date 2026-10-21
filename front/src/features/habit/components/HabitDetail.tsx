@@ -9,11 +9,11 @@ import { buildHeatmap, Cell } from "../../entry/lib/buildHeatmap";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import WeekLabels from "./WeekLabels";
 import HeatmapGrid from "./HeatmapGrid";
+import { HabitTypeBadge } from "./HabitTypeBadge";
 import Legend from "./Legend";
-import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import GoalList from "../../goal/components/GoalList";
 
 type Props = {
@@ -41,6 +41,9 @@ function HabitDetail({
   const [dayKey, setDayKey] = useState<string>(todayKey);
   const [completed, setCompleted] = useState<boolean>(false);
   const { isPending, mutate } = useCreateEntry();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuOpenRef = useRef(menuOpen);
 
   const today = new Date();
   const hace90d = new Date();
@@ -76,6 +79,36 @@ function HabitDetail({
 
     return inRange.reduce((sum, e) => sum + (e.value ?? 0), 0);
   }, [entries, days, habit.type, todayKey]);
+
+  useEffect(() => {
+    menuOpenRef.current = menuOpen;
+  }, [menuOpen]);
+
+  useEffect(() => {
+    const onPointerDown = (e: MouseEvent) => {
+      if (!menuOpenRef.current) return;
+      if (!menuRef.current?.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!menuOpenRef.current) return;
+      if (e.key !== "Escape") return;
+
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setMenuOpen(false);
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
 
   const syncDay = (next: string) => {
     if (!next || next > todayKey) return;
@@ -121,34 +154,81 @@ function HabitDetail({
         # TODO: Porcentaje global de cumplimiento (ej: 78% en los últimos 3 meses)
     */}
 
-      <div className="flex flex-col gap-6 p-6 bg-card border-b border-border/40">
+      <div className="flex flex-col gap-6 p-6 bg-white border-b border-slate-200">
         {/* Header: Metadata + Título */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Tag>{HABIT_TYPE_LABELS[habit.type]}</Tag>
-            {habit.category && <Tag variant="outline">{habit.category}</Tag>}
+        <div className="flex flex-row justify-between">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <HabitTypeBadge type={habit.type} />
+              {habit.category && (
+                <Tag
+                  className="border-slate-200 text-slate-500"
+                  variant="outline"
+                >
+                  {habit.category}
+                </Tag>
+              )}
+            </div>
+
+            <h2 className="text-2xl font-bold text-text">{habit.name}</h2>
+
+            {habit.target && (
+              <p className="text-xs text-slate-500">
+                Objetivo:{" "}
+                <span className="font-medium text-text">
+                  {habit.target} {habit.unit ?? ""}
+                </span>
+              </p>
+            )}
           </div>
 
-          <h2 className="text-2xl font-bold text-text">{habit.name}</h2>
-
-          {habit.target && (
-            <p className="text-xs text-text-muted">
-              Objetivo:{" "}
-              <span className="font-medium text-text">
-                {habit.target} {habit.unit ?? ""}
-              </span>
-            </p>
-          )}
+          <div ref={menuRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+              className="rounded-lg px-2.5 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
+            >
+              ⋯
+            </button>
+            {menuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full mt-2 z-10 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
+              >
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onEdit(habit);
+                  }}
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-100"
+                >
+                  Editar
+                </button>
+                <button
+                  role="menuitem"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onArchive(habit._id);
+                  }}
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-danger hover:bg-red-50"
+                >
+                  Arquivar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tarjetas de Métricas (KPIs) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 w-full">
-          {/* Racha Actual */}
-          <div className="flex flex-col gap-1 rounded-xl border border-border/40 bg-background p-3.5">
-            <span className="text-xs text-text-muted font-medium">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
+          <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Racha Actual
             </span>
-            <span className="text-xl font-bold text-amber-500 flex items-center gap-1.5">
+            <span className="text-lg font-bold text-amber-500 flex items-center gap-1.5">
               <span>{streak && streak > 0 ? "🔥" : "💤"}</span>
               <span>
                 {streak ?? 0} {streak === 1 ? "día" : "días"}
@@ -157,11 +237,11 @@ function HabitDetail({
           </div>
 
           {/* Objetivo / Meta */}
-          <div className="flex flex-col gap-1 rounded-xl border border-border/40 bg-background p-3.5">
-            <span className="text-xs text-text-muted font-medium">
+          <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Meta Diaria
             </span>
-            <span className="text-xl font-bold text-text">
+            <span className="text-lg font-bold text-text">
               {habit.target
                 ? `${habit.target} ${habit.unit ?? ""}`
                 : "Sin meta"}
@@ -169,11 +249,11 @@ function HabitDetail({
           </div>
 
           {/* Total del Período (últimos N días del selector del heatmap) */}
-          <div className="flex flex-col gap-1 rounded-xl border border-border/40 bg-background p-3.5">
-            <span className="text-xs text-text-muted font-medium">
+          <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Total do Período
             </span>
-            <span className="text-xl font-bold text-primary">
+            <span className="text-lg font-bold text-primary">
               {habit.type === HabitType.BOOLEAN
                 ? `${periodTotal} ${periodTotal === 1 ? "dia" : "dias"}`
                 : `${periodTotal} ${habit.unit ?? ""}`.trim()}
@@ -188,9 +268,9 @@ function HabitDetail({
       - Tooltip al hacer hover/click en un día: ver fecha exacta y valor registrado
       */}
 
-      <div className="flex flex-col gap-3 p-6 border-b border-border/40">
+      <div className="flex flex-col gap-3 p-6 border-b border-slate-200">
         <div className="flex flex-row items-center gap-2 justify-center">
-          <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             Histórico de Actividade
           </span>
           <Select
@@ -216,7 +296,7 @@ function HabitDetail({
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-text-muted mt-1">
+        <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
           <Legend />
 
           {selectedDate && (
@@ -291,32 +371,6 @@ function HabitDetail({
           </>
         )}
       </form>
-
-      {/*
-      # Configuración y Acciones
-      - Editar hábito: Botón para abrir el formulario de edición de nombre, meta o categoría
-      - Archivar: Dejar de mostrar el hábito en la lista activa.
-      */}
-
-      <div className="flex flex-row justify-center gap-3 p-3 border-a border-border/40">
-        <Button
-          type="button"
-          onClick={() => {
-            onEdit(habit);
-          }}
-        >
-          Editar
-        </Button>
-        <Button
-          variant="danger"
-          type="button"
-          onClick={() => {
-            onArchive(habit._id);
-          }}
-        >
-          Arquivar
-        </Button>
-      </div>
     </div>
   );
 }
