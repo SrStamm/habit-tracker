@@ -17,6 +17,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import GoalList from "../../goal/components/GoalList";
 import { cn } from "../../../lib/cn";
 import { formatDate } from "../../../lib/formDate";
+import KpiCard from "./KpiCard";
 
 type Props = {
   habit: Habit;
@@ -236,41 +237,35 @@ function HabitDetail({
 
         {/* Tarjetas de Métricas (KPIs) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
-          <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Racha Actual
-            </span>
-            <span className="text-lg font-bold text-amber-500 flex items-center gap-1.5">
-              <span>{streak && streak > 0 ? "🔥" : "💤"}</span>
-              <span>
-                {streak ?? 0} {streak === 1 ? "día" : "días"}
-              </span>
-            </span>
-          </div>
+          <KpiCard
+            label="Racha actual"
+            value={
+              <>
+                {streak && streak > 0 ? "🔥" : "💤"} {streak ?? 0}{" "}
+                {streak === 1 ? "día" : "días"}
+              </>
+            }
+            valueClassName="text-amber-500 flex items-center gap-1.5"
+          />
 
           {/* Objetivo / Meta */}
-          <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Meta Diaria
-            </span>
-            <span className="text-lg font-bold text-text">
-              {habit.target
-                ? `${habit.target} ${habit.unit ?? ""}`
-                : "Sin meta"}
-            </span>
-          </div>
+          <KpiCard
+            label="Meta diaria"
+            value={
+              habit.target ? `${habit.target} ${habit.unit ?? ""}` : "Sin meta"
+            }
+          />
 
           {/* Total del Período (últimos N días del selector del heatmap) */}
-          <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              Total do Período
-            </span>
-            <span className="text-lg font-bold text-primary">
-              {habit.type === HabitType.BOOLEAN
+          <KpiCard
+            label="Total do Período"
+            value={
+              habit.type === HabitType.BOOLEAN
                 ? `${periodTotal} ${periodTotal === 1 ? "dia" : "dias"}`
-                : `${periodTotal} ${habit.unit ?? ""}`.trim()}
-            </span>
-          </div>
+                : `${periodTotal} ${habit.unit ?? ""}`.trim()
+            }
+            valueClassName="text-primary"
+          />
         </div>
       </div>
 
