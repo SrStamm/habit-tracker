@@ -78,7 +78,7 @@ function HabitCard({
         {/* Badge de Streak a la derecha */}
         {streak !== undefined && (
           <div
-            className={`inline-flex items-center gap-1 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
               streak > 0
                 ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
                 : "bg-muted/50 text-text-muted border border-border/40"
