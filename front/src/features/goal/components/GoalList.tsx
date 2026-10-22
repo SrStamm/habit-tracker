@@ -9,6 +9,7 @@ import { Button } from "../../../components/ui/Button";
 import { Select } from "../../../components/ui/Select";
 import { HabitType } from "@habits/shared/habit";
 import { goalAmountUnitLabel } from "../lib/amountUnitLabels";
+import { formatDate } from "../../../lib/formDate";
 
 interface Props {
   habitId: string;
@@ -186,7 +187,8 @@ function GoalList({ habitId, habitType, unit }: Props) {
                 {GOAL_PERIOD_LABELS[goal.period]}
               </span>
               <span className="text-xs text-slate-500">
-                {progress.periodStart} – {progress.periodEnd}
+                {formatDate(progress.periodStart)} –{" "}
+                {formatDate(progress.periodEnd)}
               </span>
             </div>
 
