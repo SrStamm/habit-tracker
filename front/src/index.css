@@ -11,5 +11,10 @@
   --color-secondary: #8b5cf6;
   --color-background: #f8fafc;
   --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-card: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-accent: #f1f5f9;
   --color-danger: #dc2626;
 }
