@@ -117,30 +117,17 @@ export default function HomePage() {
   return (
     <main className="min-h-screen w-full bg-background p-4 sm:p-6 lg:p-8 flex justify-center">
       <div className="w-full max-w-4xl flex flex-col gap-8">
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between  gap-4 border-b border-border/40 pb-6">
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm text-text-muted border-b border-border/40 pb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-text tracking-tight">
               Habits Tracker
             </h1>
-            <p className="text-text-muted text-sm mt-1">
-              Track your habits, one day at a time.
-            </p>
-            <p>{formatDate(today)}</p>
+            <p className="mt-1">Track your habits, one day at a time.</p>
+            <p className="mt-1">{formatDate(today)}</p>
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              onClick={onCreateHabit}
-              className="self-start sm:self-auto shadow-sm"
-            >
-              + Novo Hábito
-            </Button>
-
-            <Button
-              onClick={logout}
-              className="self-start sm:self-auto"
-              variant="danger"
-            >
+            <Button onClick={logout} variant="danger">
               Sair
             </Button>
           </div>
@@ -168,9 +155,16 @@ export default function HomePage() {
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-text">Meus Hábitos</h2>
-            <span className="text-xs text-text-muted">
-              {habitData ? habitData.length : 0} ativos
-            </span>
+
+            <div className="flex gap-2 items-center">
+              <span className="text-xs text-text-muted">
+                {habitData ? habitData.length : 0} ativos
+              </span>
+
+              <Button onClick={onCreateHabit} className="shadow-sm">
+                + Novo Hábito
+              </Button>
+            </div>
           </div>
 
           <HabitList
