@@ -16,6 +16,7 @@ import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { useEffect, useMemo, useRef, useState } from "react";
 import GoalList from "../../goal/components/GoalList";
 import { cn } from "../../../lib/cn";
+import { formatDate } from "../../../lib/formDate";
 
 type Props = {
   habit: Habit;
@@ -312,7 +313,7 @@ function HabitDetail({
 
           {selectedDate && (
             <div className="text-right text-text">
-              <span className="font-medium">{selectedDate}: </span>
+              <span className="font-medium">{formatDate(selectedDate)}: </span>
               <span className="text-primary font-semibold">
                 {selectedLabel}
               </span>

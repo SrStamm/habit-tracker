@@ -12,6 +12,7 @@ import { groupByHabitId } from "../../habit/lib/groupById";
 import { calculateStreak } from "../../habit/lib/calculateStreak";
 import HabitDetail from "../../habit/components/HabitDetail";
 import { Habit } from "@habits/shared/habit";
+import { formatDate } from "../../../lib/formDate";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -124,7 +125,7 @@ export default function HomePage() {
             <p className="text-text-muted text-sm mt-1">
               Track your habits, one day at a time.
             </p>
-            <p>{today}</p>
+            <p>{formatDate(today)}</p>
           </div>
 
           <div className="flex items-center gap-2">

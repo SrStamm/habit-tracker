@@ -1,3 +1,4 @@
+import { formatDate } from "../../../lib/formDate";
 import { Cell } from "../../entry/lib/buildHeatmap";
 
 type HeatmapProps = {
@@ -35,8 +36,8 @@ function HeatmapGrid({ weeks, onCellSelect }: HeatmapProps) {
             ) : (
               <div
                 key={cellIndex}
-                title={cell.label}
-                aria-label={cell.label}
+                title={`${formatDate(cell.date)} — ${cell.label}`}
+                aria-label={`${formatDate(cell.date)} — ${cell.label}`}
                 className={`size-5 rounded-[3px] cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all ${LEVEL_CLASSES[cell.level]}`}
                 onClick={() => onCellSelect(cell)}
               />
