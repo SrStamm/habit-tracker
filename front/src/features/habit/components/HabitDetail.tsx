@@ -1,23 +1,19 @@
-import { DurationOptions, Habit, HabitType } from "@habits/shared/habit";
+import { Habit, HabitType } from "@habits/shared/habit";
 import { Entry } from "@habits/shared/entry";
 import { Tag } from "../../../components/ui/Tag";
 import { Button } from "../../../components/ui/Button";
 import { Select } from "../../../components/ui/Select";
-import { Input } from "../../../components/ui/Input";
-import { Label } from "../../../components/ui/Label";
 import { buildHeatmap, Cell } from "../../entry/lib/buildHeatmap";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import WeekLabels from "./WeekLabels";
 import HeatmapGrid from "./HeatmapGrid";
 import { HabitTypeBadge } from "./HabitTypeBadge";
 import Legend from "./Legend";
-import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
-import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { useEffect, useMemo, useRef, useState } from "react";
 import GoalList from "../../goal/components/GoalList";
-import { cn } from "../../../lib/cn";
 import { formatDate } from "../../../lib/formDate";
 import KpiCard from "./KpiCard";
+import EntryForm from "./EntryForm";
 
 type Props = {
   habit: Habit;
@@ -40,14 +36,12 @@ function HabitDetail({
 
   const [selectedDate, setSelectedDate] = useState<string>();
   const [days, setDays] = useState<number>(90);
-  const [value, setValue] = useState<number | "">("");
   const [dayKey, setDayKey] = useState<string>(todayKey);
-  const [completed, setCompleted] = useState<boolean>(false);
   const [showEntryForm, setShowEntryForm] = useState(false);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuOpenRef = useRef(menuOpen);
-  const { isPending, error: errorCreate, mutate } = useCreateEntry();
 
   const today = new Date();
   const hace90d = new Date();
@@ -117,9 +111,6 @@ function HabitDetail({
   const syncDay = (next: string) => {
     if (!next || next > todayKey) return;
     setDayKey(next);
-    const found = entries.find((e) => e.dayKey === next);
-    setValue(found?.value ?? "");
-    setCompleted(found?.completed ?? false);
   };
 
   const onCellSelect = (cell: Cell) => {
@@ -127,34 +118,6 @@ function HabitDetail({
     syncDay(cell.date);
     setShowEntryForm(true);
   };
-
-  const handleSubmit = async () => {
-    if (habit.type === HabitType.BOOLEAN) {
-      const saved = await mutate({ completed: !completed, dayKey }, habit._id);
-
-      if (saved) {
-        setCompleted(saved.completed ?? false);
-        setShowEntryForm(false);
-        onEntrySaved?.();
-      }
-    } else {
-      if (value === "" || Number.isNaN(value)) return;
-
-      const created = await mutate({ value, dayKey }, habit._id);
-
-      if (created) {
-        setCompleted(true);
-        setShowEntryForm(false);
-        onEntrySaved?.();
-      }
-    }
-  };
-
-  const isToday = dayKey === todayKey;
-  const entryUnitLabel =
-    habit.type === HabitType.DURATION && habit.unit
-      ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
-      : (habit.unit ?? "");
 
   return (
     <div>
@@ -337,125 +300,16 @@ function HabitDetail({
         </div>
 
         {/* Colapsable: CSS only, sin librería */}
-        <div
-          className={cn(
-            "grid transition-[grid-template-rows] duration-200 ease-out",
-            showEntryForm ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-          )}
-        >
-          <div className="overflow-hidden">
-            <div
-              inert={!showEntryForm}
-              className={cn(
-                "pt-4 transition-opacity duration-200",
-                showEntryForm ? "opacity-100" : "opacity-0",
-              )}
-            >
-              <form
-                id="form-entry"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSubmit();
-                }}
-                className="flex flex-wrap items-end gap-3"
-              >
-                {/* Data */}
-                <div className="flex flex-col gap-1">
-                  <Label
-                    htmlFor="entry-date"
-                    className="text-xs text-slate-500"
-                  >
-                    Data
-                  </Label>
-                  <Input
-                    id="entry-date"
-                    type="date"
-                    max={todayKey}
-                    value={dayKey}
-                    onChange={(e) => {
-                      if (e.target.value > todayKey) return;
-                      setDayKey(e.target.value);
-                      syncDay(e.target.value);
-                    }}
-                    className="px-2 py-1.5 text-sm"
-                  />
-                </div>
-
-                {/* Valor + Unidade — solo QUANTITY / DURATION */}
-                {habit.type !== HabitType.BOOLEAN && (
-                  <div className="flex flex-col gap-1">
-                    <Label
-                      htmlFor="entry-value"
-                      className="text-xs text-slate-500"
-                    >
-                      Valor
-                    </Label>
-                    <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                      <Input
-                        id="entry-value"
-                        type="number"
-                        min={0}
-                        step={1}
-                        inputMode="numeric"
-                        value={value}
-                        onChange={(e) =>
-                          setValue(
-                            e.target.value === "" ? "" : Number(e.target.value),
-                          )
-                        }
-                        className="w-24 border-0 rounded-none px-2 py-1.5 text-sm focus:ring-0"
-                      />
-                      <span className="flex items-center border-l border-slate-200 bg-slate-50 px-2 text-xs text-slate-500">
-                        {entryUnitLabel}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Ações */}
-                <div className="flex items-center gap-2 ml-auto">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="text-xs"
-                    disabled={isPending}
-                    onClick={() => setShowEntryForm(false)}
-                  >
-                    Cancelar
-                  </Button>
-
-                  <Button
-                    type="submit"
-                    size="sm"
-                    className="text-xs"
-                    disabled={
-                      isPending ||
-                      (habit.type !== HabitType.BOOLEAN &&
-                        (value === "" || Number.isNaN(value)))
-                    }
-                  >
-                    {isPending
-                      ? "Salvando..."
-                      : habit.type === HabitType.BOOLEAN
-                        ? completed
-                          ? "Desmarcar"
-                          : isToday
-                            ? "Marcar hoje"
-                            : "Marcar"
-                        : "Salvar"}
-                  </Button>
-                </div>
-              </form>
-
-              {errorCreate && (
-                <p role="alert" className="mt-2 text-xs text-red-600">
-                  {errorCreate}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+        <EntryForm
+          habit={habit}
+          entries={entries}
+          dayKey={dayKey}
+          setDayKey={setDayKey}
+          todayKey={todayKey}
+          showEntryForm={showEntryForm}
+          setShowEntryForm={setShowEntryForm}
+          onEntrySaved={onEntrySaved}
+        />
       </div>
 
       <GoalList habitId={habit._id} habitType={habit.type} unit={habit.unit} />
