@@ -45,7 +45,7 @@ export function Modal({
         aria-modal="true"
         aria-label={title}
         className={cn(
-          "w-full max-w-md rounded-xl bg-white p-6 shadow-lg",
+          "w-full max-w-md max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl bg-white p-6 shadow-lg",
           className,
         )}
         onClick={(e) => e.stopPropagation()}
