@@ -95,7 +95,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-6 border-b border-slate-200">
+    <div className="flex flex-col gap-4 p-6">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
           Objetivos
