@@ -42,10 +42,11 @@ function EntryForm({
 
   useEffect(() => {
     const entry = entries.find((entry) => entry.dayKey === dayKey);
-
     setValue(entry?.value ?? "");
-    setCompleted(entry?.completed ?? false);
-  }, [dayKey, entries]);
+    if (habit.type === HabitType.BOOLEAN) {
+      setCompleted(entry?.completed ?? false);
+    }
+  }, [dayKey, entries, habit.type]);
 
   const handleSubmit = async () => {
     if (habit.type === HabitType.BOOLEAN) {
@@ -62,7 +63,6 @@ function EntryForm({
       const created = await mutate({ value, dayKey }, habit._id);
 
       if (created) {
-        setCompleted(true);
         setShowEntryForm(false);
         onEntrySaved?.();
       }
