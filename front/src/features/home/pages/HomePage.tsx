@@ -13,12 +13,14 @@ import { calculateStreak } from "../../habit/lib/calculateStreak";
 import HabitDetail from "../../habit/components/HabitDetail";
 import { Habit } from "@habits/shared/habit";
 import { formatDate } from "../../../lib/formDate";
+import { Select } from "../../../components/ui/Select";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [stateModal, setStateModal] = useState<"create" | "edit">("create");
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [habitSelected, setHabitSelected] = useState<Habit | null>();
+  const [categoryFilter, setCategoryFilter] = useState("");
   const {
     data: habitData,
     error,
@@ -29,6 +31,22 @@ export default function HomePage() {
   const { logout } = useAuth();
   const { isPending: isArchivePending, mutate: archiveMutate } =
     useArchiveHabit();
+
+  // Obtem as categories que existem nos Habits
+  const categories = useMemo(
+    () => [
+      ...new Set((habitData ?? []).map((h) => h.category).filter(Boolean)),
+    ],
+    [habitData],
+  );
+
+  // Obtem todos os Habits com a categorie do filter
+  const filteredHabits = useMemo(() => {
+    const habits = habitData ?? [];
+    return categoryFilter
+      ? habits.filter((h) => h.category === categoryFilter)
+      : habits;
+  }, [habitData, categoryFilter]);
 
   const selectHabit = (_id: string) => {
     const habitFinded = habitData?.find((h) => h._id === _id);
@@ -135,7 +153,7 @@ export default function HomePage() {
 
         <section>
           <TodaySummary
-            habits={habitData ?? []}
+            habits={filteredHabits}
             entriesByHabit={todayByHabit}
             isPending={historyEntries.isPending}
             error={historyEntries.error}
@@ -156,9 +174,26 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-text">Meus Hábitos</h2>
 
+            {categories.length > 0 && (
+              <Select
+                className="py-0.5 w-auto text-xs px-2"
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                value={categoryFilter}
+              >
+                <option key="" value="">
+                  Todas
+                </option>
+                {categories.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </Select>
+            )}
+
             <div className="flex gap-2 items-center">
               <span className="text-xs text-text-muted">
-                {habitData ? habitData.length : 0} ativos
+                {filteredHabits ? filteredHabits.length : 0} ativos
               </span>
 
               <Button onClick={onCreateHabit} className="shadow-sm">
@@ -168,7 +203,7 @@ export default function HomePage() {
           </div>
 
           <HabitList
-            habits={habitData ?? []}
+            habits={filteredHabits}
             todayByHabit={todayByHabit}
             onEntrySaved={refreshHistory}
             streaks={streaks}
