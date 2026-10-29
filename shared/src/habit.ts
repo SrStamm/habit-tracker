@@ -4,6 +4,7 @@ export enum HabitType {
   BOOLEAN = "BOOLEAN",
   QUANTITY = "QUANTITY",
   DURATION = "DURATION",
+  WORKOUT = "WORKOUT",
 }
 
 export enum DurationOptions {

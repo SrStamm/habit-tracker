@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { HabitType } from "./habit";
+import { WorkoutExerciseSchema } from "./workout";
 
 // offset: true aceita tanto `Z` como `+02:00`. O backend normaliza `at` para
 // instante absoluto (new Date) e depois agrupa por APP_TIMEZONE, então
@@ -11,7 +12,11 @@ const base = { dayKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) };
 export const buildCreateEntrySchema = (type: HabitType) =>
   type === HabitType.BOOLEAN
     ? z.object({ ...base, completed: z.boolean() }).strict()
-    : z.object({ ...base, value: z.number().min(0) }).strict();
+    : type === HabitType.WORKOUT
+      ? z
+          .object({ ...base, workout: z.array(WorkoutExerciseSchema).min(1) })
+          .strict()
+      : z.object({ ...base, value: z.number().min(0) }).strict();
 
 export type CreateEntryDTO = z.infer<ReturnType<typeof buildCreateEntrySchema>>;
 
