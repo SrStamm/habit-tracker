@@ -44,6 +44,7 @@ export const EntryResponseSchema = z.object({
   habitId: z.string(),
   dayKey: z.string(),
   value: z.number().optional(),
+  workout: z.array(WorkoutExerciseSchema).optional(),
   completed: z.boolean().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
