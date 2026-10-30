@@ -48,7 +48,8 @@ const unitRequiredForMeasurable = (
   if (
     habit.unit === undefined &&
     habit.type !== undefined &&
-    habit.type !== HabitType.BOOLEAN
+    habit.type !== HabitType.BOOLEAN &&
+    habit.type !== HabitType.WORKOUT
   ) {
     ctx.addIssue({
       code: "custom",
