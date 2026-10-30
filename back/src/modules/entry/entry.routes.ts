@@ -5,6 +5,7 @@ import { validateHabitOwner } from "../../middleware/validateHabitOwner";
 import {
   GetAllEntriesQuerySchema,
   GetEntriesQuerySchema,
+  buildCreateEntrySchema,
 } from "@habits/shared/entry";
 import { HabitParamsSchema as EntryParamsSchema } from "@habits/shared/habit";
 import {
@@ -33,6 +34,10 @@ entryRouter.post(
   "/:habitId/entries",
   validate({ params: EntryParamsSchema }),
   validateHabitOwner,
+  (req, res, next) => {
+    const schema = buildCreateEntrySchema(req.habit.type);
+    return validate({ body: schema })(req, res, next);
+  },
   handleCreateEntry,
 );
 
