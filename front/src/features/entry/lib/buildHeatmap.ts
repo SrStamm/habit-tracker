@@ -1,6 +1,7 @@
 import { Entry } from "@habits/shared/entry";
 import { HabitType } from "@habits/shared/habit";
 import { Workout } from "@habits/shared/workout";
+import { workoutSummary } from "../../workout/lib/workoutSummary";
 
 export type Cell = {
   date: string;
@@ -125,12 +126,9 @@ const createCells = (
         case HabitType.DURATION:
           label = `${value} ${unit ?? "min"}`;
           break;
-
         case HabitType.WORKOUT: {
           const workout = workoutsByDay.get(v) ?? [];
-          const exercises = workout.length;
-          const sets = workout.reduce((sum, ex) => sum + ex.sets.length, 0);
-          label = `${exercises} ${exercises === 1 ? "exercício" : "exercícios"} · ${sets} ${sets === 1 ? "série" : "séries"}`;
+          label = workoutSummary(workout);
           break;
         }
       }
