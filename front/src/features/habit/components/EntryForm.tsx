@@ -7,6 +7,14 @@ import { Input } from "../../../components/ui/Input";
 import { useEffect, useState } from "react";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
+import {
+  WorkoutDraft,
+  emptyExercise,
+  isWorkoutDraftValid,
+  toDraft,
+  toWorkout,
+} from "../../workout/lib/workoutDraft";
+import WorkoutEditor from "../../workout/components/WorkoutEditor";
 
 interface EntryFormProps {
   habit: Habit;
@@ -31,6 +39,9 @@ function EntryForm({
 }: EntryFormProps) {
   const [value, setValue] = useState<number | "">("");
   const [completed, setCompleted] = useState(false);
+  const [workoutValue, setWorkout] = useState<WorkoutDraft>(() => [
+    emptyExercise(),
+  ]);
 
   const { isPending, error: errorCreate, mutate } = useCreateEntry();
 
@@ -46,6 +57,12 @@ function EntryForm({
     if (habit.type === HabitType.BOOLEAN) {
       setCompleted(entry?.completed ?? false);
     }
+
+    if (habit.type === HabitType.WORKOUT) {
+      setWorkout(
+        entry?.workout?.length ? toDraft(entry.workout) : [emptyExercise()],
+      );
+    }
   }, [dayKey, entries, habit.type]);
 
   const handleSubmit = async () => {
@@ -54,6 +71,16 @@ function EntryForm({
 
       if (saved) {
         setCompleted(saved.completed ?? false);
+        setShowEntryForm(false);
+        onEntrySaved?.();
+      }
+    } else if (habit.type === HabitType.WORKOUT) {
+      const saved = await mutate(
+        { workout: toWorkout(workoutValue), dayKey },
+        habit._id,
+      );
+
+      if (saved) {
         setShowEntryForm(false);
         onEntrySaved?.();
       }
@@ -90,7 +117,12 @@ function EntryForm({
               e.preventDefault();
               handleSubmit();
             }}
-            className="flex flex-wrap items-end gap-3"
+            className={cn(
+              "gap-3",
+              habit.type === HabitType.WORKOUT
+                ? "flex flex-col"
+                : "flex flex-wrap items-end",
+            )}
           >
             {/* Data */}
             <div className="flex flex-col gap-1">
@@ -111,35 +143,47 @@ function EntryForm({
             </div>
 
             {/* Valor + Unidade — solo QUANTITY / DURATION */}
-            {habit.type !== HabitType.BOOLEAN && (
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="entry-value" className="text-xs text-slate-500">
-                  Valor
-                </Label>
-                <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
-                  <Input
-                    id="entry-value"
-                    type="number"
-                    min={0}
-                    step={1}
-                    inputMode="numeric"
-                    value={value}
-                    onChange={(e) =>
-                      setValue(
-                        e.target.value === "" ? "" : Number(e.target.value),
-                      )
-                    }
-                    className="w-24 border-0 rounded-none px-2 py-1.5 text-sm focus:ring-0"
-                  />
-                  <span className="flex items-center border-l border-slate-200 bg-slate-50 px-2 text-xs text-slate-500">
-                    {entryUnitLabel}
-                  </span>
+            {habit.type !== HabitType.BOOLEAN &&
+              habit.type !== HabitType.WORKOUT && (
+                <div className="flex flex-col gap-1">
+                  <Label
+                    htmlFor="entry-value"
+                    className="text-xs text-slate-500"
+                  >
+                    Valor
+                  </Label>
+                  <div className="flex items-stretch overflow-hidden rounded-lg border border-slate-300 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+                    <Input
+                      id="entry-value"
+                      type="number"
+                      min={0}
+                      step={1}
+                      inputMode="numeric"
+                      value={value}
+                      onChange={(e) =>
+                        setValue(
+                          e.target.value === "" ? "" : Number(e.target.value),
+                        )
+                      }
+                      className="w-24 border-0 rounded-none px-2 py-1.5 text-sm focus:ring-0"
+                    />
+                    <span className="flex items-center border-l border-slate-200 bg-slate-50 px-2 text-xs text-slate-500">
+                      {entryUnitLabel}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
+
+            {habit.type === HabitType.WORKOUT && (
+              <WorkoutEditor
+                value={workoutValue}
+                onChange={setWorkout}
+                disabled={isPending}
+              />
             )}
 
             {/* Ações */}
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2 ml-auto self-end">
               <Button
                 type="button"
                 size="sm"
@@ -157,8 +201,10 @@ function EntryForm({
                 className="text-xs"
                 disabled={
                   isPending ||
-                  (habit.type !== HabitType.BOOLEAN &&
-                    (value === "" || Number.isNaN(value)))
+                  (habit.type === HabitType.WORKOUT
+                    ? !isWorkoutDraftValid(workoutValue)
+                    : habit.type !== HabitType.BOOLEAN &&
+                      (value === "" || Number.isNaN(value)))
                 }
               >
                 {isPending
