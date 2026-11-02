@@ -106,7 +106,7 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
         ))}
       </Select>
 
-      {type !== HabitType.BOOLEAN && (
+      {type !== HabitType.BOOLEAN && type !== HabitType.WORKOUT && (
         <>
           <Label htmlFor="target">Meta:</Label>
           <Input

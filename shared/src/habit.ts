@@ -4,6 +4,7 @@ export enum HabitType {
   BOOLEAN = "BOOLEAN",
   QUANTITY = "QUANTITY",
   DURATION = "DURATION",
+  WORKOUT = "WORKOUT",
 }
 
 export enum DurationOptions {
@@ -47,7 +48,8 @@ const unitRequiredForMeasurable = (
   if (
     habit.unit === undefined &&
     habit.type !== undefined &&
-    habit.type !== HabitType.BOOLEAN
+    habit.type !== HabitType.BOOLEAN &&
+    habit.type !== HabitType.WORKOUT
   ) {
     ctx.addIssue({
       code: "custom",

@@ -40,7 +40,10 @@ describe("buildCreateEntrySchema com HabitType.BOOLEAN", () => {
   });
 
   it("rejeita completed como string", () => {
-    const result = schema.safeParse({ dayKey: "2026-01-01", completed: "true" });
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      completed: "true",
+    });
     expect(result.success).toBe(false);
   });
 
@@ -110,6 +113,117 @@ describe("buildCreateEntrySchema com QUANTITY e DURATION", () => {
   it("DURATION gera o mesmo shape que QUANTITY", () => {
     const quantitySchema = buildCreateEntrySchema(HabitType.QUANTITY);
     expect(quantitySchema.shape).toEqual(schema.shape);
+  });
+});
+
+describe("buildCreateEntrySchema com WORKOUT", () => {
+  const schema = buildCreateEntrySchema(HabitType.WORKOUT);
+
+  it("daykey + workout com 1 exercise e 2 sets -> válido", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      workout: [
+        {
+          exercise: "Press banca",
+          sets: [
+            {
+              reps: 12,
+              weight: 30,
+            },
+            {
+              reps: 8,
+              weight: 50,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("workout: [] -> inválido", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      workout: [],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("Exercicio como sets: [] -> inválido", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      workout: [
+        {
+          exercise: "Press banca",
+          sets: [],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("exercise vacío -> inválido", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      workout: [
+        {
+          exercise: "",
+          sets: [
+            {
+              reps: 12,
+              weight: 30,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("reps: 2.5 -> inválido", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      workout: [
+        {
+          exercise: "Press banca",
+          sets: [
+            {
+              reps: 12.2,
+              weight: 30,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("Enviar value em vez de workout -> inválido", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      value: [
+        {
+          exercise: "Press banca",
+          sets: [
+            {
+              reps: 12,
+              weight: 30,
+            },
+            {
+              reps: 8,
+              weight: 50,
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(result.success).toBe(false);
   });
 });
 

@@ -7,6 +7,9 @@ export const isCompleted = (
 ): boolean => {
   if (!entry) return false;
   if (habit.type === HabitType.BOOLEAN) return entry.completed === true;
+  if (habit.type === HabitType.WORKOUT) {
+    return (entry.workout?.length ?? 0) > 0;
+  }
 
   const value = entry.value ?? 0;
   if (habit.target == null) return value > 0;

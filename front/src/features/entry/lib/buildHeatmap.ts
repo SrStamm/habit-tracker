@@ -1,5 +1,7 @@
 import { Entry } from "@habits/shared/entry";
 import { HabitType } from "@habits/shared/habit";
+import { Workout } from "@habits/shared/workout";
+import { workoutSummary } from "../../workout/lib/workoutSummary";
 
 export type Cell = {
   date: string;
@@ -40,6 +42,9 @@ const groupEntriesByDay = (
         // Soma em vez de substituir: se algum dia tiver mais de uma entry
         // (migração, edição manual), o valor do dia é o total, não o último.
         valueEntries.set(m.dayKey, previous + (m.value ?? 0));
+        break;
+      case HabitType.WORKOUT:
+        valueEntries.set(m.dayKey, m.workout?.length ? 1 : 0);
         break;
     }
   });
@@ -98,6 +103,7 @@ const createCells = (
   values: Map<string, number>,
   max: number,
   typeHabit: HabitType,
+  workoutsByDay: Map<string, Workout>,
   unit?: string,
 ): Cell[] => {
   const cellArray: Cell[] = [];
@@ -120,6 +126,11 @@ const createCells = (
         case HabitType.DURATION:
           label = `${value} ${unit ?? "min"}`;
           break;
+        case HabitType.WORKOUT: {
+          const workout = workoutsByDay.get(v) ?? [];
+          label = workoutSummary(workout);
+          break;
+        }
       }
     }
 
@@ -180,11 +191,26 @@ export const buildHeatmap = (
   // Generar el array de dias entre from a to
   const entriesGrouped = groupEntriesByDay(entries, typeHabit);
 
-  const max = target ?? getMaxValue(entriesGrouped);
+  const max =
+    typeHabit === HabitType.WORKOUT
+      ? 1
+      : (target ?? getMaxValue(entriesGrouped));
+
+  const workoutsByDay = new Map<string, Workout>();
+  entries.forEach((e) => {
+    if (e.workout?.length) workoutsByDay.set(e.dayKey, e.workout);
+  });
 
   const dayRange = buildDayRange(from, to);
 
-  const cells = createCells(dayRange, entriesGrouped, max, typeHabit, unit);
+  const cells = createCells(
+    dayRange,
+    entriesGrouped,
+    max,
+    typeHabit,
+    workoutsByDay,
+    unit,
+  );
 
   return createPadding(cells, from);
 };

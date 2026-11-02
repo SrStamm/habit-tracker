@@ -8,6 +8,7 @@ import { useCreateEntry } from "../../entry/hooks/useEntries";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import { Entry } from "@habits/shared/entry";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
+import { workoutSummary } from "../../workout/lib/workoutSummary";
 
 type HabitCardProps = {
   habit: Habit;
@@ -109,6 +110,23 @@ function HabitCard({
           >
             {completedToday ? "✓ Cumprido" : "Marcar hoje"}
           </Button>
+        ) : habit.type === HabitType.WORKOUT ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-muted">
+              {workoutSummary(todayEntry?.workout)}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(habit._id);
+              }}
+            >
+              Registrar
+            </Button>
+          </div>
         ) : (
           <form
             onSubmit={(e) => {

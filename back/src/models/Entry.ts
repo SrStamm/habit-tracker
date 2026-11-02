@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { workoutSchema } from "./subdocuments/Workout.schema";
 
 const entrySchema = new mongoose.Schema(
   {
@@ -16,6 +17,9 @@ const entrySchema = new mongoose.Schema(
     dayKey: { type: String, required: true },
     value: { type: Number },
     completed: { type: Boolean },
+    workout: {
+      type: [workoutSchema],
+    },
   },
   { timestamps: true },
 );
