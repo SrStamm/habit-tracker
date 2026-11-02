@@ -109,6 +109,25 @@ function HabitCard({
           >
             {completedToday ? "✓ Cumprido" : "Marcar hoje"}
           </Button>
+        ) : habit.type === HabitType.WORKOUT ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-text-muted">
+              {todayEntry?.workout?.length
+                ? `${dayKey} registrado`
+                : "Pendente"}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(habit._id);
+              }}
+            >
+              Registrar
+            </Button>
+          </div>
         ) : (
           <form
             onSubmit={(e) => {
