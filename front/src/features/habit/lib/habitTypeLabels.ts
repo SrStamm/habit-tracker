@@ -5,6 +5,7 @@ export const HABIT_TYPE_LABELS: Record<HabitType, string> = {
   [HabitType.QUANTITY]: "Quantidade",
   [HabitType.DURATION]: "Duração",
   [HabitType.WORKOUT]: "Treino",
+  [HabitType.LECTURE]: "Leitura",
 };
 
 export const HABIT_TYPE_BADGE_CLASSES: Record<HabitType, string> = {
@@ -12,4 +13,5 @@ export const HABIT_TYPE_BADGE_CLASSES: Record<HabitType, string> = {
   [HabitType.QUANTITY]: "bg-violet-50 text-violet-700 border border-violet-200",
   [HabitType.DURATION]: "bg-amber-50 text-amber-700 border border-amber-200",
   [HabitType.WORKOUT]: "bg-rose-50 text-rose-700 border border-rose-200",
+  [HabitType.LECTURE]: "bg-teal-50 text-teal-700 border border-teal-200",
 };

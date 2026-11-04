@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { workoutSchema } from "./subdocuments/Workout.schema";
+import { lectureSchema } from "./subdocuments/Lecture.schema";
 
 const entrySchema = new mongoose.Schema(
   {
@@ -19,6 +20,9 @@ const entrySchema = new mongoose.Schema(
     completed: { type: Boolean },
     workout: {
       type: [workoutSchema],
+    },
+    lecture: {
+      type: [lectureSchema],
     },
   },
   { timestamps: true },
