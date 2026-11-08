@@ -46,6 +46,9 @@ const groupEntriesByDay = (
       case HabitType.WORKOUT:
         valueEntries.set(m.dayKey, m.workout?.length ? 1 : 0);
         break;
+      case HabitType.LECTURE:
+        valueEntries.set(m.dayKey, m.lecture?.length ? 1 : 0);
+        break;
     }
   });
 
