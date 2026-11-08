@@ -106,46 +106,48 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
         ))}
       </Select>
 
-      {type !== HabitType.BOOLEAN && type !== HabitType.WORKOUT && (
-        <>
-          <Label htmlFor="target">Meta:</Label>
-          <Input
-            id="target"
-            type="number"
-            min={1}
-            value={target}
-            onChange={(e) => setTarget(e.target.valueAsNumber || "")}
-          />
+      {type !== HabitType.BOOLEAN &&
+        type !== HabitType.WORKOUT &&
+        type !== HabitType.LECTURE && (
+          <>
+            <Label htmlFor="target">Meta:</Label>
+            <Input
+              id="target"
+              type="number"
+              min={1}
+              value={target}
+              onChange={(e) => setTarget(e.target.valueAsNumber || "")}
+            />
 
-          {type === HabitType.DURATION ? (
-            <>
-              <Label htmlFor="unit">Unidade de medida:</Label>
-              <Select
-                id="unit"
-                required
-                value={unit}
-                onChange={(e) => setUnit(e.target.value as DurationOptions)}
-              >
-                {Object.values(DurationOptions).map((durationOptions) => (
-                  <option key={durationOptions} value={durationOptions}>
-                    {DURATION_OPTIONS_LABELS[durationOptions]}
-                  </option>
-                ))}
-              </Select>
-            </>
-          ) : (
-            <>
-              <Label htmlFor="unit">Unidade de medida:</Label>
-              <Input
-                id="unit"
-                type="text"
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-              />
-            </>
-          )}
-        </>
-      )}
+            {type === HabitType.DURATION ? (
+              <>
+                <Label htmlFor="unit">Unidade de medida:</Label>
+                <Select
+                  id="unit"
+                  required
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value as DurationOptions)}
+                >
+                  {Object.values(DurationOptions).map((durationOptions) => (
+                    <option key={durationOptions} value={durationOptions}>
+                      {DURATION_OPTIONS_LABELS[durationOptions]}
+                    </option>
+                  ))}
+                </Select>
+              </>
+            ) : (
+              <>
+                <Label htmlFor="unit">Unidade de medida:</Label>
+                <Input
+                  id="unit"
+                  type="text"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                />
+              </>
+            )}
+          </>
+        )}
 
       {activeError ? (
         <p role="alert" className="text-sm text-red-600">
