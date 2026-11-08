@@ -7,7 +7,7 @@ export const lectureSummary = (lecture?: Lecture): string => {
 
   if (items === 1) {
     const livro = list[0];
-    return `Livro · cap. ${livro.chapter} · pág. ${livro.page}`;
+    return `${livro.book} · cap. ${livro.chapter} · pág. ${livro.page}`;
   } else {
     const pages = list.reduce((sum, ex) => sum + ex.page, 0);
     return `${items} leituras · ${pages} páginas`;

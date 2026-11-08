@@ -34,6 +34,8 @@ function LectureCard({ lecture, onChange, disabled, onRemove }: Props) {
         <Input
           aria-label="Pagina do livro"
           placeholder="Pagina do livro"
+          type="number"
+          inputMode="numeric"
           value={lecture.page}
           disabled={disabled}
           onChange={(e) => onChange({ ...lecture, page: e.target.value })}

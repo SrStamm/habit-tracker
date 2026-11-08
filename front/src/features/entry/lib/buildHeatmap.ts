@@ -2,6 +2,8 @@ import { Entry } from "@habits/shared/entry";
 import { HabitType } from "@habits/shared/habit";
 import { Workout } from "@habits/shared/workout";
 import { workoutSummary } from "../../workout/lib/workoutSummary";
+import { Lecture } from "@habits/shared/lecture";
+import { lectureSummary } from "../../lecture/lectureSummary";
 
 export type Cell = {
   date: string;
@@ -107,6 +109,7 @@ const createCells = (
   max: number,
   typeHabit: HabitType,
   workoutsByDay: Map<string, Workout>,
+  lecturesByDay: Map<string, Lecture>,
   unit?: string,
 ): Cell[] => {
   const cellArray: Cell[] = [];
@@ -132,6 +135,11 @@ const createCells = (
         case HabitType.WORKOUT: {
           const workout = workoutsByDay.get(v) ?? [];
           label = workoutSummary(workout);
+          break;
+        }
+        case HabitType.LECTURE: {
+          const lecture = lecturesByDay.get(v) ?? [];
+          label = lectureSummary(lecture);
           break;
         }
       }
@@ -204,6 +212,11 @@ export const buildHeatmap = (
     if (e.workout?.length) workoutsByDay.set(e.dayKey, e.workout);
   });
 
+  const lecturesByDay = new Map<string, Lecture>();
+  entries.forEach((e) => {
+    if (e.lecture?.length) lecturesByDay.set(e.dayKey, e.lecture);
+  });
+
   const dayRange = buildDayRange(from, to);
 
   const cells = createCells(
@@ -212,6 +225,7 @@ export const buildHeatmap = (
     max,
     typeHabit,
     workoutsByDay,
+    lecturesByDay,
     unit,
   );
 
