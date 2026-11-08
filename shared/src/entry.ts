@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { HabitType } from "./habit";
 import { WorkoutExerciseSchema } from "./workout";
+import { LectureSchema } from "./lecture";
 
 // offset: true aceita tanto `Z` como `+02:00`. O backend normaliza `at` para
 // instante absoluto (new Date) e depois agrupa por APP_TIMEZONE, então
@@ -16,7 +17,9 @@ export const buildCreateEntrySchema = (type: HabitType) =>
       ? z
           .object({ ...base, workout: z.array(WorkoutExerciseSchema).min(1) })
           .strict()
-      : z.object({ ...base, value: z.number().min(0) }).strict();
+      : type === HabitType.LECTURE
+        ? z.object({ ...base, lecture: z.array(LectureSchema).min(1) }).strict()
+        : z.object({ ...base, value: z.number().min(0) }).strict();
 
 export type CreateEntryDTO = z.infer<ReturnType<typeof buildCreateEntrySchema>>;
 
@@ -45,6 +48,7 @@ export const EntryResponseSchema = z.object({
   dayKey: z.string(),
   value: z.number().optional(),
   workout: z.array(WorkoutExerciseSchema).optional(),
+  lecture: z.array(LectureSchema).optional(),
   completed: z.boolean().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),

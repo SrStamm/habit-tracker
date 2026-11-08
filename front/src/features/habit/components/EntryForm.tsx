@@ -15,6 +15,14 @@ import {
   toWorkout,
 } from "../../workout/lib/workoutDraft";
 import WorkoutEditor from "../../workout/components/WorkoutEditor";
+import LectureEditor from "../../lecture/components/LectureEditor";
+import {
+  emptyLecture,
+  LectureDraft,
+  toLecture,
+  toDraft as toDraftLecture,
+  isLectureDraftValid,
+} from "../../lecture/lectureDraft";
 
 interface EntryFormProps {
   habit: Habit;
@@ -42,6 +50,9 @@ function EntryForm({
   const [workoutValue, setWorkout] = useState<WorkoutDraft>(() => [
     emptyExercise(),
   ]);
+  const [lectureValue, setLecture] = useState<LectureDraft>(() => [
+    emptyLecture(),
+  ]);
 
   const { isPending, error: errorCreate, mutate } = useCreateEntry();
 
@@ -63,6 +74,14 @@ function EntryForm({
         entry?.workout?.length ? toDraft(entry.workout) : [emptyExercise()],
       );
     }
+
+    if (habit.type === HabitType.LECTURE) {
+      setLecture(
+        entry?.lecture?.length
+          ? toDraftLecture(entry.lecture)
+          : [emptyLecture()],
+      );
+    }
   }, [dayKey, entries, habit.type]);
 
   const handleSubmit = async () => {
@@ -77,6 +96,16 @@ function EntryForm({
     } else if (habit.type === HabitType.WORKOUT) {
       const saved = await mutate(
         { workout: toWorkout(workoutValue), dayKey },
+        habit._id,
+      );
+
+      if (saved) {
+        setShowEntryForm(false);
+        onEntrySaved?.();
+      }
+    } else if (habit.type === HabitType.LECTURE) {
+      const saved = await mutate(
+        { lecture: toLecture(lectureValue), dayKey },
         habit._id,
       );
 
@@ -119,7 +148,8 @@ function EntryForm({
             }}
             className={cn(
               "gap-3",
-              habit.type === HabitType.WORKOUT
+              habit.type === HabitType.WORKOUT ||
+                habit.type === HabitType.LECTURE
                 ? "flex flex-col"
                 : "flex flex-wrap items-end",
             )}
@@ -144,7 +174,8 @@ function EntryForm({
 
             {/* Valor + Unidade — solo QUANTITY / DURATION */}
             {habit.type !== HabitType.BOOLEAN &&
-              habit.type !== HabitType.WORKOUT && (
+              habit.type !== HabitType.WORKOUT &&
+              habit.type !== HabitType.LECTURE && (
                 <div className="flex flex-col gap-1">
                   <Label
                     htmlFor="entry-value"
@@ -182,6 +213,14 @@ function EntryForm({
               />
             )}
 
+            {habit.type === HabitType.LECTURE && (
+              <LectureEditor
+                value={lectureValue}
+                onChange={setLecture}
+                disabled={isPending}
+              />
+            )}
+
             {/* Ações */}
             <div className="flex items-center gap-2 ml-auto self-end">
               <Button
@@ -203,8 +242,10 @@ function EntryForm({
                   isPending ||
                   (habit.type === HabitType.WORKOUT
                     ? !isWorkoutDraftValid(workoutValue)
-                    : habit.type !== HabitType.BOOLEAN &&
-                      (value === "" || Number.isNaN(value)))
+                    : habit.type === HabitType.LECTURE
+                      ? !isLectureDraftValid(lectureValue)
+                      : habit.type !== HabitType.BOOLEAN &&
+                        (value === "" || Number.isNaN(value)))
                 }
               >
                 {isPending

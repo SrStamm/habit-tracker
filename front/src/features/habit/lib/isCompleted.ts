@@ -10,6 +10,9 @@ export const isCompleted = (
   if (habit.type === HabitType.WORKOUT) {
     return (entry.workout?.length ?? 0) > 0;
   }
+  if (habit.type === HabitType.LECTURE) {
+    return (entry.lecture?.length ?? 0) > 0;
+  }
 
   const value = entry.value ?? 0;
   if (habit.target == null) return value > 0;

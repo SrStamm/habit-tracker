@@ -53,9 +53,10 @@ export const upsertEntry = async (
   const value = "value" in input ? input.value : undefined;
   const completed = "completed" in input ? input.completed : undefined;
   const workout = "workout" in input ? input.workout : undefined;
+  const lecture = "lecture" in input ? input.lecture : undefined;
 
   const filter = { userId, habitId, dayKey };
-  const update = { $set: { value, completed, workout } };
+  const update = { $set: { value, completed, workout, lecture } };
   const options = {
     runValidators: true,
     includeResultMetadata: true,

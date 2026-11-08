@@ -79,6 +79,10 @@ function HabitDetail({
       return inRange.filter((e) => (e.workout?.length ?? 0) > 0).length;
     }
 
+    if (habit.type === HabitType.LECTURE) {
+      return inRange.filter((e) => (e.lecture?.length ?? 0) > 0).length;
+    }
+
     return inRange.reduce((sum, e) => sum + (e.value ?? 0), 0);
   }, [entries, days, habit.type, todayKey]);
 
