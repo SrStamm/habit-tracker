@@ -96,6 +96,17 @@ describe("CreateHabitSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  // unitRequiredForMeasurable isenta LECTURE de exigir unit.
+  // Sem isto, um regresso volta a exigir unit e CreateHabitSchema quebra
+  // a criação de hábitos de leitura.
+  it("aceita LECTURE sem unit", () => {
+    const result = CreateHabitSchema.safeParse({
+      name: "Ler",
+      type: "LECTURE",
+    });
+    expect(result.success).toBe(true);
+  });
 });
 
 describe("HabitUpdateSchema", () => {
