@@ -75,6 +75,11 @@ const goalDoc = (extra: Record<string, unknown> = {}) => ({
   ...extra,
 });
 
+const lectureEntry = (
+  dayKey: string,
+  lecture: Array<{ book?: string | null; page?: number | null }> | null,
+) => ({ dayKey, lecture });
+
 // ============================================================
 // getGoalProgress(userId, habitId, goalId, habit) — janela em curso
 // ============================================================
@@ -420,6 +425,309 @@ describe("getGoalProgress", () => {
       unit: "BOOLEAN",
       periodStart: "2026-10-12",
       periodEnd: "2026-10-18",
+    });
+  });
+
+  // ============================================================
+  // WORKOUT — volume = Σ(reps × peso) na janela do período
+  // ============================================================
+  describe("WORKOUT", () => {
+    it("soma o volume de todas as entries, exercícios e séries e devolve unit kg·rep", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 270, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind.mockResolvedValue([
+        {
+          workout: [
+            // 10*20 + 5*10 = 250
+            { sets: [{ reps: 10, weight: 20 }, { reps: 5, weight: 10 }] },
+          ],
+        },
+        {
+          workout: [
+            { sets: [{ reps: 8, weight: 2.5 }] }, // 20
+            { sets: [] }, // 0
+          ],
+        },
+        { value: 999 }, // entry de outro tipo não contribui
+        {}, // sem workout
+      ]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.WORKOUT }),
+      );
+
+      expect(result.current).toBe(270);
+      expect(result.unit).toBe("kg·rep");
+      expect(result.pct).toBe(100);
+      expect(m.entryFind).toHaveBeenCalledTimes(1);
+    });
+
+    it("trata reps/weight ausentes ou nulos como 0", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 10, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind.mockResolvedValue([
+        {
+          workout: [
+            {
+              sets: [
+                { reps: null, weight: 100 }, // 0
+                { reps: 10, weight: null }, // 0
+                { reps: 10 }, // sem peso → 0
+                {}, // sem reps nem peso → 0
+              ],
+            },
+          ],
+        },
+        { workout: [{ sets: [{ reps: 4, weight: 2.5 }] }] }, // 10
+      ]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.WORKOUT }),
+      );
+
+      expect(result.current).toBe(10);
+      expect(result.pct).toBe(100);
+    });
+
+    it("sem entries na janela: current 0, pct 0 e unit kg·rep", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 500, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind.mockResolvedValue([]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.WORKOUT }),
+      );
+
+      expect(result.current).toBe(0);
+      expect(result.pct).toBe(0);
+      expect(result.unit).toBe("kg·rep");
+      expect(m.entryFind).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ============================================================
+  // LECTURE — Δ páginas por livro na janela vs. baseline anterior
+  // ============================================================
+  describe("LECTURE", () => {
+    beforeEach(() => {
+      m.entryFind.mockReset();
+      m.findOne.mockReset();
+      vi.useFakeTimers();
+      // Qua 2026-10-15 09:00 em Buenos Aires → semana 12..18/10
+      vi.setSystemTime(new Date("2026-10-15T12:00:00Z"));
+    });
+
+    it("soma o delta de páginas por livro contra o baseline e devolve unit páginas", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 110, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-14", [{ book: "A", page: 150 }]),
+          lectureEntry("2026-10-12", [{ book: "B", page: 80 }]),
+          // sem baseline → conta desde 0
+          lectureEntry("2026-10-13", [{ book: "C", page: 30 }]),
+        ])
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-05", [{ book: "A", page: 100 }]),
+          lectureEntry("2026-10-01", [{ book: "B", page: 50 }]),
+        ]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      // A: 150-100, B: 80-50, C: 30-0
+      expect(result.current).toBe(110);
+      expect(result.unit).toBe("páginas");
+      expect(result.pct).toBe(100);
+      expect(m.entryFind).toHaveBeenCalledTimes(2);
+      expect(m.entryFind).toHaveBeenNthCalledWith(2, {
+        userId: "u1",
+        habitId: "h1",
+        dayKey: { $lt: "2026-10-12" },
+      });
+    });
+
+    it("usa a última leitura por livro na janela, independente da ordem recebida", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 200, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-14", [{ book: "A", page: 200 }]),
+          lectureEntry("2026-10-12", [{ book: "A", page: 150 }]),
+          lectureEntry("2026-10-13", [{ book: "A", page: 180 }]),
+        ])
+        .mockResolvedValueOnce([]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      expect(result.current).toBe(200);
+      expect(result.pct).toBe(100);
+    });
+
+    it("usa a última leitura por livro do baseline, independente da ordem recebida", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 20, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-14", [{ book: "A", page: 320 }]),
+        ])
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-10", [{ book: "A", page: 300 }]),
+          lectureEntry("2026-10-01", [{ book: "A", page: 250 }]),
+          lectureEntry("2026-10-05", [{ book: "A", page: 280 }]),
+        ]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      expect(result.current).toBe(20);
+      expect(result.pct).toBe(100);
+    });
+
+    it("aplica Math.max(0, ...) quando a página regride em relação ao baseline", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 10, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-14", [{ book: "A", page: 250 }]),
+        ])
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-10", [{ book: "A", page: 300 }]),
+        ]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      expect(result.current).toBe(0);
+      expect(result.pct).toBe(0);
+    });
+
+    it("várias leituras do mesmo livro na mesma entry: a última vence", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 25, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-12", [
+            { book: "A", page: 10 },
+            { book: "A", page: 25 },
+          ]),
+        ])
+        .mockResolvedValueOnce([]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      expect(result.current).toBe(25);
+    });
+
+    it("ignora leituras sem book ou page e não consulta o baseline se nada sobrar", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 10, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind.mockResolvedValueOnce([
+        lectureEntry("2026-10-12", [
+          { book: null, page: 10 },
+          { book: "A", page: null },
+          { book: "B" },
+          { page: 5 },
+        ]),
+        lectureEntry("2026-10-13", null),
+        { dayKey: "2026-10-14" },
+      ]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      expect(result.current).toBe(0);
+      expect(result.unit).toBe("páginas");
+      // Sem leituras válidas, nem chega a buscar o baseline.
+      expect(m.entryFind).toHaveBeenCalledTimes(1);
+    });
+
+    it("só conta leituras válidas e ignora page nula ao lado de uma válida do mesmo livro", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 40, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind
+        .mockResolvedValueOnce([
+          lectureEntry("2026-10-12", [
+            { book: null, page: 10 },
+            { book: "A", page: 40 },
+            { book: "A", page: null },
+          ]),
+        ])
+        .mockResolvedValueOnce([]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      expect(result.current).toBe(40);
+      expect(result.pct).toBe(100);
+    });
+
+    it("sem leituras na janela: current 0 e não consulta o baseline", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 10, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind.mockResolvedValueOnce([]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.LECTURE }),
+      );
+
+      expect(result.current).toBe(0);
+      expect(result.pct).toBe(0);
+      expect(result.unit).toBe("páginas");
+      expect(m.entryFind).toHaveBeenCalledTimes(1);
     });
   });
 });
