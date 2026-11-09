@@ -30,11 +30,14 @@ back/src
 ├── models/                  # Mongoose schemas → see "MongoDB models" below
 │   ├── User.ts
 │   ├── Habit.ts
-│   └── Entry.ts
+│   ├── Entry.ts
+│   ├── Goal.ts
+│   └── subdocuments/        # Workout.schema, Lecture.schema
 ├── modules/                 # one folder per domain: routes → controller → service
 │   ├── auth/                # auth.routes / auth.controller / auth.service / auth.docs
 │   ├── habit/
-│   └── entry/
+│   ├── entry/
+│   └── goal/
 ├── lib/
 │   └── dayKey.ts            # day-key resolution in APP_TIMEZONE (+ tests)
 ├── docs/
@@ -86,11 +89,15 @@ All routes except `auth` require `Authorization: Bearer <jwt>`.
 | `POST` | `/auth/login` | Sign in, returns token (1 h) |
 | `GET` | `/habits` | List habits (`?all=true` includes archived) |
 | `POST` | `/habits` | Create habit |
-| `PATCH` | `/habits/:habitId` | Update habit (name, description, category, target, unit, active…) |
+| `PATCH` | `/habits/:habitId` | Update habit (name, description, category, type, target, unit) |
 | `DELETE` | `/habits/:habitId` | Archive habit (soft delete) |
 | `GET` | `/habits/entries` | All entries of the user (`?from`, `?to`, `?habitId`) — feeds the home heatmap |
 | `GET` | `/habits/:habitId/entries` | Entries of one habit (`?from`, `?to`) |
 | `POST` | `/habits/:habitId/entries` | Register the entry for a `dayKey` |
+| `GET` | `/habits/:habitId/goals` | List the goals of a habit |
+| `GET` | `/habits/:habitId/goals/:goalId/progress` | Progress of one goal for the current period |
+| `POST` | `/habits/:habitId/goals` | Create a goal (`amount`, `period`: `WEEK` \| `MONTH`) |
+| `DELETE` | `/habits/:habitId/goals/:goalId` | Delete a goal |
 
 Ownership is enforced by `validateHabitOwner` before every `:habitId` handler.
 
@@ -123,7 +130,7 @@ enabled on every model. Indexes are **not** built by Mongoose at boot
 | `name` | String | required, trimmed |
 | `description` | String | optional, trimmed |
 | `category` | String | optional, trimmed |
-| `type` | String | required, enum `HabitType`: `BOOLEAN` \| `QUANTITY` \| `DURATION` |
+| `type` | String | required, enum `HabitType`: `BOOLEAN` \| `QUANTITY` \| `DURATION` \| `WORKOUT` \| `LECTURE` |
 | `target` | Number | optional, `min: 1` — only meaningful for `QUANTITY`/`DURATION` |
 | `unit` | String | optional, `min: 1` — required by the API for measurable types (`SECONDS`/`MINUTES`/`HOURS` for `DURATION`) |
 | `active` | Boolean | required — `false` marks the habit as archived |
@@ -141,6 +148,8 @@ and `003-unit-habits` backfill later schema changes.
 | `dayKey` | String | required, `YYYY-MM-DD` |
 | `value` | Number | optional — used by `QUANTITY` / `DURATION` |
 | `completed` | Boolean | optional — used by `BOOLEAN` |
+| `workout` | Array of `{ exercise, sets: [{ reps, weight }] }` | optional — used by `WORKOUT` |
+| `lecture` | Array of `{ book, chapter, page }` | optional — used by `LECTURE` |
 | `timestamps` | — | `createdAt`, `updatedAt` |
 
 **Unique compound index:** `{ userId, habitId, dayKey }` — one entry per habit
@@ -154,7 +163,8 @@ The `dayKey` is computed by the backend from the request instant using
 Request contracts are shared with the frontend through `@habits/shared`:
 `LoginSchema`, `CreateHabitSchema`, `HabitUpdateSchema`, `GetEntriesQuerySchema`,
 `buildCreateEntrySchema(type)` (the entry body depends on the habit type —
-`completed` for booleans, `value` for measurable ones). The `validate`
+`completed` for booleans, `value` for quantity/duration, `workout` for workouts,
+`lecture` for lectures). The `validate`
 middleware checks `body`, `query` and `params` and answers `400` with the Zod
 issues.
 

@@ -1,6 +1,6 @@
 # Habits Tracker
 
-Full-stack application to create habits, track their daily entries (boolean, quantity or duration) and visualize progress with heatmaps.
+Full-stack application to create habits, track their daily entries (boolean, quantity, duration, workout or lecture) and visualize progress with heatmaps.
 
 Monorepo managed with **pnpm workspaces**.
 

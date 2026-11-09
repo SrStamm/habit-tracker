@@ -72,10 +72,29 @@ export function registerEntryDocs(r: OpenAPIRegistry) {
             schema: z.union([
               buildCreateEntrySchema(HabitType.BOOLEAN),
               buildCreateEntrySchema(HabitType.DURATION),
+              buildCreateEntrySchema(HabitType.WORKOUT),
+              buildCreateEntrySchema(HabitType.LECTURE),
             ]),
             examples: {
               booleano: { value: { dayKey: "2026-10-07", completed: true } },
               medible: { value: { dayKey: "2026-10-07", value: 5 } },
+              treino: {
+                value: {
+                  dayKey: "2026-10-07",
+                  workout: [
+                    {
+                      exercise: "Supino reto",
+                      sets: [{ reps: 10, weight: 40 }],
+                    },
+                  ],
+                },
+              },
+              leitura: {
+                value: {
+                  dayKey: "2026-10-07",
+                  lecture: [{ book: "Clean Code", chapter: "3", page: 42 }],
+                },
+              },
             },
           },
         },
