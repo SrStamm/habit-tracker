@@ -52,6 +52,9 @@ front/src
     ├── habit/            # api, useHabits, HabitList, HabitCard, HabitDetail,
     │                     # HabitForm, HeatmapGrid, WeekLabels, Legend
     ├── entry/            # api, useEntries, buildHeatmap (+ tests)
+    ├── goal/             # api, useGoal, GoalList, period/unit labels
+    ├── workout/          # WorkoutEditor, ExerciseCard, SetRow, workout draft/summary
+    ├── lecture/          # LectureEditor, LectureCard, lecture draft/summary
     └── home/             # HomePage, TodaySummary
 ```
 
