@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { workoutSchema } from "./subdocuments/Workout.schema";
 import { lectureSchema } from "./subdocuments/Lecture.schema";
+import { InferSchemaType } from "mongoose";
 
 const entrySchema = new mongoose.Schema(
   {
@@ -33,3 +34,7 @@ entrySchema.index({ userId: 1, habitId: 1, dayKey: 1 }, { unique: true });
 const Entry = mongoose.model("Entry", entrySchema);
 
 export default Entry;
+
+export type EntryDoc = mongoose.HydratedDocument<
+  InferSchemaType<typeof entrySchema>
+>;

@@ -1,8 +1,12 @@
 import { dayKeyFrom } from "../../lib/dayKey";
 import { HttpError } from "../../lib/errors";
 import Goal, { type GoalDoc } from "../../models/Goal";
-import Entry from "../../models/Entry";
-import { CreateGoalDTO, GoalResponseDTO } from "@habits/shared/goal";
+import Entry, { EntryDoc } from "../../models/Entry";
+import {
+  CreateGoalDTO,
+  GoalProgressResponseDTO,
+  GoalResponseDTO,
+} from "@habits/shared/goal";
 import { APP_TIMEZONE } from "../../config/timeZone";
 import { Habit, HabitType, DurationOptions } from "@habits/shared/habit";
 
@@ -26,12 +30,27 @@ export const getGoals = async (userId: string, habitId: string) => {
   return goals.map(toGoalResponse);
 };
 
+const lastPageByBook = (entries: EntryDoc[]) => {
+  const pages = new Map<string, number>();
+  const sorted = [...entries].sort((a, b) => a.dayKey.localeCompare(b.dayKey));
+
+  for (const entry of sorted) {
+    for (const item of entry.lecture ?? []) {
+      if (item.book != null && item.page != null) {
+        pages.set(item.book, item.page);
+      }
+    }
+  }
+
+  return pages;
+};
+
 export const getGoalProgress = async (
   userId: string,
   habitId: string,
   goalId: string,
   habit: Habit,
-) => {
+): Promise<GoalProgressResponseDTO> => {
   // O goal define o valor e a periodicidade; o hábito, como contar.
   const goal = await Goal.findOne({ _id: goalId, userId, habitId });
 
@@ -76,13 +95,43 @@ export const getGoalProgress = async (
     dayKey: { $gte: periodStart, $lte: periodEnd },
   });
 
-  // O tipo do hábito decide o que soma: BOOLEAN conta dias cumpridos,
-  // QUANTITY e DURATION somam values. Sem entries na janela, fica 0.
   let current = 0;
 
   if (habit.type === HabitType.BOOLEAN) {
     const newEntries = entries.filter((e) => e.completed === true);
     current = newEntries.length;
+  } else if (habit.type === HabitType.WORKOUT) {
+    current = entries.reduce(
+      (total, entry) =>
+        total +
+        (entry.workout ?? []).reduce(
+          (t, ex) =>
+            t +
+            ex.sets.reduce(
+              (s, set) => s + (set.reps ?? 0) * (set.weight ?? 0),
+              0,
+            ),
+          0,
+        ),
+      0,
+    );
+  } else if (habit.type === HabitType.LECTURE) {
+    const inPeriod = lastPageByBook(entries);
+
+    if (inPeriod.size > 0) {
+      const before = await Entry.find({
+        userId,
+        habitId,
+        dayKey: { $lt: periodStart },
+      });
+      const baseline = lastPageByBook(before);
+
+      current = [...inPeriod.entries()].reduce(
+        (total, [book, page]) =>
+          total + Math.max(0, page - (baseline.get(book) ?? 0)),
+        0,
+      );
+    }
   } else {
     current = entries.reduce((acum, currVal) => {
       // value é optional no schema de Entry: sem valor, conta 0.
@@ -119,7 +168,11 @@ export const getGoalProgress = async (
       ? "BOOLEAN"
       : habit.type === HabitType.DURATION
         ? DurationOptions.MINUTES
-        : habit.unit;
+        : habit.type === HabitType.WORKOUT
+          ? "kg·rep"
+          : habit.type === HabitType.LECTURE
+            ? "páginas"
+            : (habit.unit ?? "");
 
   return {
     goalId: goal._id.toString(),
