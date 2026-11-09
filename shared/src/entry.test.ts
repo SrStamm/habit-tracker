@@ -227,6 +227,34 @@ describe("buildCreateEntrySchema com WORKOUT", () => {
   });
 });
 
+describe("buildCreateEntrySchema com LECTURE", () => {
+  const schema = buildCreateEntrySchema(HabitType.LECTURE);
+
+  it("aceita dayKey + lecture com 1 leitura", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      lecture: [{ book: "Sapiens", chapter: "2", page: 40 }],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita value, porque LECTURE leva lecture e não value", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      value: 10,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita lecture: [] (min 1)", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      lecture: [],
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
 describe("GetEntriesQuerySchema", () => {
   // Atenção: é z.coerce.date(), não z.date(). O front manda
   // filter.from.toISOString() (uma string) e por isso funciona. Sem o

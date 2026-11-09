@@ -5,7 +5,7 @@ import { buildHeatmap, Cell } from "./buildHeatmap";
 
 const makeEntry = (
   dayKey: string,
-  extra: Partial<Pick<Entry, "value" | "completed">>,
+  extra: Partial<Pick<Entry, "value" | "completed" | "workout" | "lecture">>,
 ): Entry => ({
   _id: dayKey,
   userId: "user-1",
@@ -113,5 +113,31 @@ describe("buildHeatmap com HabitType.BOOLEAN", () => {
     // 2026-01-01 es jueves → 3 días de padding (lun–mié)
     expect(cells[0]?.slice(0, 3)).toEqual([null, null, null]);
     expect(cells[0]?.[3]?.date).toBe("2026-01-01");
+  });
+});
+
+describe("buildHeatmap com HabitType.LECTURE", () => {
+  it("acende o dia com lecture e usa o lectureSummary na label", () => {
+    const entries = [
+      makeEntry("2026-01-03", {
+        lecture: [{ book: "Sapiens", chapter: "2", page: 40 }],
+      }),
+    ];
+    const cells = buildHeatmap(entries, HabitType.LECTURE, FROM, TO);
+
+    const cell = findCell(cells, "2026-01-03");
+    expect(cell?.level).toBe(4);
+    expect(cell?.label).toBe("Sapiens · cap. 2 · pág. 40");
+  });
+
+  it("mantém 'Sin datos' nos dias sem entry", () => {
+    const entries = [
+      makeEntry("2026-01-03", {
+        lecture: [{ book: "Sapiens", chapter: "2", page: 40 }],
+      }),
+    ];
+    const cells = buildHeatmap(entries, HabitType.LECTURE, FROM, TO);
+
+    expect(findCell(cells, "2026-01-05")?.label).toBe("Sin datos");
   });
 });
