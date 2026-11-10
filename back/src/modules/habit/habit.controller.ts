@@ -50,7 +50,7 @@ export const handleUpdateHabit = async (
     unit,
   });
 
-  return res.status(201).json({ habitoAtualizado });
+  return res.status(200).json({ habitoAtualizado });
 };
 
 export const handleArchiveHabit = async (

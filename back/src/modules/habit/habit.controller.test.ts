@@ -166,7 +166,7 @@ describe("handleCreateHabit", () => {
 });
 
 describe("handleUpdateHabit", () => {
-  it("201 + { habitoAtualizado } no sucesso", async () => {
+  it("200 + { habitoAtualizado } no sucesso (update não cria recurso)", async () => {
     const habitData = {
       name: "nameFalso",
       type: HabitType.BOOLEAN,
@@ -194,7 +194,7 @@ describe("handleUpdateHabit", () => {
 
     await handleUpdateHabit(req, res);
 
-    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({
       habitoAtualizado: habitMocked,
     });
