@@ -14,6 +14,9 @@ export enum DurationOptions {
   HOURS = "HOURS",
 }
 
+export const isMeasurableType = (type?: HabitType) =>
+  type === HabitType.QUANTITY || type === HabitType.DURATION;
+
 const isDurationOption = (value: string): value is DurationOptions =>
   Object.values(DurationOptions).includes(value as DurationOptions);
 
@@ -33,7 +36,9 @@ const targetOnlyForMeasurable = (
   habit: { type?: HabitType; target?: number | null },
   ctx: z.RefinementCtx,
 ) => {
-  if (habit.target !== undefined && habit.type === HabitType.BOOLEAN) {
+  const isMeasurable = isMeasurableType(habit.type);
+
+  if (habit.target != null && habit.type !== undefined && !isMeasurable) {
     ctx.addIssue({
       code: "custom",
       path: ["target"],
@@ -65,7 +70,9 @@ const unitsForMeasurable = (
   habit: { type?: HabitType; unit?: string },
   ctx: z.RefinementCtx,
 ) => {
-  if (habit.type === HabitType.BOOLEAN && habit.unit !== undefined) {
+  const isMeasurable = isMeasurableType(habit.type);
+
+  if (habit.type !== undefined && !isMeasurable && habit.unit !== undefined) {
     ctx.addIssue({
       code: "custom",
       path: ["unit"],

@@ -199,6 +199,98 @@ describe("updateHabit", () => {
 
     expect(result).toBe(saved);
   });
+
+  it("type não mensurável -> '$unset' de target e unit", async () => {
+    const data: UpdateHabitDTO = { type: HabitType.WORKOUT };
+    m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
+
+    await updateHabit("h1", "u1", data);
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: "h1",
+        userId: "u1",
+      },
+      {
+        $set: { type: HabitType.WORKOUT },
+        $unset: { target: 1, unit: 1 },
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+  });
+
+  it("type DURATION sem unit -> '$unset' de unit", async () => {
+    const data: UpdateHabitDTO = { type: HabitType.DURATION };
+    m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
+
+    await updateHabit("h1", "u1", data);
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: "h1",
+        userId: "u1",
+      },
+      {
+        $set: { type: HabitType.DURATION },
+        $unset: { unit: 1 },
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+  });
+
+  it("type DURATION com unit válida -> '$set' de type e unit", async () => {
+    const data: UpdateHabitDTO = {
+      type: HabitType.DURATION,
+      unit: "MINUTES",
+    };
+    m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
+
+    await updateHabit("h1", "u1", data);
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: "h1",
+        userId: "u1",
+      },
+      {
+        $set: { type: HabitType.DURATION, unit: "MINUTES" },
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+  });
+
+  // O schema rejeita type não mensurável com target/unit, mas o service não pode
+  // gerar $set e $unset no mesmo campo se for chamado direto.
+  it("type não mensurável ignora target/unit do body", async () => {
+    const data: UpdateHabitDTO = {
+      type: HabitType.BOOLEAN,
+      target: 5,
+      unit: "páginas",
+    };
+    m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
+
+    await updateHabit("h1", "u1", data);
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: "h1",
+        userId: "u1",
+      },
+      {
+        $set: { type: HabitType.BOOLEAN },
+        $unset: { target: 1, unit: 1 },
+      },
+      {
+        returnDocument: "after",
+      },
+    );
+  });
 });
 
 describe("findAllHabits", () => {
