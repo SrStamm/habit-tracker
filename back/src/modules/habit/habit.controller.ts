@@ -13,32 +13,24 @@ export const handleGetAllHabits = async (req: Request, res: Response) => {
   const rawAll = (req.query as { all?: string | string[] }).all;
   const wantAll = rawAll === "true";
 
-  try {
-    const allHabits = wantAll
-      ? await findAllHabits(userId)
-      : await findAllActiveHabits(userId);
+  const allHabits = wantAll
+    ? await findAllHabits(userId)
+    : await findAllActiveHabits(userId);
 
-    return res.status(200).json({ allHabits });
-  } catch (error) {
-    return res.status(404).json({ error: (error as Error).message });
-  }
+  return res.status(200).json({ allHabits });
 };
 
 export const handleCreateHabit = async (req: Request, res: Response) => {
   const { name, description, category, type, target, unit } = req.body;
-  try {
-    const novoHabito = await createHabit(req.userId, {
-      name,
-      description,
-      category,
-      type,
-      target,
-      unit,
-    });
-    return res.status(201).json({ novoHabito });
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
+  const novoHabito = await createHabit(req.userId, {
+    name,
+    description,
+    category,
+    type,
+    target,
+    unit,
+  });
+  return res.status(201).json({ novoHabito });
 };
 
 export const handleUpdateHabit = async (
@@ -49,20 +41,16 @@ export const handleUpdateHabit = async (
   const { habitId } = req.params;
   const userId = req.userId;
 
-  try {
-    const habitoAtualizado = await updateHabit(habitId, userId, {
-      name,
-      description,
-      category,
-      type,
-      target,
-      unit,
-    });
+  const habitoAtualizado = await updateHabit(habitId, userId, {
+    name,
+    description,
+    category,
+    type,
+    target,
+    unit,
+  });
 
-    return res.status(201).json({ habitoAtualizado });
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
+  return res.status(201).json({ habitoAtualizado });
 };
 
 export const handleArchiveHabit = async (
@@ -72,10 +60,6 @@ export const handleArchiveHabit = async (
   const userId = req.userId;
   const { habitId } = req.params;
 
-  try {
-    await archiveHabit(habitId, userId);
-    return res.status(204).send();
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
+  await archiveHabit(habitId, userId);
+  return res.status(204).send();
 };

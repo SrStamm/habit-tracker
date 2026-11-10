@@ -18,6 +18,10 @@ import { type Request, type Response } from "express";
 // Contrato HTTP dos handlers de habit: código de estado + forma do JSON.
 // Mock do service (nunca do modelo) — a lógica do service pertence a
 // habit.service.test.ts.
+//
+// Erros: os handlers não capturam mais — o contrato é PROPAGAR a rejeição
+// (Express 5 encaminha ao errorHandler). O mapeamento erro → status é
+// coberto em src/middleware/errorHandler.test.ts.
 vi.mock("./habit.service");
 
 describe("handleGetAllHabits", () => {
@@ -78,7 +82,7 @@ describe("handleGetAllHabits", () => {
     expect(findAllHabits).toHaveBeenCalledWith("u1");
   });
 
-  it("404 + { error } quando o service lança", async () => {
+  it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
     const req = {
       userId: "u1",
       query: { all: "true" },
@@ -89,16 +93,11 @@ describe("handleGetAllHabits", () => {
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(findAllHabits).mockRejectedValue(
-      new Error("Falha Base de Dados"),
-    );
+    const erro = new Error("Falha Base de Dados");
+    vi.mocked(findAllHabits).mockRejectedValue(erro);
 
-    await handleGetAllHabits(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({
-      error: "Falha Base de Dados",
-    });
+    await expect(handleGetAllHabits(req, res)).rejects.toBe(erro);
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
 
@@ -142,7 +141,7 @@ describe("handleCreateHabit", () => {
     });
   });
 
-  it("400 + { error } quando createHabit lança", async () => {
+  it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
     const habitData = {
       name: "nameFalso",
       type: HabitType.BOOLEAN,
@@ -158,14 +157,11 @@ describe("handleCreateHabit", () => {
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(createHabit).mockRejectedValue(new Error("Falha Base de Dados"));
+    const erro = new Error("Falha Base de Dados");
+    vi.mocked(createHabit).mockRejectedValue(erro);
 
-    await handleCreateHabit(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      error: "Falha Base de Dados",
-    });
+    await expect(handleCreateHabit(req, res)).rejects.toBe(erro);
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
 
@@ -211,7 +207,7 @@ describe("handleUpdateHabit", () => {
     });
   });
 
-  it("400 + { error } quando updateHabit lança", async () => {
+  it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
     const habitData = {
       name: "nameFalso",
       type: HabitType.BOOLEAN,
@@ -228,14 +224,11 @@ describe("handleUpdateHabit", () => {
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(updateHabit).mockRejectedValue(new Error("Falha Base de Dados"));
+    const erro = new Error("Falha Base de Dados");
+    vi.mocked(updateHabit).mockRejectedValue(erro);
 
-    await handleUpdateHabit(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      error: "Falha Base de Dados",
-    });
+    await expect(handleUpdateHabit(req, res)).rejects.toBe(erro);
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
 
@@ -268,7 +261,7 @@ describe("handleArchiveHabit", () => {
     expect(archiveHabit).toHaveBeenCalledWith("h1", "u1");
   });
 
-  it("400 + { error } quando archiveHabit lança", async () => {
+  it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
     const req = {
       userId: "u1",
       params: { habitId: "h1" },
@@ -279,12 +272,11 @@ describe("handleArchiveHabit", () => {
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(archiveHabit).mockRejectedValue(new Error("Falha Base de Dados"));
+    const erro = new Error("Falha Base de Dados");
+    vi.mocked(archiveHabit).mockRejectedValue(erro);
 
-    await handleArchiveHabit(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "Falha Base de Dados" });
+    await expect(handleArchiveHabit(req, res)).rejects.toBe(erro);
+    expect(res.status).not.toHaveBeenCalled();
     expect(archiveHabit).toHaveBeenCalledWith("h1", "u1");
   });
 });

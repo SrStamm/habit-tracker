@@ -14,7 +14,6 @@ import {
 } from "./goal.service";
 import { HabitType, type Habit } from "@habits/shared/habit";
 import { GoalPeriod } from "@habits/shared/goal";
-import { HttpError } from "../../lib/errors";
 
 // Contrato HTTP dos handlers de goal: código de estado + forma do JSON.
 // Mock do service (nunca do modelo) — a lógica do service pertence a
@@ -136,31 +135,11 @@ describe("handleDeleteGoal", () => {
 
 // O 400 de payload inválido e o 404/403 de posse do hábito vêm dos
 // middlewares validate() e validateHabitOwner (já cobertos em
-// back/src/middleware/validate.test.ts e auth.test.ts). Aqui testa-se o
-// contrato do handler: propagar o statusCode do HttpError que o service
-// (ou o middleware em integração) lançar, com fallback 500.
-describe("mapeamento de erros (contrato comum aos 4 handlers)", () => {
-  const cenarios = [
-    {
-      nome: "HttpError 404",
-      erro: new HttpError("Goal não encontrado", 404),
-      status: 404,
-      mensagem: "Goal não encontrado",
-    },
-    {
-      nome: "HttpError 403",
-      erro: new HttpError("Hábito no encontrado", 403),
-      status: 403,
-      mensagem: "Hábito no encontrado",
-    },
-    {
-      nome: "erro genérico",
-      erro: new Error("Falha Base de Dados"),
-      status: 500,
-      mensagem: "Erro interno do servidor",
-    },
-  ];
-
+// back/src/middleware/validate.test.ts e auth.test.ts). Com o error-handling
+// central, o contrato destes handlers é PROPAGAR a rejeição: Express 5
+// encaminha ao errorHandler, e o mapeamento erro → status/mensagem é
+// coberto em src/middleware/errorHandler.test.ts.
+describe("propagação de erros", () => {
   const alvos = [
     { nome: "handleGetGoals", handler: handleGetGoals, mock: getGoals },
     {
@@ -173,16 +152,15 @@ describe("mapeamento de erros (contrato comum aos 4 handlers)", () => {
   ];
 
   for (const alvo of alvos) {
-    for (const cenario of cenarios) {
-      it(`${alvo.nome}: ${cenario.nome} → ${cenario.status} + { error }`, async () => {
-        vi.mocked(alvo.mock).mockRejectedValue(cenario.erro);
+    it(`${alvo.nome}: rejeita com o erro do service sem responder`, async () => {
+      const erro = new Error("Falha Base de Dados");
+      vi.mocked(alvo.mock).mockRejectedValue(erro);
 
-        const res = makeRes();
-        await alvo.handler(makeReq(), res as unknown as Response);
-
-        expect(res.status).toHaveBeenCalledWith(cenario.status);
-        expect(res.json).toHaveBeenCalledWith({ error: cenario.mensagem });
-      });
-    }
+      const res = makeRes();
+      await expect(
+        alvo.handler(makeReq(), res as unknown as Response),
+      ).rejects.toBe(erro);
+      expect(res.status).not.toHaveBeenCalled();
+    });
   }
 });
