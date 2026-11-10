@@ -7,12 +7,8 @@ export const handleGetAllEntries = async (req: Request, res: Response) => {
   const to = req.query.to ? new Date(String(req.query.to)) : undefined;
   const habitId = req.query.habitId ? String(req.query.habitId) : undefined;
 
-  try {
-    const entries = await getAllEntries(req.userId, from, to, habitId);
-    res.status(200).json({ entries });
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
+  const entries = await getAllEntries(req.userId, from, to, habitId);
+  res.status(200).json({ entries });
 };
 
 export const handleGetEntries = async (req: Request, res: Response) => {
@@ -20,12 +16,8 @@ export const handleGetEntries = async (req: Request, res: Response) => {
   const from = req.query.from ? new Date(String(req.query.from)) : undefined;
   const to = req.query.to ? new Date(String(req.query.to)) : undefined;
 
-  try {
-    const entries = await getEntries(req.userId, String(habitId), from, to);
-    res.status(200).json({ entries });
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
+  const entries = await getEntries(req.userId, String(habitId), from, to);
+  res.status(200).json({ entries });
 };
 
 export const handleCreateEntry = async (req: Request, res: Response) => {
@@ -38,15 +30,11 @@ export const handleCreateEntry = async (req: Request, res: Response) => {
     });
   }
 
-  try {
-    const { entry: newEntry, updatedExisting } = await upsertEntry(
-      req.userId,
-      String(req.params.habitId),
-      parsed.data,
-    );
+  const { entry: newEntry, updatedExisting } = await upsertEntry(
+    req.userId,
+    String(req.params.habitId),
+    parsed.data,
+  );
 
-    res.status(updatedExisting ? 200 : 201).json({ newEntry });
-  } catch (error) {
-    return res.status(400).json({ error: (error as Error).message });
-  }
+  res.status(updatedExisting ? 200 : 201).json({ newEntry });
 };

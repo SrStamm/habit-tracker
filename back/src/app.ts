@@ -3,9 +3,10 @@ import { authRoutes } from "./modules/auth/auth.routes";
 import { habitRoutes } from "./modules/habit/habit.routes";
 import { entryRoutes } from "./modules/entry/entry.routes";
 import { buildDocument } from "./docs/openapi";
+import { goalRoutes } from "./modules/goal/goal.routes";
+import { errorHandler } from "./middleware/errorHandler";
 import swaggerUi from "swagger-ui-express";
 import "./docs/index";
-import { goalRoutes } from "./modules/goal/goal.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -21,6 +22,8 @@ export function createApp(): Express {
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
   });
+
+  app.use(errorHandler);
 
   return app;
 }

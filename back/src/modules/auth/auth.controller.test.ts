@@ -8,6 +8,10 @@ import { HttpError } from "../../lib/errors";
 // Contrato HTTP dos handlers de auth: código de estado + forma do JSON.
 // Mock do service (nunca do modelo) — a lógica do service pertence a
 // auth.service.test.ts.
+//
+// Erros: os handlers não capturam mais — o contrato é PROPAGAR a rejeição
+// (Express 5 encaminha ao errorHandler). O mapeamento erro → status é
+// coberto em src/middleware/errorHandler.test.ts.
 
 vi.hoisted(() => {
   process.env.JWT_SECRET ??= "segredo-de-teste";
@@ -65,37 +69,33 @@ describe("handleRegister", () => {
     expect(firmarToken).toHaveBeenCalledWith(userMocked._id.toString());
   });
 
-  it("409 + { error } quando o utilizador já existe", async () => {
+  it("rejeita com o HttpError 409 quando o utilizador já existe (sem token)", async () => {
     const req = { body: { nome: "test", password: "test" } } as Request;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(createUser).mockRejectedValue(
-      new HttpError("Usuario ja existe", 409),
-    );
+    const erro = new HttpError("Usuario ja existe", 409);
+    vi.mocked(createUser).mockRejectedValue(erro);
 
-    await handleRegister(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(409);
-    expect(res.json).toHaveBeenCalledWith({ error: "Usuario ja existe" });
+    await expect(handleRegister(req, res)).rejects.toBe(erro);
     expect(firmarToken).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
   });
 
-  it("400 + { error } quando createUser lança outro erro", async () => {
+  it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
     const req = { body: { nome: "test", password: "test" } } as Request;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(createUser).mockRejectedValue(new Error("Falha Base de Dados"));
+    const erro = new Error("Falha Base de Dados");
+    vi.mocked(createUser).mockRejectedValue(erro);
 
-    await handleRegister(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "Falha Base de Dados" });
+    await expect(handleRegister(req, res)).rejects.toBe(erro);
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
 
@@ -150,38 +150,32 @@ describe("handleLogin", () => {
     expect(firmarToken).toHaveBeenCalledWith(userMocked._id.toString());
   });
 
-  it("401 + { error } quando as credenciais são erradas", async () => {
+  it("rejeita com o HttpError 401 quando as credenciais são erradas (sem token)", async () => {
     const req = { body: { nome: "test", password: "errado" } } as Request;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(validarUsuario).mockRejectedValue(
-      new HttpError("Credenciais inválidas", 401),
-    );
+    const erro = new HttpError("Credenciais inválidas", 401);
+    vi.mocked(validarUsuario).mockRejectedValue(erro);
 
-    await handleLogin(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-    expect(res.json).toHaveBeenCalledWith({ error: "Credenciais inválidas" });
+    await expect(handleLogin(req, res)).rejects.toBe(erro);
     expect(firmarToken).not.toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
   });
 
-  it("400 + { error } quando validarUsuario lança outro erro", async () => {
+  it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
     const req = { body: { nome: "test", password: "test" } } as Request;
     const res = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
-    vi.mocked(validarUsuario).mockRejectedValue(
-      new Error("Falha Base de Dados"),
-    );
+    const erro = new Error("Falha Base de Dados");
+    vi.mocked(validarUsuario).mockRejectedValue(erro);
 
-    await handleLogin(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: "Falha Base de Dados" });
+    await expect(handleLogin(req, res)).rejects.toBe(erro);
+    expect(res.status).not.toHaveBeenCalled();
   });
 });
