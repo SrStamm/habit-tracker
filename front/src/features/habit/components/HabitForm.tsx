@@ -7,6 +7,7 @@ import {
   DurationOptions,
   Habit,
   HabitType,
+  isMeasurableType,
 } from "@habits/shared/habit";
 import { useCreateHabit, useUpdateHabit } from "../hooks/useHabits";
 import { Button } from "../../../components/ui/Button";
@@ -37,18 +38,29 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
   const activeError = state === "edit" ? updateError : error;
   const activeIsPending = state === "edit" ? updateIsPending : isPending;
 
+  const handleTypeChange = (next: HabitType) => {
+    setType(next);
+    const nextIsMeasurable = isMeasurableType(next);
+
+    if (!nextIsMeasurable) {
+      setTarget("");
+      setUnit("");
+      return;
+    }
+    setUnit(next === HabitType.DURATION ? DurationOptions.MINUTES : "");
+  };
+
   const handleSubmit = async () => {
-    const measurableTarget = type === HabitType.BOOLEAN ? undefined : target;
+    const isMeasurable = isMeasurableType(type);
 
     const payload: CreateHabitDTO = {
       name: nome,
       description,
       category,
       type,
-      ...(typeof measurableTarget === "number"
-        ? { target: measurableTarget }
-        : {}),
-      ...(type !== HabitType.BOOLEAN && unit ? { unit } : {}),
+
+      ...(isMeasurable && typeof target === "number" ? { target } : {}),
+      ...(isMeasurable && unit ? { unit } : {}),
     };
 
     const saved =
@@ -97,7 +109,7 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
         id="type"
         required
         value={type}
-        onChange={(e) => setType(e.target.value as HabitType)}
+        onChange={(e) => handleTypeChange(e.target.value as HabitType)}
       >
         {Object.values(HabitType).map((habitType) => (
           <option key={habitType} value={habitType}>
