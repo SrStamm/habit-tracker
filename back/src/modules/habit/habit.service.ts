@@ -1,5 +1,10 @@
 import Habit from "../../models/Habit";
-import { CreateHabitDTO, UpdateHabitDTO } from "@habits/shared/habit";
+import {
+  CreateHabitDTO,
+  UpdateHabitDTO,
+  HabitType,
+  isMeasurableType,
+} from "@habits/shared/habit";
 
 export const findAllHabits = async (userId: string) => {
   const allHabits = await Habit.find({ userId });
@@ -32,14 +37,18 @@ export const updateHabit = async (
   const setData: Record<string, any> = {};
   const unsetData: Record<string, any> = {};
 
+  const nonMeasurable = type !== undefined && !isMeasurableType(type);
+
   if (name !== undefined) setData.name = name;
   if (type !== undefined) setData.type = type;
   if (description !== undefined) setData.description = description;
   if (category !== undefined) setData.category = category;
-  if (target === null) unsetData.target = 1;
+  if (target === null || nonMeasurable) unsetData.target = 1;
   else if (target !== undefined) setData.target = target;
 
-  if (unit !== undefined) setData.unit = unit;
+  if (nonMeasurable) unsetData.unit = 1;
+  else if (unit !== undefined) setData.unit = unit;
+  else if (type === HabitType.DURATION) unsetData.unit = 1;
 
   const update: Record<string, any> = {};
   if (Object.keys(setData).length > 0) update.$set = setData;
