@@ -107,6 +107,52 @@ describe("CreateHabitSchema", () => {
     });
     expect(result.success).toBe(true);
   });
+
+  it("rejeita target quando type é WORKOUT", () => {
+    const result = CreateHabitSchema.safeParse({
+      name: "Treinar",
+      type: "WORKOUT",
+      target: 3,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita target quando type é LECTURE", () => {
+    const result = CreateHabitSchema.safeParse({
+      name: "Ler",
+      type: "LECTURE",
+      target: 10,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita unit quando type é WORKOUT", () => {
+    const result = CreateHabitSchema.safeParse({
+      name: "Treinar",
+      type: "WORKOUT",
+      unit: "séries",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita unit quando type é LECTURE", () => {
+    const result = CreateHabitSchema.safeParse({
+      name: "Ler",
+      type: "LECTURE",
+      unit: "páginas",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita unit livre quando type é DURATION", () => {
+    const result = CreateHabitSchema.safeParse({
+      name: "Treinar",
+      type: "DURATION",
+      target: 40,
+      unit: "páginas",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("HabitUpdateSchema", () => {
@@ -128,6 +174,42 @@ describe("HabitUpdateSchema", () => {
       target: 10,
     });
     expect(result.success).toBe(false);
+  });
+
+  // target null é o sinal de unset: não pode ser rejeitado nem em tipo não mensurável.
+  it("aceita target null como unset em type não mensurável", () => {
+    const result = HabitUpdateSchema.safeParse({
+      type: "BOOLEAN",
+      target: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita target em WORKOUT", () => {
+    const result = HabitUpdateSchema.safeParse({
+      type: "WORKOUT",
+      target: 2,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita unit em LECTURE", () => {
+    const result = HabitUpdateSchema.safeParse({
+      type: "LECTURE",
+      unit: "páginas",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  // Patch parcial sem type: o schema não conhece o tipo atual e não pode rejeitar unit.
+  it("aceita patch só de unit sem type", () => {
+    const result = HabitUpdateSchema.safeParse({
+      unit: "MINUTES",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({ unit: "MINUTES" });
+    }
   });
 
   // Atenção: o body do update NÃO é .strict(), só o CreateHabitSchema é.
