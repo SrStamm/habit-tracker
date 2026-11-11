@@ -166,44 +166,46 @@ function HabitDetail({
             )}
           </div>
 
-          <div ref={menuRef} className="relative shrink-0">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              className="rounded-lg px-2.5 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
-            >
-              ⋯
-            </button>
-            {menuOpen && (
-              <div
-                role="menu"
-                className="absolute right-0 top-full mt-2 z-10 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
+          {habit.active && (
+            <div ref={menuRef} className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                className="rounded-lg px-2.5 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
               >
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onEdit(habit);
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-100"
+                ⋯
+              </button>
+              {menuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full mt-2 z-10 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-lg"
                 >
-                  Editar
-                </button>
-                <button
-                  role="menuitem"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onArchive(habit._id);
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-danger hover:bg-red-50"
-                >
-                  Arquivar
-                </button>
-              </div>
-            )}
-          </div>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onEdit(habit);
+                    }}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-100"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      onArchive(habit._id);
+                    }}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-danger hover:bg-red-50"
+                  >
+                    Arquivar
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Tarjetas de Métricas (KPIs) */}

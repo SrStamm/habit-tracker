@@ -10,6 +10,7 @@ import { Entry } from "@habits/shared/entry";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import { workoutSummary } from "../../workout/lib/workoutSummary";
 import { lectureSummary } from "../../lecture/lectureSummary";
+import { cn } from "../../../lib/cn";
 
 type HabitCardProps = {
   habit: Habit;
@@ -67,18 +68,28 @@ function HabitCard({
   return (
     <div
       onClick={() => onSelect?.(habit._id)}
-      className="group relative flex flex-col justify-between p-4 rounded-xl bg-card border border-border hover:border-primary/50 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
+      className={cn(
+        "group relative flex flex-col justify-between p-4 rounded-xl border transition-all",
+        habit.active
+          ? "bg-card border-border hover:border-primary/50 shadow-sm hover:shadow-md cursor-pointer"
+          : "bg-slate-200/70 border-dashed border-slate-300 text-text-muted cursor-default hover:shadow-none",
+      )}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <Tag>{HABIT_TYPE_LABELS[habit.type]}</Tag>
-          <h3 className="text-base font-medium text-text mt-1 group-hover:text-primary transition-colors">
+          <h3
+            className={cn(
+              "text-base font-medium text-text mt-1 transition-colors",
+              habit.active && "group-hover:text-primary",
+            )}
+          >
             {habit.name}
           </h3>
         </div>
 
         {/* Badge de Streak a la derecha */}
-        {streak !== undefined && (
+        {streak !== undefined && habit.active && (
           <div
             className={`inline-flex items-center gap-1.5 shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
               streak > 0
@@ -95,82 +106,93 @@ function HabitCard({
       </div>
 
       {/* Controles de registro diario segun el tipo de hábito */}
-      <div className="mt-2 pt-3 border-t border-border/40 flex items-center justify-between">
-        <span className="text-xs text-text-muted">Hoje:</span>
+      {habit.active && (
+        <div className="mt-2 pt-3 border-t border-border/40 flex items-center justify-between">
+          <span className="text-xs text-text-muted">Hoje:</span>
 
-        {habit.type === HabitType.BOOLEAN ? (
-          <Button
-            size="sm"
-            variant={completedToday ? "primary" : "outline"}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleCheck();
-            }}
-            disabled={isPending}
-            className="text-xs"
-          >
-            {completedToday ? "✓ Cumprido" : "Marcar hoje"}
-          </Button>
-        ) : habit.type === HabitType.WORKOUT ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted">
-              {workoutSummary(todayEntry?.workout)}
-            </span>
+          {habit.type === HabitType.BOOLEAN ? (
             <Button
               size="sm"
-              variant="outline"
-              className="text-xs"
+              variant={completedToday ? "primary" : "outline"}
               onClick={(e) => {
                 e.stopPropagation();
-                onSelect?.(habit._id);
+                handleToggleCheck();
               }}
-            >
-              Registrar
-            </Button>
-          </div>
-        ) : habit.type === HabitType.LECTURE ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-text-muted">
-              {lectureSummary(todayEntry?.lecture)}
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
+              disabled={isPending}
               className="text-xs"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelect?.(habit._id);
-              }}
             >
-              Registrar
+              {completedToday ? "✓ Cumprido" : "Marcar hoje"}
             </Button>
-          </div>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleValueSubmit();
-            }}
-            className="flex items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Input
-              type="number"
-              placeholder={
-                habit.type === HabitType.DURATION && habit.unit
-                  ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
-                  : habit.unit
-              }
-              value={value}
-              onChange={(e) => setValue(e.target.valueAsNumber || "")}
-              className="w-24 px-2 py-1 text-xs bg-background"
-            />
-            <Button size="sm" type="submit" disabled={!value}>
-              {isPending ? "Guardando..." : "Guardar"}
-            </Button>
-          </form>
-        )}
-      </div>
+          ) : habit.type === HabitType.WORKOUT ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-muted">
+                {workoutSummary(todayEntry?.workout)}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect?.(habit._id);
+                }}
+              >
+                Registrar
+              </Button>
+            </div>
+          ) : habit.type === HabitType.LECTURE ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-muted">
+                {lectureSummary(todayEntry?.lecture)}
+              </span>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect?.(habit._id);
+                }}
+              >
+                Registrar
+              </Button>
+            </div>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleValueSubmit();
+              }}
+              className="flex items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Input
+                type="number"
+                placeholder={
+                  habit.type === HabitType.DURATION && habit.unit
+                    ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
+                    : habit.unit
+                }
+                value={value}
+                onChange={(e) => setValue(e.target.valueAsNumber || "")}
+                className="w-24 px-2 py-1 text-xs bg-background"
+              />
+              <Button size="sm" type="submit" disabled={!value}>
+                {isPending ? "Guardando..." : "Guardar"}
+              </Button>
+            </form>
+          )}
+        </div>
+      )}
+
+      {!habit.active && (
+        <div className="mt-2 pt-3 border-t border-border/40 flex items-center justify-between">
+          <span className="text-xs text-text-muted">Estado:</span>
+          <span className="text-xs rounded-full px-2.5 py-1 bg-card text-text-muted border border-slate-300/80">
+            Arquivado
+          </span>
+        </div>
+      )}
 
       {error ? (
         <p role="alert" className="mt-2 text-xs text-red-600">

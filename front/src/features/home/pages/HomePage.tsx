@@ -21,6 +21,7 @@ export default function HomePage() {
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [habitSelected, setHabitSelected] = useState<Habit | null>();
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [all, setAll] = useState<boolean>(false);
   const {
     data: habitData,
     error,
@@ -43,10 +44,15 @@ export default function HomePage() {
   // Obtem todos os Habits com a categorie do filter
   const filteredHabits = useMemo(() => {
     const habits = habitData ?? [];
+
+    if (all === true) {
+      return all ? habits.filter((h) => h.active === false) : habits;
+    }
+
     return categoryFilter
       ? habits.filter((h) => h.category === categoryFilter)
       : habits;
-  }, [habitData, categoryFilter]);
+  }, [habitData, categoryFilter, all]);
 
   const selectHabit = (_id: string) => {
     const habitFinded = habitData?.find((h) => h._id === _id);
@@ -60,8 +66,8 @@ export default function HomePage() {
   const today = fmtDayKey(new Date());
 
   useEffect(() => {
-    habitMutate();
-  }, []);
+    habitMutate(all);
+  }, [all]);
 
   const hace90d = new Date();
   hace90d.setDate(hace90d.getDate() - 90);
@@ -124,7 +130,7 @@ export default function HomePage() {
 
   const onSuccess = () => {
     setIsModalOpen(false);
-    habitMutate();
+    habitMutate(all);
   };
 
   const formProps =
@@ -153,7 +159,7 @@ export default function HomePage() {
 
         <section>
           <TodaySummary
-            habits={filteredHabits}
+            habits={all ? [] : filteredHabits}
             entriesByHabit={todayByHabit}
             isPending={historyEntries.isPending}
             error={historyEntries.error}
@@ -192,8 +198,26 @@ export default function HomePage() {
             )}
 
             <div className="flex gap-2 items-center">
+              <Button
+                type="button"
+                variant={all ? "outline" : "primary"}
+                onClick={() => setAll(false)}
+              >
+                Ativos
+              </Button>
+              <Button
+                type="button"
+                variant={all ? "primary" : "outline"}
+                onClick={() => setAll(true)}
+              >
+                Arquivados
+              </Button>
+            </div>
+
+            <div className="flex gap-2 items-center">
               <span className="text-xs text-text-muted">
-                {filteredHabits ? filteredHabits.length : 0} ativos
+                {filteredHabits ? filteredHabits.length : 0}{" "}
+                {all ? "arquivados" : "ativos"}
               </span>
 
               <Button onClick={onCreateHabit} className="shadow-sm">
