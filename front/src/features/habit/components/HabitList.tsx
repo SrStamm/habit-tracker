@@ -8,6 +8,8 @@ type ListHabitCardProps = {
   onSelect?: (habitId: string) => void;
   onEntrySaved?: () => void;
   streaks?: Map<string, number>;
+  emptyTitle?: string;
+  emptyDescription?: string;
 };
 
 function HabitList({
@@ -16,14 +18,14 @@ function HabitList({
   todayByHabit,
   onEntrySaved,
   streaks,
+  emptyTitle = "Ainda não tem nenhum hábito registado.",
+  emptyDescription = 'Cria o primeiro com o botão "+ Novo Hábito".',
 }: ListHabitCardProps) {
   if (habits.length === 0) {
     return (
       <div className="text-center py-12 border border-dashed border-border rounded-xl text-text-muted">
-        <p className="text-sm">Ainda não tem nenhum hábito registado.</p>
-        <p className="text-xs mt-1">
-          Cria o primeiro com o botão "+ Novo Hábito".
-        </p>
+        <p className="text-sm">{emptyTitle}</p>
+        <p className="text-xs mt-1">{emptyDescription}</p>
       </div>
     );
   }

@@ -14,6 +14,7 @@ import HabitDetail from "../../habit/components/HabitDetail";
 import { Habit } from "@habits/shared/habit";
 import { formatDate } from "../../../lib/formDate";
 import { Select } from "../../../components/ui/Select";
+import { cn } from "../../../lib/cn";
 
 export default function HomePage() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -33,23 +34,26 @@ export default function HomePage() {
   const { isPending: isArchivePending, mutate: archiveMutate } =
     useArchiveHabit();
 
-  // Obtem as categories que existem nos Habits
+  // Obtem as categories que existem nos Habits ativos
   const categories = useMemo(
     () => [
-      ...new Set((habitData ?? []).map((h) => h.category).filter(Boolean)),
+      ...new Set(
+        (habitData ?? [])
+          .filter((h) => h.active)
+          .map((h) => h.category)
+          .filter(Boolean),
+      ),
     ],
     [habitData],
   );
 
-  // Obtem todos os Habits com a categorie do filter
+  // Vista Ativos/Arquivados + filtro de categoria (aplicado só na vista ativa)
   const filteredHabits = useMemo(() => {
-    const habits = habitData ?? [];
+    const habits = (habitData ?? []).filter((h) =>
+      all ? !h.active : h.active,
+    );
 
-    if (all === true) {
-      return all ? habits.filter((h) => h.active === false) : habits;
-    }
-
-    return categoryFilter
+    return !all && categoryFilter
       ? habits.filter((h) => h.category === categoryFilter)
       : habits;
   }, [habitData, categoryFilter, all]);
@@ -65,9 +69,11 @@ export default function HomePage() {
 
   const today = fmtDayKey(new Date());
 
+  // Uma única busca com todos os hábitos; a vista Ativos/Arquivados
+  // é filtrada no cliente para a troca ser instantânea, sem rede.
   useEffect(() => {
-    habitMutate(all);
-  }, [all]);
+    void habitMutate(true);
+  }, []);
 
   const hace90d = new Date();
   hace90d.setDate(hace90d.getDate() - 90);
@@ -130,7 +136,7 @@ export default function HomePage() {
 
   const onSuccess = () => {
     setIsModalOpen(false);
-    habitMutate(all);
+    void habitMutate(true);
   };
 
   const formProps =
@@ -177,44 +183,57 @@ export default function HomePage() {
         </Modal>
 
         <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-text">Meus Hábitos</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-text">Meus Hábitos</h2>
 
-            {categories.length > 0 && (
-              <Select
-                className="py-0.5 w-auto text-xs px-2"
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                value={categoryFilter}
-              >
-                <option key="" value="">
-                  Todas
-                </option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </Select>
-            )}
-
-            <div className="flex gap-2 items-center">
-              <Button
-                type="button"
-                variant={all ? "outline" : "primary"}
-                onClick={() => setAll(false)}
-              >
-                Ativos
-              </Button>
-              <Button
-                type="button"
-                variant={all ? "primary" : "outline"}
-                onClick={() => setAll(true)}
-              >
-                Arquivados
-              </Button>
+              {/* Switch de vista: Ativos / Arquivados */}
+              <div className="flex items-center rounded-lg border border-border bg-card p-1 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setAll(false)}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                    all
+                      ? "text-text-muted hover:text-text"
+                      : "bg-primary text-white",
+                  )}
+                >
+                  Ativos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAll(true)}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                    all
+                      ? "bg-primary text-white"
+                      : "text-text-muted hover:text-text",
+                  )}
+                >
+                  Arquivados
+                </button>
+              </div>
             </div>
 
-            <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-2">
+              {!all && categories.length > 0 && (
+                <Select
+                  className="py-0.5 w-auto text-xs px-2"
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  value={categoryFilter}
+                >
+                  <option key="" value="">
+                    Todas
+                  </option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </Select>
+              )}
+
               <span className="text-xs text-text-muted">
                 {filteredHabits ? filteredHabits.length : 0}{" "}
                 {all ? "arquivados" : "ativos"}
@@ -232,6 +251,16 @@ export default function HomePage() {
             onEntrySaved={refreshHistory}
             streaks={streaks}
             onSelect={selectHabit}
+            emptyTitle={
+              all
+                ? "Ainda não tem nenhum hábito arquivado."
+                : undefined
+            }
+            emptyDescription={
+              all
+                ? "Os hábitos que arquivar aparecem aqui."
+                : undefined
+            }
           />
 
           {error && (
