@@ -4,6 +4,8 @@ import { Tag } from "../../../components/ui/Tag";
 import { Button } from "../../../components/ui/Button";
 import { Select } from "../../../components/ui/Select";
 import { buildHeatmap, Cell } from "../../entry/lib/buildHeatmap";
+import { useHabitEntries } from "../../entry/hooks/useEntries";
+import { mergeEntries } from "../../entry/lib/mergeEntries";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import WeekLabels from "./WeekLabels";
 import HeatmapGrid from "./HeatmapGrid";
@@ -43,15 +45,22 @@ function HabitDetail({
   const menuRef = useRef<HTMLDivElement>(null);
   const menuOpenRef = useRef(menuOpen);
 
-  const today = new Date();
-  const hace90d = new Date();
-  hace90d.setDate(hace90d.getDate() - days);
+  const rangeEntries = useHabitEntries(habit._id, days);
+
+  const entriesInRange = useMemo(
+    () => mergeEntries(entries, rangeEntries.data ?? []),
+    [entries, rangeEntries.data],
+  );
+
+  const desde = new Date();
+  desde.setDate(desde.getDate() - days);
+  const desdeKey = fmtDayKey(desde);
 
   const weeks = buildHeatmap(
-    entries,
+    entriesInRange,
     habit.type,
-    fmtDayKey(hace90d),
-    fmtDayKey(today),
+    desdeKey,
+    todayKey,
     undefined,
     habit.unit ?? undefined,
   );
@@ -64,11 +73,8 @@ function HabitDetail({
   // BOOLEAN cuenta días cumplidos; QUANTITY/DURATION suman value en la
   // unidad cruda del hábito (no hay conversión en el front).
   const periodTotal = useMemo(() => {
-    const start = new Date();
-    start.setDate(start.getDate() - days);
-    const cutoff = fmtDayKey(start);
-    const inRange = entries.filter(
-      (e) => e.dayKey >= cutoff && e.dayKey <= todayKey,
+    const inRange = entriesInRange.filter(
+      (e) => e.dayKey >= desdeKey && e.dayKey <= todayKey,
     );
 
     if (habit.type === HabitType.BOOLEAN) {
@@ -84,7 +90,7 @@ function HabitDetail({
     }
 
     return inRange.reduce((sum, e) => sum + (e.value ?? 0), 0);
-  }, [entries, days, habit.type, todayKey]);
+  }, [entriesInRange, desdeKey, todayKey, habit.type]);
 
   useEffect(() => {
     menuOpenRef.current = menuOpen;
@@ -125,6 +131,11 @@ function HabitDetail({
     setSelectedDate(cell.date);
     syncDay(cell.date);
     setShowEntryForm(true);
+  };
+
+  const handleEntrySaved = () => {
+    rangeEntries.refetch();
+    onEntrySaved?.();
   };
 
   return (
@@ -244,7 +255,7 @@ function HabitDetail({
 
       {/*
       # Visualización de Consistencia
-      - Heatmap interactivo: últimos 90 días.
+      - Heatmap interactivo: rango seleccionado (hasta 365 días).
       - Tooltip al hacer hover/click en un día: ver fecha exacta y valor registrado
       */}
 
@@ -288,6 +299,12 @@ function HabitDetail({
             </div>
           )}
         </div>
+
+        {rangeEntries.error && (
+          <p role="alert" className="text-center text-xs text-red-600">
+            {rangeEntries.error}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col p-6 border-b border-slate-200">
@@ -312,13 +329,13 @@ function HabitDetail({
         {/* Colapsable: CSS only, sin librería */}
         <EntryForm
           habit={habit}
-          entries={entries}
+          entries={entriesInRange}
           dayKey={dayKey}
           setDayKey={setDayKey}
           todayKey={todayKey}
           showEntryForm={showEntryForm}
           setShowEntryForm={setShowEntryForm}
-          onEntrySaved={onEntrySaved}
+          onEntrySaved={handleEntrySaved}
         />
       </div>
 
