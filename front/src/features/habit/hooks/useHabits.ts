@@ -20,8 +20,8 @@ export const useCreateHabit = () => {
 
 export const useGetHabits = () => {
   const { error, isPending, data, setData, mutate } = useApiMutation(
-    async (_input: void): Promise<Habit[]> => {
-      const result = await getAllHabits();
+    async (all?: boolean): Promise<Habit[]> => {
+      const result = await getAllHabits(all);
       return result.allHabits;
     },
   );

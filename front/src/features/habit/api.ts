@@ -12,8 +12,11 @@ export const createHabit = async (
   return api("/habits", { method: "POST", body: data });
 };
 
-export const getAllHabits = async (): Promise<{ allHabits: Habit[] }> => {
-  return api("/habits", { method: "GET" });
+export const getAllHabits = async (
+  all?: boolean,
+): Promise<{ allHabits: Habit[] }> => {
+  const url = all ? "/habits?all=true" : "/habits";
+  return api(url, { method: "GET" });
 };
 
 export const archiveHabit = async (params: ParamsHabitDTO): Promise<void> => {
