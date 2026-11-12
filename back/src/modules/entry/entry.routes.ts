@@ -12,6 +12,7 @@ import {
   handleCreateEntry,
   handleGetAllEntries,
   handleGetEntries,
+  handleGetRecords,
 } from "./entry.controller";
 
 const entryRouter: Router = Router();
@@ -39,6 +40,13 @@ entryRouter.post(
     return validate({ body: schema })(req, res, next);
   },
   handleCreateEntry,
+);
+
+entryRouter.get(
+  "/:habitId/records",
+  validate({ params: EntryParamsSchema }),
+  validateHabitOwner,
+  handleGetRecords,
 );
 
 export const entryRoutes = { basePath: "/habits", router: entryRouter };

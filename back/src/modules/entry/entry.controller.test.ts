@@ -4,8 +4,14 @@ import {
   handleCreateEntry,
   handleGetEntries,
   handleGetAllEntries,
+  handleGetRecords,
 } from "./entry.controller";
-import { upsertEntry, getEntries, getAllEntries } from "./entry.service";
+import {
+  upsertEntry,
+  getEntries,
+  getAllEntries,
+  getRecords,
+} from "./entry.service";
 import { HabitType } from "@habits/shared/habit";
 
 // Contrato HTTP dos handlers de entry: código de estado + forma do JSON.
@@ -429,6 +435,55 @@ describe("handleGetAllEntries", () => {
     vi.mocked(getAllEntries).mockRejectedValue(erro);
 
     await expect(handleGetAllEntries(req, res)).rejects.toBe(erro);
+    expect(res.status).not.toHaveBeenCalled();
+  });
+});
+
+describe("handleGetRecords", () => {
+  it("200 + { records } no caso de sucesso", async () => {
+    const records = [
+      {
+        exercise: "Supino reto",
+        maxWeight: 100,
+        reps: 8,
+        dayKey: "2026-11-01",
+      },
+    ];
+
+    const req = {
+      userId: "u1",
+      params: { habitId: "h1" },
+    } as unknown as Request;
+
+    const res = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as unknown as Response;
+
+    vi.mocked(getRecords).mockResolvedValue(records);
+
+    await handleGetRecords(req, res);
+
+    expect(getRecords).toHaveBeenCalledWith("u1", "h1");
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ records });
+  });
+
+  it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
+    const req = {
+      userId: "u1",
+      params: { habitId: "h1" },
+    } as unknown as Request;
+
+    const res = {
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn().mockReturnThis(),
+    } as unknown as Response;
+
+    const erro = new Error("Falha Base de Dados");
+    vi.mocked(getRecords).mockRejectedValue(erro);
+
+    await expect(handleGetRecords(req, res)).rejects.toBe(erro);
     expect(res.status).not.toHaveBeenCalled();
   });
 });
