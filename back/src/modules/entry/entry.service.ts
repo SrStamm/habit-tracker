@@ -2,6 +2,8 @@ import Entry from "../../models/Entry";
 import { dayKeyFrom } from "../../lib/dayKey";
 import { APP_TIMEZONE } from "../../config/timeZone";
 import { CreateEntryDTO } from "@habits/shared/entry";
+import { WorkoutRecord } from "@habits/shared/workout";
+import { Types } from "mongoose";
 
 const dayKeyRange = (from?: Date, to?: Date) => {
   if (!from && !to) return undefined;
@@ -93,4 +95,37 @@ export const upsertEntry = async (
 
     return result;
   }
+};
+
+export const getRecords = async (
+  userId: string,
+  habitId: string,
+): Promise<WorkoutRecord[]> => {
+  const rows = await Entry.aggregate([
+    {
+      $match: {
+        userId: new Types.ObjectId(userId),
+        habitId: new Types.ObjectId(habitId),
+      },
+    },
+    { $unwind: "$workout" },
+    { $unwind: "$workout.sets" },
+    {
+      $group: {
+        _id: "$workout.exercise",
+        top: {
+          $top: {
+            sortBy: { "workout.sets.weight": -1, "workout.sets.reps": -1 },
+            output: {
+              maxWeight: "$workout.sets.weight",
+              reps: "$workout.sets.reps",
+              dayKey: "$dayKey",
+            },
+          },
+        },
+      },
+    },
+    { $sort: { "top.maxWeight": -1 } },
+  ]);
+  return rows.map((r) => ({ exercise: r._id, ...r.top }));
 };

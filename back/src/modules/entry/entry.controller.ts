@@ -1,5 +1,10 @@
 import { type Response, type Request } from "express";
-import { getEntries, getAllEntries, upsertEntry } from "./entry.service";
+import {
+  getEntries,
+  getAllEntries,
+  upsertEntry,
+  getRecords,
+} from "./entry.service";
 import { buildCreateEntrySchema } from "@habits/shared/entry";
 
 export const handleGetAllEntries = async (req: Request, res: Response) => {
@@ -37,4 +42,11 @@ export const handleCreateEntry = async (req: Request, res: Response) => {
   );
 
   res.status(updatedExisting ? 200 : 201).json({ newEntry });
+};
+
+export const handleGetRecords = async (req: Request, res: Response) => {
+  const { habitId } = req.params;
+
+  const records = await getRecords(req.userId, String(habitId));
+  res.status(200).json({ records });
 };

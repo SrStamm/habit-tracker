@@ -8,6 +8,7 @@ import {
   HabitParamsSchema as EntryParamsSchema,
   HabitType,
 } from "@habits/shared/habit";
+import { WorkoutRecordsResponseSchema } from "@habits/shared/workout";
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import z from "zod";
 
@@ -114,6 +115,29 @@ export function registerEntryDocs(r: OpenAPIRegistry) {
         content: {
           "application/json": {
             schema: z.object({ newEntry: EntryResponseSchema }),
+          },
+        },
+      },
+    },
+  });
+
+  r.registerPath({
+    summary: "Listar os records pessoais de um Hábito WORKOUT",
+    tags: ["Entry"],
+    operationId: "getRecords",
+    method: "get",
+    path: "/habits/{habitId}/records",
+    security: [{ bearerAuth: [] }],
+    request: {
+      params: EntryParamsSchema,
+    },
+    responses: {
+      200: {
+        description:
+          "Obter o peso máximo por exercício de um Hábito WORKOUT. Hábitos de outros tipos devolvem lista vazia",
+        content: {
+          "application/json": {
+            schema: WorkoutRecordsResponseSchema,
           },
         },
       },
