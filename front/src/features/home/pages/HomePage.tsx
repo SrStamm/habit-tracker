@@ -4,6 +4,7 @@ import { Button } from "../../../components/ui/Button";
 import HabitForm from "../../habit/components/HabitForm";
 import HabitList from "../../habit/components/HabitList";
 import TodaySummary from "../components/TodaySummary";
+import ConsistencyHeatmap from "../components/ConsistencyHeatmap";
 import { useArchiveHabit, useGetHabits } from "../../habit/hooks/useHabits";
 import { useEntries } from "../../entry/hooks/useEntries";
 import { useAuth } from "../../auth/context/AuthContext";
@@ -52,6 +53,17 @@ export default function HomePage() {
     const habits = (habitData ?? []).filter((h) =>
       all ? !h.active : h.active,
     );
+
+    return !all && categoryFilter
+      ? habits.filter((h) => h.category === categoryFilter)
+      : habits;
+  }, [habitData, categoryFilter, all]);
+
+  // Heatmap global: só hábitos ativos (arquivados ficam de fora, v1) e o
+  // filtro de categoria só se aplica na vista Ativos — mesma lógica do Select,
+  // que fica oculto na vista Arquivados.
+  const heatmapHabits = useMemo(() => {
+    const habits = (habitData ?? []).filter((h) => h.active);
 
     return !all && categoryFilter
       ? habits.filter((h) => h.category === categoryFilter)
@@ -170,6 +182,13 @@ export default function HomePage() {
             isPending={historyEntries.isPending}
             error={historyEntries.error}
             onRefresh={refreshHistory}
+          />
+        </section>
+
+        <section>
+          <ConsistencyHeatmap
+            habits={heatmapHabits}
+            entries={historyEntries.data ?? []}
           />
         </section>
 
