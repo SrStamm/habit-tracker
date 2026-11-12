@@ -40,7 +40,9 @@ function ConsistencyHeatmap({ habits, entries }: Props) {
         <p className="text-xs text-text-muted">Últimos 90 dias</p>
       </div>
 
-      <div className="overflow-x-auto pb-2">
+      {/* p-2 (no solo pb-2): overflow-x fuerza overflow-y a auto y recortaría
+          el ring de hover de la primera fila. */}
+      <div className="overflow-x-auto p-2">
         <div className="flex gap-2 w-fit mx-auto mb-2">
           <WeekLabels />
 
