@@ -7,6 +7,7 @@ const m = vi.hoisted(() => {
     sort: vi.fn(),
     find: vi.fn(),
     findOneAndUpdate: vi.fn(),
+    aggregate: vi.fn(),
   };
 });
 
@@ -15,12 +16,19 @@ vi.mock("../../models/Entry", () => {
     default: {
       find: m.find.mockReturnValue({ sort: m.sort }),
       findOneAndUpdate: m.findOneAndUpdate,
+      aggregate: m.aggregate,
     },
   };
 });
 
-import { getAllEntries, getEntries, upsertEntry } from "./entry.service";
+import {
+  getAllEntries,
+  getEntries,
+  getRecords,
+  upsertEntry,
+} from "./entry.service";
 import { dayKeyFrom } from "../../lib/dayKey";
+import { Types } from "mongoose";
 
 // ============================================================
 // getAllEntries(userId, from?, to?, habitId?) — heatmap da home
@@ -303,5 +311,102 @@ describe("upsertEntry", () => {
       "Falha ao gravar a entry",
     );
     expect(m.findOneAndUpdate).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ============================================================
+// getRecords(userId, habitId) — records pessoais de treino
+// ============================================================
+describe("getRecords", () => {
+  // "u1"/"h1" não são hex de 24 caracteres: new Types.ObjectId lança
+  // antes de chegar ao aggregate. As fixtures precisam de ids válidos.
+  const USER_ID = "aaaaaaaaaaaaaaaaaaaaaaaa";
+  const HABIT_ID = "bbbbbbbbbbbbbbbbbbbbbbbb";
+
+  beforeEach(() => vi.clearAllMocks());
+
+  it("filtra com ObjectId no $match e usa $top por peso/reps no $group", async () => {
+    m.aggregate.mockResolvedValue([]);
+
+    await getRecords(USER_ID, HABIT_ID);
+
+    expect(m.aggregate).toHaveBeenCalledTimes(1);
+    const pipeline = m.aggregate.mock.calls[0][0] as Array<{
+      $match: { userId: unknown; habitId: unknown };
+    }>;
+
+    // Mongoose NÃO converte campos dentro de aggregate(): sem ObjectId
+    // real o $match do Mongo não encontra nada (silenciosamente).
+    const match = pipeline[0].$match;
+    expect(match.userId).toBeInstanceOf(Types.ObjectId);
+    expect(match.habitId).toBeInstanceOf(Types.ObjectId);
+    expect(String(match.userId)).toBe(USER_ID);
+    expect(String(match.habitId)).toBe(HABIT_ID);
+
+    expect(pipeline.slice(1)).toEqual([
+      { $unwind: "$workout" },
+      { $unwind: "$workout.sets" },
+      {
+        $group: {
+          _id: "$workout.exercise",
+          top: {
+            $top: {
+              sortBy: { "workout.sets.weight": -1, "workout.sets.reps": -1 },
+              output: {
+                maxWeight: "$workout.sets.weight",
+                reps: "$workout.sets.reps",
+                dayKey: "$dayKey",
+              },
+            },
+          },
+        },
+      },
+      { $sort: { "top.maxWeight": -1 } },
+    ]);
+  });
+
+  it("mapeia _id/top para { exercise, maxWeight, reps, dayKey }", async () => {
+    m.aggregate.mockResolvedValue([
+      {
+        _id: "Supino reto",
+        top: { maxWeight: 100, reps: 8, dayKey: "2026-11-01" },
+      },
+      {
+        _id: "Agachamento",
+        top: { maxWeight: 140, reps: 5, dayKey: "2026-10-20" },
+      },
+    ]);
+
+    const result = await getRecords(USER_ID, HABIT_ID);
+
+    expect(result).toEqual([
+      {
+        exercise: "Supino reto",
+        maxWeight: 100,
+        reps: 8,
+        dayKey: "2026-11-01",
+      },
+      {
+        exercise: "Agachamento",
+        maxWeight: 140,
+        reps: 5,
+        dayKey: "2026-10-20",
+      },
+    ]);
+  });
+
+  it("aggregate sem linhas -> [] (hábito sem treinos)", async () => {
+    m.aggregate.mockResolvedValue([]);
+
+    const result = await getRecords(USER_ID, HABIT_ID);
+
+    expect(result).toEqual([]);
+  });
+
+  it("erro do aggregate propaga sem responder", async () => {
+    const erro = new Error("connection lost");
+    m.aggregate.mockRejectedValue(erro);
+
+    await expect(getRecords(USER_ID, HABIT_ID)).rejects.toBe(erro);
   });
 });
