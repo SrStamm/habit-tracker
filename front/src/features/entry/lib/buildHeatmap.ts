@@ -11,7 +11,7 @@ export type Cell = {
   label: string;
 };
 
-const toLocalDayKey = (date: string): string => {
+export const toLocalDayKey = (date: string): string => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return date;
   }
@@ -65,7 +65,7 @@ const getMaxValue = (values: Map<string, number>): number => {
   return Math.max(...values.values());
 };
 
-const valueToLevel = (value: number, max: number): 0 | 1 | 2 | 3 | 4 => {
+export const valueToLevel = (value: number, max: number): 0 | 1 | 2 | 3 | 4 => {
   if (max === 0) return 0;
 
   const newValue = value / max;
@@ -88,7 +88,7 @@ const addOneDay = (date: string): string => {
   ).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`;
 };
 
-const buildDayRange = (from: string, to: string) => {
+export const buildDayRange = (from: string, to: string) => {
   const array: string[] = [];
   let currentDate = from;
 
@@ -159,7 +159,7 @@ const fillNulls = (quantity: number): null[] => {
   return Array.from({ length: quantity }, () => null);
 };
 
-const createPadding = (cells: Cell[], from: string) => {
+export const createPadding = (cells: Cell[], from: string) => {
   const [year, month, day] = from.split("-");
   const currentDate = new Date(Number(year), Number(month) - 1, Number(day));
 
