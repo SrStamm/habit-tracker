@@ -3,8 +3,9 @@ import {
   Entry,
   GetEntriesQueryDTO,
 } from "@habits/shared/entry";
+import { WorkoutRecord } from "@habits/shared/workout";
 import { useCallback, useEffect, useState } from "react";
-import { createEntry, getAllEntries } from "../api";
+import { createEntry, getAllEntries, getWorkoutRecords } from "../api";
 import { useApiMutation } from "../../../lib/useApiMutation";
 
 export const useEntries = () => {
@@ -73,6 +74,51 @@ export const useHabitEntries = (habitId: string, days: number) => {
       cancelled = true;
     };
   }, [habitId, days, refreshTick]);
+
+  const refetch = useCallback(() => setRefreshTick((t) => t + 1), []);
+
+  return { data, error, isPending, refetch };
+};
+
+// Records personales (mejor peso por ejercicio) de un hábito WORKOUT.
+// enabled=false no fetch: el hook queda en data=null / isPending=false /
+// error=null (si se desactiva a mitad de vuelo, cancelled lo descarta).
+export const useWorkoutRecords = (habitId: string, enabled: boolean) => {
+  const [data, setData] = useState<WorkoutRecord[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, setIsPending] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  useEffect(() => {
+    if (!enabled) {
+      // Sin fetch: estado idle limpio (si se desactiva a mitad de vuelo,
+      // el cleanup anterior marcó cancelled y aquí se limpia el resto).
+      setData(null);
+      setError(null);
+      setIsPending(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    setIsPending(true);
+    setError(null);
+
+    getWorkoutRecords(habitId)
+      .then((result) => {
+        if (!cancelled) setData(result.records);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        if (!cancelled) setIsPending(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [habitId, enabled, refreshTick]);
 
   const refetch = useCallback(() => setRefreshTick((t) => t + 1), []);
 

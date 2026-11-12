@@ -4,7 +4,10 @@ import { Tag } from "../../../components/ui/Tag";
 import { Button } from "../../../components/ui/Button";
 import { Select } from "../../../components/ui/Select";
 import { buildHeatmap, Cell } from "../../entry/lib/buildHeatmap";
-import { useHabitEntries } from "../../entry/hooks/useEntries";
+import {
+  useHabitEntries,
+  useWorkoutRecords,
+} from "../../entry/hooks/useEntries";
 import { mergeEntries } from "../../entry/lib/mergeEntries";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
 import WeekLabels from "./WeekLabels";
@@ -16,6 +19,7 @@ import GoalList from "../../goal/components/GoalList";
 import { formatDate } from "../../../lib/formDate";
 import KpiCard from "./KpiCard";
 import EntryForm from "./EntryForm";
+import WorkoutRecords from "../../workout/components/WorkoutRecords";
 
 type Props = {
   habit: Habit;
@@ -46,6 +50,11 @@ function HabitDetail({
   const menuOpenRef = useRef(menuOpen);
 
   const rangeEntries = useHabitEntries(habit._id, days);
+  // Sin condicionales: rules of hooks. Solo fetch activo si es WORKOUT.
+  const records = useWorkoutRecords(
+    habit._id,
+    habit.type === HabitType.WORKOUT,
+  );
 
   const entriesInRange = useMemo(
     () => mergeEntries(entries, rangeEntries.data ?? []),
@@ -135,6 +144,7 @@ function HabitDetail({
 
   const handleEntrySaved = () => {
     rangeEntries.refetch();
+    records.refetch(); // no-op si el hábito no es WORKOUT (enabled=false)
     onEntrySaved?.();
   };
 
@@ -306,6 +316,15 @@ function HabitDetail({
           </p>
         )}
       </div>
+
+      {habit.type === HabitType.WORKOUT && (
+        <WorkoutRecords
+          records={records.data ?? []}
+          isPending={records.isPending}
+          error={records.error}
+          unit={habit.unit ?? undefined}
+        />
+      )}
 
       <div className="flex flex-col p-6 border-b border-slate-200">
         <div className="flex items-center justify-between">

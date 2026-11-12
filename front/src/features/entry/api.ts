@@ -3,6 +3,7 @@ import {
   Entry,
   GetEntriesQueryDTO,
 } from "@habits/shared/entry";
+import { WorkoutRecord } from "@habits/shared/workout";
 import { api } from "../../lib/api";
 
 const createURL = (filter?: GetEntriesQueryDTO, habitId?: string): string => {
@@ -40,4 +41,12 @@ export const getAllEntries = async (
   const url = createURL(filter, habitId);
 
   return api(url, { method: "GET" });
+};
+
+// Records personales de un hábito WORKOUT (mejor peso por ejercicio,
+// ordenados por el backend de maxWeight desc).
+export const getWorkoutRecords = async (
+  habitId: string,
+): Promise<{ records: WorkoutRecord[] }> => {
+  return api(`/habits/${habitId}/records`, { method: "GET" });
 };
