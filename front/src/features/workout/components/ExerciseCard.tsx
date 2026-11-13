@@ -1,7 +1,12 @@
 import { useId } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
-import { ExerciseDraft, SetDraft, emptySet } from "../lib/workoutDraft";
+import {
+  ExerciseDraft,
+  SetDraft,
+  duplicateSet,
+  emptySet,
+} from "../lib/workoutDraft";
 import SetRow from "./SetRow";
 
 type Props = {
@@ -90,9 +95,13 @@ function ExerciseCard({
         variant="ghost"
         size="sm"
         disabled={disabled}
-        onClick={() =>
-          onChange({ ...exercise, sets: [...exercise.sets, emptySet()] })
-        }
+        onClick={() => {
+          const last = exercise.sets[exercise.sets.length - 1];
+          onChange({
+            ...exercise,
+            sets: [...exercise.sets, last ? duplicateSet(last) : emptySet()],
+          });
+        }}
         className="self-start text-xs text-primary"
       >
         + Adicionar série
