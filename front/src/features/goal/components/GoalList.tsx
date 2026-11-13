@@ -42,7 +42,11 @@ function GoalList({ habitId, habitType, unit, refreshKey }: Props) {
     isPending: isPendingCreate,
     error: errorCreate,
   } = useCreateGoal();
-  const { mutate: mutateDelete, isPending: isPendingDelete } = useDeleteGoal();
+  const {
+    mutate: mutateDelete,
+    isPending: isPendingDelete,
+    error: errorDelete,
+  } = useDeleteGoal();
 
   useEffect(() => {
     mutate();
@@ -228,6 +232,12 @@ function GoalList({ habitId, habitType, unit, refreshKey }: Props) {
           </div>
         );
       })}
+
+      {errorDelete && (
+        <p role="alert" className="text-xs text-red-600">
+          {errorDelete}
+        </p>
+      )}
 
       {/* Form siempre montado: se abre/cierra con transición CSS (patrón EntryForm). */}
       <div
