@@ -159,7 +159,9 @@ export const getGoalProgress = async (
     }, 0);
   }
 
-  const pct = (current / goal.amount) * 100;
+  // Arredonda para 2 casas decimais: o front só pinta o valor, então a
+  // precisão (e a representação dela) é responsabilidade do backend.
+  const pct = Math.round((current / goal.amount) * 100 * 100) / 100;
 
   // DURATION é sempre MINUTES porque a soma acima já converteu;
   // QUANTITY usa a unidade livre do hábito.

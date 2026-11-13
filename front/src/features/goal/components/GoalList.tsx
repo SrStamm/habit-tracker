@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCreateGoal, useDeleteGoal, useGetGoals } from "../hooks/useGoal";
 import { getGoalProgress } from "../api";
 import { GoalPeriod, GoalProgressResponseDTO } from "@habits/shared/goal";
@@ -10,6 +10,7 @@ import { Select } from "../../../components/ui/Select";
 import { HabitType } from "@habits/shared/habit";
 import { goalAmountUnitLabel } from "../lib/amountUnitLabels";
 import { formatDate } from "../../../lib/formDate";
+import { cn } from "../../../lib/cn";
 
 interface Props {
   habitId: string;
@@ -25,6 +26,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
   const [amount, setAmount] = useState<number | "">(1);
   const [period, setPeriod] = useState<GoalPeriod>(GoalPeriod.MONTH);
   const [showForm, setShowForm] = useState(false);
+  const amountRef = useRef<HTMLInputElement>(null);
 
   const {
     mutate,
@@ -65,6 +67,12 @@ function GoalList({ habitId, habitType, unit }: Props) {
       cancelled = true;
     };
   }, [goals]);
+
+  // autoFocus de React solo actúa al montar, y el form ahora se monta
+  // cerrado: enfocamos el valor recién cuando se abre.
+  useEffect(() => {
+    if (showForm) amountRef.current?.focus();
+  }, [showForm]);
 
   const handleSubmit = async () => {
     // `amount` puede venir como "" (campo vacío) o number: narrow antes de
@@ -162,7 +170,10 @@ function GoalList({ habitId, habitType, unit }: Props) {
           );
         }
 
-        const done = progress.pct >= 100;
+        // El pct viene redondeado a 2 decimales: comparar current contra
+        // amount evita pintar como cumplido un goal que aún no llegó
+        // (por ejemplo 99.996% → 100% tras el redondeo).
+        const done = progress.current >= progress.amount;
 
         return (
           <div
@@ -216,75 +227,91 @@ function GoalList({ habitId, habitType, unit }: Props) {
         );
       })}
 
-      {showForm && (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-          className="flex flex-col gap-2"
-          id="form-goal"
-        >
-          {!isPendingCreate && errorCreate ? (
-            <div className="relative p-4 rounded-xl border border-slate-200 bg-white animate-pulse">
-              <p role="alert" className="mt-2 text-xs text-red-600">
-                {errorCreate}
-              </p>
-            </div>
-          ) : (
-            ""
-          )}
-
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="goal-amount">
-                Valor ({goalAmountUnitLabel(habitType, unit)}):
-              </Label>
-
-              <Input
-                id="goal-amount"
-                type="number"
-                min={1}
-                step={1}
-                value={amount}
-                onChange={(e) => {
-                  setAmount(
-                    e.target.value === "" ? "" : Number(e.target.value),
-                  );
-                }}
-                className="flex-1 min-w-0 px-2 py-1 text-sm bg-white"
-                autoFocus
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <Label htmlFor="goal-period">Período:</Label>
-              <Select
-                id="goal-period"
-                required
-                value={period}
-                onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
-                className="flex-1 min-w-0 px-2 py-1 text-sm bg-white"
-              >
-                {Object.values(GoalPeriod).map((goalPeriod) => (
-                  <option key={goalPeriod} value={goalPeriod}>
-                    {GOAL_PERIOD_LABELS[goalPeriod]}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <Button
-              size="sm"
-              disabled={isPendingCreate || !amount || amount < 1}
-              className="text-xs col-span-full justify-self-end"
-              type="submit"
+      {/* Form siempre montado: se abre/cierra con transición CSS (patrón EntryForm). */}
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows,margin] duration-200 ease-out",
+          showForm ? "grid-rows-[1fr]" : "-mt-4 grid-rows-[0fr]",
+        )}
+      >
+        <div className="overflow-hidden">
+          <div
+            inert={!showForm}
+            className={cn(
+              "transition-opacity duration-200",
+              showForm ? "opacity-100" : "opacity-0",
+            )}
+          >
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              className="flex flex-col gap-2"
+              id="form-goal"
             >
-              {isPendingCreate ? "Criando..." : "Criar"}
-            </Button>
+              {!isPendingCreate && errorCreate ? (
+                <div className="relative p-4 rounded-xl border border-slate-200 bg-white animate-pulse">
+                  <p role="alert" className="mt-2 text-xs text-red-600">
+                    {errorCreate}
+                  </p>
+                </div>
+              ) : (
+                ""
+              )}
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="goal-amount">
+                    Valor ({goalAmountUnitLabel(habitType, unit)}):
+                  </Label>
+
+                  <Input
+                    id="goal-amount"
+                    ref={amountRef}
+                    type="number"
+                    min={1}
+                    step={1}
+                    value={amount}
+                    onChange={(e) => {
+                      setAmount(
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      );
+                    }}
+                    className="flex-1 min-w-0 px-2 py-1 text-sm bg-white"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor="goal-period">Período:</Label>
+                  <Select
+                    id="goal-period"
+                    required
+                    value={period}
+                    onChange={(e) => setPeriod(e.target.value as GoalPeriod)}
+                    className="flex-1 min-w-0 px-2 py-1 text-sm bg-white"
+                  >
+                    {Object.values(GoalPeriod).map((goalPeriod) => (
+                      <option key={goalPeriod} value={goalPeriod}>
+                        {GOAL_PERIOD_LABELS[goalPeriod]}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+
+                <Button
+                  size="sm"
+                  disabled={isPendingCreate || !amount || amount < 1}
+                  className="text-xs col-span-full justify-self-end"
+                  type="submit"
+                >
+                  {isPendingCreate ? "Criando..." : "Criar"}
+                </Button>
+              </div>
+            </form>
           </div>
-        </form>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
