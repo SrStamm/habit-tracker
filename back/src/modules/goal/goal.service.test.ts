@@ -460,7 +460,7 @@ describe("getGoalProgress", () => {
   });
 
   // ============================================================
-  // WORKOUT — volume = Σ(reps × peso) na janela do período
+  // WORKOUT — volume = Σ(reps × peso); peso 0 explícito conta reps
   // ============================================================
   describe("WORKOUT", () => {
     it("soma o volume de todas as entries, exercícios e séries e devolve unit kg·rep", async () => {
@@ -526,6 +526,36 @@ describe("getGoalProgress", () => {
 
       expect(result.current).toBe(10);
       expect(result.pct).toBe(100);
+    });
+
+    it("conta reps de séries com peso 0 explícito (peso corporal)", async () => {
+      m.findOne.mockResolvedValue(
+        goalDoc({ amount: 45, period: GoalPeriod.WEEK }),
+      );
+      m.entryFind.mockResolvedValue([
+        {
+          workout: [
+            {
+              sets: [
+                { reps: 15, weight: 0 }, // 15
+                { reps: 10, weight: 0 }, // 10
+              ],
+            },
+            { sets: [{ reps: 20, weight: 0 }] }, // 20
+          ],
+        },
+      ]);
+
+      const result = await getGoalProgress(
+        "u1",
+        "h1",
+        "g1",
+        makeHabit({ type: HabitType.WORKOUT }),
+      );
+
+      expect(result.current).toBe(45);
+      expect(result.pct).toBe(100);
+      expect(result.unit).toBe("kg·rep");
     });
 
     it("sem entries na janela: current 0, pct 0 e unit kg·rep", async () => {
