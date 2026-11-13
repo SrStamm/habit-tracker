@@ -108,7 +108,13 @@ export const getGoalProgress = async (
           (t, ex) =>
             t +
             ex.sets.reduce(
-              (s, set) => s + (set.reps ?? 0) * (set.weight ?? 0),
+              // Peso 0 explícito (peso corporal) conta reps × 1 para o
+              // progresso não ficar em 0. Peso ausente/null (dado legado)
+              // continua contando 0.
+              (s, set) =>
+                s +
+                (set.reps ?? 0) *
+                  (set.weight == null ? 0 : set.weight || 1),
               0,
             ),
           0,

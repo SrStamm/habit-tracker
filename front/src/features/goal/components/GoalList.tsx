@@ -16,9 +16,11 @@ interface Props {
   habitId: string;
   habitType: HabitType;
   unit?: string;
+  // Cambia cuando se guarda una entry: re-dispara el fetch de progreso.
+  refreshKey?: number;
 }
 
-function GoalList({ habitId, habitType, unit }: Props) {
+function GoalList({ habitId, habitType, unit, refreshKey }: Props) {
   const [progressMap, setProgressMap] = useState<
     Record<string, GoalProgressResponseDTO>
   >({});
@@ -40,7 +42,11 @@ function GoalList({ habitId, habitType, unit }: Props) {
     isPending: isPendingCreate,
     error: errorCreate,
   } = useCreateGoal();
-  const { mutate: mutateDelete, isPending: isPendingDelete } = useDeleteGoal();
+  const {
+    mutate: mutateDelete,
+    isPending: isPendingDelete,
+    error: errorDelete,
+  } = useDeleteGoal();
 
   useEffect(() => {
     mutate();
@@ -66,7 +72,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [goals]);
+  }, [goals, refreshKey]);
 
   // autoFocus de React solo actúa al montar, y el form ahora se monta
   // cerrado: enfocamos el valor recién cuando se abre.
@@ -226,6 +232,12 @@ function GoalList({ habitId, habitType, unit }: Props) {
           </div>
         );
       })}
+
+      {errorDelete && (
+        <p role="alert" className="text-xs text-red-600">
+          {errorDelete}
+        </p>
+      )}
 
       {/* Form siempre montado: se abre/cierra con transición CSS (patrón EntryForm). */}
       <div
