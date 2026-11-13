@@ -6,9 +6,15 @@ type Props = {
   value: LectureDraft;
   onChange: (next: LectureDraft) => void;
   disabled?: boolean;
+  suggestions?: string[];
 };
 
-function LectureEditor({ value, onChange, disabled }: Props) {
+function LectureEditor({
+  value,
+  onChange,
+  disabled,
+  suggestions = [],
+}: Props) {
   return (
     <div className="flex flex-col gap-3">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
@@ -26,6 +32,7 @@ function LectureEditor({ value, onChange, disabled }: Props) {
           <LectureCard
             lecture={l}
             disabled={disabled}
+            suggestions={suggestions}
             onChange={(next) =>
               onChange(value.map((e) => (e.id === next.id ? next : e)))
             }

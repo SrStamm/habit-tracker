@@ -6,9 +6,15 @@ type Props = {
   value: WorkoutDraft;
   onChange: (next: WorkoutDraft) => void;
   disabled?: boolean;
+  suggestions?: string[];
 };
 
-function WorkoutEditor({ value, onChange, disabled }: Props) {
+function WorkoutEditor({
+  value,
+  onChange,
+  disabled,
+  suggestions = [],
+}: Props) {
   return (
     <div className="flex flex-col gap-3">
       <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
@@ -26,6 +32,7 @@ function WorkoutEditor({ value, onChange, disabled }: Props) {
           key={exercise.id}
           exercise={exercise}
           disabled={disabled}
+          suggestions={suggestions}
           onChange={(next) =>
             onChange(value.map((e) => (e.id === next.id ? next : e)))
           }

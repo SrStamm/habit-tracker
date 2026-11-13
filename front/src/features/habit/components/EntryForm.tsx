@@ -4,8 +4,9 @@ import { cn } from "../../../lib/cn";
 import { Label } from "../../../components/ui/Label";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
+import { buildEntrySuggestions } from "../../entry/lib/buildEntrySuggestions";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import {
   WorkoutDraft,
@@ -55,6 +56,8 @@ function EntryForm({
   ]);
 
   const { isPending, error: errorCreate, mutate } = useCreateEntry();
+
+  const suggestions = useMemo(() => buildEntrySuggestions(entries), [entries]);
 
   const isToday = dayKey === todayKey;
   const entryUnitLabel =
@@ -210,6 +213,7 @@ function EntryForm({
                 value={workoutValue}
                 onChange={setWorkout}
                 disabled={isPending}
+                suggestions={suggestions.exercises}
               />
             )}
 
@@ -218,6 +222,7 @@ function EntryForm({
                 value={lectureValue}
                 onChange={setLecture}
                 disabled={isPending}
+                suggestions={suggestions.books}
               />
             )}
 
