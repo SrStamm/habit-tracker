@@ -1,6 +1,12 @@
+import { useId } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
-import { ExerciseDraft, SetDraft, emptySet } from "../lib/workoutDraft";
+import {
+  ExerciseDraft,
+  SetDraft,
+  duplicateSet,
+  emptySet,
+} from "../lib/workoutDraft";
 import SetRow from "./SetRow";
 
 type Props = {
@@ -8,9 +14,17 @@ type Props = {
   onChange: (next: ExerciseDraft) => void;
   onRemove: () => void;
   disabled?: boolean;
+  suggestions?: string[];
 };
 
-function ExerciseCard({ exercise, onChange, onRemove, disabled }: Props) {
+function ExerciseCard({
+  exercise,
+  onChange,
+  onRemove,
+  disabled,
+  suggestions = [],
+}: Props) {
+  const suggestionsId = useId();
   const updateSet = (setId: string, patch: Partial<SetDraft>) =>
     onChange({
       ...exercise,
@@ -31,11 +45,19 @@ function ExerciseCard({ exercise, onChange, onRemove, disabled }: Props) {
         <Input
           aria-label="Nome do exercício"
           placeholder="Nome do exercício"
+          list={suggestions.length > 0 ? suggestionsId : undefined}
           value={exercise.exercise}
           disabled={disabled}
           onChange={(e) => onChange({ ...exercise, exercise: e.target.value })}
           className="flex-1 px-2 py-1.5 text-sm"
         />
+        {suggestions.length > 0 && (
+          <datalist id={suggestionsId}>
+            {suggestions.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
+        )}
         <Button
           type="button"
           variant="ghost"
@@ -73,9 +95,13 @@ function ExerciseCard({ exercise, onChange, onRemove, disabled }: Props) {
         variant="ghost"
         size="sm"
         disabled={disabled}
-        onClick={() =>
-          onChange({ ...exercise, sets: [...exercise.sets, emptySet()] })
-        }
+        onClick={() => {
+          const last = exercise.sets[exercise.sets.length - 1];
+          onChange({
+            ...exercise,
+            sets: [...exercise.sets, last ? duplicateSet(last) : emptySet()],
+          });
+        }}
         className="self-start text-xs text-primary"
       >
         + Adicionar série

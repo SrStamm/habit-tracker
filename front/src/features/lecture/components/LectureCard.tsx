@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { LectureDraftItem } from "../lectureDraft";
@@ -7,20 +8,37 @@ type Props = {
   onChange: (next: LectureDraftItem) => void;
   disabled?: boolean;
   onRemove: () => void;
+  suggestions?: string[];
 };
 
-function LectureCard({ lecture, onChange, disabled, onRemove }: Props) {
+function LectureCard({
+  lecture,
+  onChange,
+  disabled,
+  onRemove,
+  suggestions = [],
+}: Props) {
+  const suggestionsId = useId();
+
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3">
       <div className="flex items-center gap-2">
         <Input
           aria-label="Nome do livro"
           placeholder="Nome do livro"
+          list={suggestions.length > 0 ? suggestionsId : undefined}
           value={lecture.book}
           disabled={disabled}
           onChange={(e) => onChange({ ...lecture, book: e.target.value })}
           className="flex-1 px-2 py-1.5 text-sm"
         />
+        {suggestions.length > 0 && (
+          <datalist id={suggestionsId}>
+            {suggestions.map((name) => (
+              <option key={name} value={name} />
+            ))}
+          </datalist>
+        )}
 
         <Input
           aria-label="Capitulo do livro"

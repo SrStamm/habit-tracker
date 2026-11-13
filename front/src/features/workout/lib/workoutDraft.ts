@@ -12,6 +12,12 @@ export const emptySet = (): SetDraft => ({
   weight: "0",
 });
 
+export const duplicateSet = (set: SetDraft): SetDraft => ({
+  id: newId(),
+  reps: set.reps,
+  weight: set.weight,
+});
+
 export const emptyExercise = (): ExerciseDraft => ({
   id: newId(),
   exercise: "",
