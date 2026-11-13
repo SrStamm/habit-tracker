@@ -16,9 +16,11 @@ interface Props {
   habitId: string;
   habitType: HabitType;
   unit?: string;
+  // Cambia cuando se guarda una entry: re-dispara el fetch de progreso.
+  refreshKey?: number;
 }
 
-function GoalList({ habitId, habitType, unit }: Props) {
+function GoalList({ habitId, habitType, unit, refreshKey }: Props) {
   const [progressMap, setProgressMap] = useState<
     Record<string, GoalProgressResponseDTO>
   >({});
@@ -66,7 +68,7 @@ function GoalList({ habitId, habitType, unit }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [goals]);
+  }, [goals, refreshKey]);
 
   // autoFocus de React solo actúa al montar, y el form ahora se monta
   // cerrado: enfocamos el valor recién cuando se abre.

@@ -44,6 +44,9 @@ function HabitDetail({
   const [days, setDays] = useState<number>(90);
   const [dayKey, setDayKey] = useState<string>(todayKey);
   const [showEntryForm, setShowEntryForm] = useState(false);
+  // Se incrementa al guardar una entry para que GoalList vuelva a pedir
+  // el progreso (sus goals no cambian de identidad).
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -145,6 +148,7 @@ function HabitDetail({
   const handleEntrySaved = () => {
     rangeEntries.refetch();
     records.refetch(); // no-op si el hábito no es WORKOUT (enabled=false)
+    setRefreshKey((k) => k + 1);
     onEntrySaved?.();
   };
 
@@ -360,7 +364,12 @@ function HabitDetail({
         />
       </div>
 
-      <GoalList habitId={habit._id} habitType={habit.type} unit={habit.unit} />
+      <GoalList
+        habitId={habit._id}
+        habitType={habit.type}
+        unit={habit.unit}
+        refreshKey={refreshKey}
+      />
     </div>
   );
 }
