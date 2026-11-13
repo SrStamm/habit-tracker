@@ -384,7 +384,7 @@ describe("getGoalProgress", () => {
     expect(result.pct).toBe(0);
   });
 
-  it("pct = (current / amount) * 100", async () => {
+  it("pct = (current / amount) * 100 arredondado a 2 casas", async () => {
     m.findOne.mockResolvedValue(goalDoc({ amount: 7 }));
     m.entryFind.mockResolvedValue([
       { completed: true },
@@ -399,8 +399,39 @@ describe("getGoalProgress", () => {
       makeHabit({ type: HabitType.BOOLEAN }),
     );
 
-    expect(result.pct).toBeCloseTo(42.86, 2);
-    expect(result.pct).toBe((3 / 7) * 100);
+    expect(result.pct).toBe(42.86);
+  });
+
+  it("arredonda pct para 2 casas decimais: 1/3 vira 33.33, não 33.33333333333333", async () => {
+    m.findOne.mockResolvedValue(goalDoc({ amount: 3 }));
+    m.entryFind.mockResolvedValue([{ completed: true }]);
+
+    const result = await getGoalProgress(
+      "u1",
+      "h1",
+      "g1",
+      makeHabit({ type: HabitType.BOOLEAN }),
+    );
+
+    expect(result.pct).toBe(33.33);
+    expect(result.pct).not.toBe((1 / 3) * 100);
+  });
+
+  it("arredonda pct para cima: 2/3 vira 66.67", async () => {
+    m.findOne.mockResolvedValue(goalDoc({ amount: 3 }));
+    m.entryFind.mockResolvedValue([
+      { completed: true },
+      { completed: true },
+    ]);
+
+    const result = await getGoalProgress(
+      "u1",
+      "h1",
+      "g1",
+      makeHabit({ type: HabitType.BOOLEAN }),
+    );
+
+    expect(result.pct).toBe(66.67);
   });
 
   it("devolve os 7 campos do progresso (goalId, amount, current, pct, unit, periodStart, periodEnd)", async () => {
@@ -421,7 +452,7 @@ describe("getGoalProgress", () => {
       goalId: "g1",
       amount: 7,
       current: 2,
-      pct: (2 / 7) * 100,
+      pct: 28.57,
       unit: "BOOLEAN",
       periodStart: "2026-10-12",
       periodEnd: "2026-10-18",
