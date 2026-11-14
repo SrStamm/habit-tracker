@@ -5,6 +5,7 @@ import { Workout } from "@habits/shared/workout";
 import { workoutSummary } from "../../workout/lib/workoutSummary";
 import { Lecture } from "@habits/shared/lecture";
 import { lectureSummary } from "../../lecture/lectureSummary";
+import { fmtDayKey } from "../../../lib/fmtDayKey";
 
 export type Cell = {
   date: string;
@@ -12,18 +13,15 @@ export type Cell = {
   label: string;
 };
 
-export const toLocalDayKey = (date: string): string => {
+// Acepta un dayKey (se devuelve tal cual) o un instante ISO, que se convierte
+// al día canónico de la app. Antes usaba componentes locales del navegador y
+// eso mezclaba dos autoridades de "qué día es".
+export const toDayKey = (date: string): string => {
   if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return date;
   }
 
-  const parsed = new Date(date);
-
-  const year = parsed.getFullYear();
-  const month = String(parsed.getMonth() + 1).padStart(2, "0");
-  const day = String(parsed.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return fmtDayKey(new Date(date));
 };
 
 const groupEntriesByDay = (
@@ -190,8 +188,8 @@ export const buildHeatmap = (
   target?: number,
   unit?: string,
 ): (Cell | null)[][] => {
-  from = toLocalDayKey(from);
-  to = toLocalDayKey(to);
+  from = toDayKey(from);
+  to = toDayKey(to);
 
   // Generar el array de dias entre from a to
   const entriesGrouped = groupEntriesByDay(entries, typeHabit);
