@@ -12,6 +12,7 @@ const m = vi.hoisted(() => {
   return {
     save,
     find: vi.fn(),
+    findOne: vi.fn(),
     findOneAndUpdate: vi.fn(),
     habitCtor,
   };
@@ -21,6 +22,7 @@ const m = vi.hoisted(() => {
 vi.mock("../../models/Habit", () => {
   Object.assign(m.habitCtor, {
     find: m.find,
+    findOne: m.findOne,
     findOneAndUpdate: m.findOneAndUpdate,
   });
   return { default: m.habitCtor };
@@ -40,6 +42,7 @@ import {
   HabitType,
   UpdateHabitDTO,
 } from "@habits/shared/habit";
+import { HttpError } from "../../lib/errors";
 
 describe("createHabit", () => {
   it("arma { userId, active: true, ...data } e persiste", async () => {
@@ -73,6 +76,7 @@ describe("updateHabit", () => {
     const data: UpdateHabitDTO = { name: "test" };
 
     // Configura o mock para que retorne null
+    m.findOne.mockResolvedValue(null);
     m.findOneAndUpdate.mockResolvedValue(null);
 
     const result = await updateHabit("h1", "u1", data);
@@ -202,6 +206,7 @@ describe("updateHabit", () => {
 
   it("type não mensurável -> '$unset' de target e unit", async () => {
     const data: UpdateHabitDTO = { type: HabitType.WORKOUT };
+    m.findOne.mockResolvedValue({ _id: "h1", userId: "u1", type: HabitType.WORKOUT });
     m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
 
     await updateHabit("h1", "u1", data);
@@ -223,6 +228,7 @@ describe("updateHabit", () => {
 
   it("type DURATION sem unit -> '$unset' de unit", async () => {
     const data: UpdateHabitDTO = { type: HabitType.DURATION };
+    m.findOne.mockResolvedValue({ _id: "h1", userId: "u1", type: HabitType.DURATION });
     m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
 
     await updateHabit("h1", "u1", data);
@@ -247,6 +253,7 @@ describe("updateHabit", () => {
       type: HabitType.DURATION,
       unit: "MINUTES",
     };
+    m.findOne.mockResolvedValue({ _id: "h1", userId: "u1", type: HabitType.DURATION });
     m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
 
     await updateHabit("h1", "u1", data);
@@ -273,6 +280,7 @@ describe("updateHabit", () => {
       target: 5,
       unit: "páginas",
     };
+    m.findOne.mockResolvedValue({ _id: "h1", userId: "u1", type: HabitType.BOOLEAN });
     m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
 
     await updateHabit("h1", "u1", data);
@@ -290,6 +298,55 @@ describe("updateHabit", () => {
         returnDocument: "after",
       },
     );
+  });
+});
+
+describe("updateHabit: bloqueio de troca de tipo", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("lança 409 se o type enviado é diferente do type guardado", async () => {
+    m.findOne.mockResolvedValue({ _id: "h1", userId: "u1", type: HabitType.BOOLEAN });
+    m.findOneAndUpdate.mockResolvedValue({ _id: "h1", userId: "u1" });
+
+    const erro = await updateHabit("h1", "u1", { type: HabitType.QUANTITY, unit: "páginas" }).catch((e) => e);
+
+    expect(erro).toBeInstanceOf(HttpError);
+    expect(erro.statusCode).toBe(409);
+    expect(erro.message).toBe("O tipo do hábito não pode ser alterado");
+    expect(m.findOne).toHaveBeenCalledWith({ _id: "h1", userId: "u1" });
+    expect(m.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  it("não lança se o type enviado é igual ao guardado", async () => {
+    m.findOne.mockResolvedValue({ _id: "h1", userId: "u1", type: HabitType.QUANTITY });
+    const saved = { _id: "h1", userId: "u1", type: HabitType.QUANTITY, unit: "páginas" };
+    m.findOneAndUpdate.mockResolvedValue(saved);
+
+    const result = await updateHabit("h1", "u1", { type: HabitType.QUANTITY, unit: "páginas", target: 3 });
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledTimes(1);
+    expect(result).toBe(saved);
+  });
+
+  it("não lança se o body não traz type (PATCH parcial)", async () => {
+    m.findOne.mockResolvedValue({ _id: "h1", userId: "u1", type: HabitType.BOOLEAN });
+    const saved = { _id: "h1", userId: "u1", name: "novo" };
+    m.findOneAndUpdate.mockResolvedValue(saved);
+
+    const result = await updateHabit("h1", "u1", { name: "novo" });
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledTimes(1);
+    expect(result).toBe(saved);
+  });
+
+  it("hábito inexistente -> retorna null sem lançar erro", async () => {
+    m.findOne.mockResolvedValue(null);
+    m.findOneAndUpdate.mockResolvedValue(null);
+
+    const result = await updateHabit("h1", "u1", { type: HabitType.QUANTITY, unit: "páginas" });
+
+    expect(result).toBeNull();
+    expect(m.findOneAndUpdate).toHaveBeenCalledTimes(1);
   });
 });
 

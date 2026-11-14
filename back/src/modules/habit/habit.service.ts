@@ -5,6 +5,7 @@ import {
   HabitType,
   isMeasurableType,
 } from "@habits/shared/habit";
+import { HttpError } from "../../lib/errors";
 
 export const findAllHabits = async (userId: string) => {
   const allHabits = await Habit.find({ userId });
@@ -33,6 +34,13 @@ export const updateHabit = async (
   data: UpdateHabitDTO,
 ) => {
   const { name, type, description, category, target, unit } = data;
+
+  if (type !== undefined) {
+    const current = await Habit.findOne({ _id: habitId, userId });
+    if (current && current.type !== type) {
+      throw new HttpError("O tipo do hábito não pode ser alterado", 409);
+    }
+  }
 
   const setData: Record<string, any> = {};
   const unsetData: Record<string, any> = {};
