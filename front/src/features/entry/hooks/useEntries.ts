@@ -5,8 +5,10 @@ import {
 } from "@habits/shared/entry";
 import { WorkoutRecord } from "@habits/shared/workout";
 import { useCallback, useEffect, useState } from "react";
+import { shiftDayKey } from "@habits/shared/dayKey";
 import { createEntry, getAllEntries, getWorkoutRecords } from "../api";
 import { useApiMutation } from "../../../lib/useApiMutation";
+import { fmtDayKey } from "../../../lib/fmtDayKey";
 
 export const useEntries = () => {
   const { error, isPending, data, mutate } = useApiMutation(
@@ -52,14 +54,15 @@ export const useHabitEntries = (habitId: string, days: number) => {
   useEffect(() => {
     let cancelled = false;
 
-    const to = new Date();
-    const from = new Date();
-    from.setDate(from.getDate() - days);
+    // Ventana en días canónicos: el borde no se corre por el DST ni por la
+    // zona del navegador, y el servidor compara strings, no instantes.
+    const toDayKey = fmtDayKey(new Date());
+    const fromDayKey = shiftDayKey(toDayKey, -days);
 
     setIsPending(true);
     setError(null);
 
-    getAllEntries({ from, to }, habitId)
+    getAllEntries({ fromDayKey, toDayKey }, habitId)
       .then((result) => {
         if (!cancelled) setData(result.entries);
       })

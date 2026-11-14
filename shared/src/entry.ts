@@ -3,29 +3,36 @@ import { HabitType } from "./habit";
 import { WorkoutExerciseSchema } from "./workout";
 import { LectureSchema } from "./lecture";
 
-// offset: true aceita tanto `Z` como `+02:00`. O backend normaliza `at` para
-// instante absoluto (new Date) e depois agrupa por APP_TIMEZONE, então
-// um offset não compete com essa semântica: rejeitá-lo só deixava um 400
-// esperando o dia que alguém registrasse um dia passado de um navegador
-// não-UTC, que é exatamente o caso de uso de Entry por dia.
-const base = { dayKey: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) };
+const DAY_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+// A escrita carrega uma intenção de dia, nunca uma adivinhação do cliente:
+// - `at`: instante ISO; o servidor deriva o dia com APP_TIMEZONE (caso "hoje").
+// - `dayKey`: dia escolhido explicitamente na UI (ex.: registrar ontem).
+// A união garante exatamente uma das duas: mandar ambas ou nenhuma falha.
+// offset: true aceita tanto `Z` como `+02:00`: o valor continua sendo um
+// instante absoluto, e quem decide o dia é o servidor, não o offset.
+const dayIntent = <T extends z.ZodRawShape>(payload: T) =>
+  z.union([
+    z.object({ at: z.iso.datetime({ offset: true }), ...payload }).strict(),
+    z.object({ dayKey: z.string().regex(DAY_KEY_PATTERN), ...payload }).strict(),
+  ]);
 
 export const buildCreateEntrySchema = (type: HabitType) =>
   type === HabitType.BOOLEAN
-    ? z.object({ ...base, completed: z.boolean() }).strict()
+    ? dayIntent({ completed: z.boolean() })
     : type === HabitType.WORKOUT
-      ? z
-          .object({ ...base, workout: z.array(WorkoutExerciseSchema).min(1) })
-          .strict()
+      ? dayIntent({ workout: z.array(WorkoutExerciseSchema).min(1) })
       : type === HabitType.LECTURE
-        ? z.object({ ...base, lecture: z.array(LectureSchema).min(1) }).strict()
-        : z.object({ ...base, value: z.number().min(0) }).strict();
+        ? dayIntent({ lecture: z.array(LectureSchema).min(1) })
+        : dayIntent({ value: z.number().min(0) });
 
 export type CreateEntryDTO = z.infer<ReturnType<typeof buildCreateEntrySchema>>;
 
+// As queries já falam em dias, não em instantes: o intervalo é o mesmo em
+// qualquer fuso. A conversão instante→dia acontece uma única vez, na escrita.
 export const GetEntriesQuerySchema = z.object({
-  from: z.coerce.date().optional(),
-  to: z.coerce.date().optional(),
+  fromDayKey: z.string().regex(DAY_KEY_PATTERN).optional(),
+  toDayKey: z.string().regex(DAY_KEY_PATTERN).optional(),
 });
 export type GetEntriesQueryDTO = z.infer<typeof GetEntriesQuerySchema>;
 

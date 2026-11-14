@@ -10,6 +10,10 @@ import { HabitType } from "./habit";
 // Ao contrário de CreateHabitSchema, este É .strict(): uma key a mais
 // é rejeitada em vez de descartada. Essa assimetria é intencional e precisa
 // ser defendida com testes, não deixada ao acaso.
+//
+// A escrita tem DUAS intenções de dia, nunca as duas ao mesmo tempo:
+// `at` (instante; o servidor deriva o dia com APP_TIMEZONE) ou `dayKey`
+// (dia escolhido explicitamente). A união estrutural defende isso.
 describe("buildCreateEntrySchema com HabitType.BOOLEAN", () => {
   const schema = buildCreateEntrySchema(HabitType.BOOLEAN);
 
@@ -19,6 +23,44 @@ describe("buildCreateEntrySchema com HabitType.BOOLEAN", () => {
       completed: true,
     });
     expect(result.success).toBe(true);
+  });
+
+  it("aceita completed booleano com at (instante ISO)", () => {
+    const result = schema.safeParse({
+      at: "2026-01-01T10:00:00Z",
+      completed: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita at com offset explícito (+02:00)", () => {
+    const result = schema.safeParse({
+      at: "2026-01-01T10:00:00+02:00",
+      completed: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita at sem hora, porque não é um instante", () => {
+    const result = schema.safeParse({
+      at: "2026-01-01",
+      completed: true,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita at e dayKey juntos", () => {
+    const result = schema.safeParse({
+      at: "2026-01-01T10:00:00Z",
+      dayKey: "2026-01-01",
+      completed: true,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita quando não vem nem at nem dayKey", () => {
+    const result = schema.safeParse({ completed: true });
+    expect(result.success).toBe(false);
   });
 
   it("aceita dayKey, que é o contrato desde que a entry passou a ser por dia", () => {
@@ -65,17 +107,6 @@ describe("buildCreateEntrySchema com HabitType.BOOLEAN", () => {
     expect(result.success).toBe(false);
   });
 
-  // `at` era o contrato antigo (instante absoluto agrupado por APP_TIMEZONE).
-  // Desde que a entry passou a ser uma-por-dia via dayKey, `at` deixou de
-  // existir: rejeitá-lo aqui é o comportamento certo, não um regressão.
-  it("rejeita at, porque a entry é por dayKey e não por instante", () => {
-    const result = schema.safeParse({
-      dayKey: "2026-01-01",
-      completed: true,
-      at: "2026-01-01T10:00:00Z",
-    });
-    expect(result.success).toBe(false);
-  });
 });
 
 describe("buildCreateEntrySchema com QUANTITY e DURATION", () => {
@@ -256,43 +287,51 @@ describe("buildCreateEntrySchema com LECTURE", () => {
 });
 
 describe("GetEntriesQuerySchema", () => {
-  // Atenção: é z.coerce.date(), não z.date(). O front manda
-  // filter.from.toISOString() (uma string) e por isso funciona. Sem o
-  // coerce, GET /habits/entries?from=... seria um 400.
-  it("coage from e to de string para Date", () => {
+  // A query inteira fala em dias (YYYY-MM-DD). Não existe mais instante
+  // aqui: converter no controller/service era a dupla conversão que corria
+  // a borda da janela em fusos diferentes.
+  it("aceita fromDayKey e toDayKey", () => {
     const result = GetEntriesQuerySchema.safeParse({
-      from: "2025-12-1",
-      to: "2025-12-31",
+      fromDayKey: "2025-12-01",
+      toDayKey: "2025-12-31",
     });
 
     expect(result.success).toBe(true);
   });
 
-  it("rejeita from com uma data inválida", () => {
+  it("rejeita fromDayKey sem zero à esquerda", () => {
     const result = GetEntriesQuerySchema.safeParse({
-      from: "2025-12-32",
+      fromDayKey: "2025-12-1",
     });
 
     expect(result.success).toBe(false);
   });
 
-  it("aceita query vazio, porque from e to são opcionais", () => {
+  it("rejeita fromDayKey com instante ISO no lugar de um dia", () => {
+    const result = GetEntriesQuerySchema.safeParse({
+      fromDayKey: "2025-12-01T10:00:00Z",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("aceita query vazio, porque as bordas são opcionais", () => {
     const result = GetEntriesQuerySchema.safeParse({});
 
     expect(result.success).toBe(true);
   });
 
-  it("aceita só from, sem to", () => {
+  it("aceita só fromDayKey, sem toDayKey", () => {
     const result = GetEntriesQuerySchema.safeParse({
-      from: "2025-12-1",
+      fromDayKey: "2025-12-01",
     });
 
     expect(result.success).toBe(true);
   });
 });
 
-// GET /habits/entries?habitId=&from=&to= — o habitId é opcional porque a
-// home pede as entries de todos os hábitos para o heatmap geral.
+// GET /habits/entries?habitId=&fromDayKey=&toDayKey= — o habitId é opcional
+// porque a home pede as entries de todos os hábitos para o heatmap geral.
 describe("GetAllEntriesQuerySchema", () => {
   const habitId = "65f1c0e0a1b2c3d4e5f60718";
 
@@ -301,11 +340,11 @@ describe("GetAllEntriesQuerySchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("aceita habitId junto com from e to", () => {
+  it("aceita habitId junto com fromDayKey e toDayKey", () => {
     const result = GetAllEntriesQuerySchema.safeParse({
       habitId,
-      from: "2025-12-01",
-      to: "2025-12-31",
+      fromDayKey: "2025-12-01",
+      toDayKey: "2025-12-31",
     });
     expect(result.success).toBe(true);
   });
