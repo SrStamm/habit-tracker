@@ -1,4 +1,5 @@
-export const fmtDayKey = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`;
+import { dayKeyFrom } from "@habits/shared/dayKey";
+import { getAppTimeZone } from "./appTimeZone";
+
+// El "día" de la app lo define APP_TIMEZONE (vía /config), no la zona del navegador.
+export const fmtDayKey = (d: Date): string => dayKeyFrom(d, getAppTimeZone());
