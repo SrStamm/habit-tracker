@@ -3,7 +3,6 @@ import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Select } from "../../../components/ui/Select";
 import {
-  CreateHabitDTO,
   DurationOptions,
   Habit,
   HabitType,
@@ -13,6 +12,7 @@ import { useCreateHabit, useUpdateHabit } from "../hooks/useHabits";
 import { Button } from "../../../components/ui/Button";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
+import { buildHabitPayload } from "../lib/buildHabitPayload";
 
 type HabitFormProps = {
   onSuccess?: (habit: Habit) => void;
@@ -25,7 +25,9 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
   );
   const [category, setCategory] = useState(() => habit?.category ?? "");
   const [type, setType] = useState(() => habit?.type ?? HabitType.BOOLEAN);
-  const [target, setTarget] = useState(() => habit?.target ?? "");
+  const [target, setTarget] = useState<number | "">(
+    () => habit?.target ?? "",
+  );
   const [unit, setUnit] = useState(() => habit?.unit ?? "");
 
   const { error, isPending, mutate } = useCreateHabit();
@@ -51,22 +53,31 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
   };
 
   const handleSubmit = async () => {
-    const isMeasurable = isMeasurableType(type);
-
-    const payload: CreateHabitDTO = {
-      name: nome,
-      description,
-      category,
-      type,
-
-      ...(isMeasurable && typeof target === "number" ? { target } : {}),
-      ...(isMeasurable && unit ? { unit } : {}),
-    };
-
     const saved =
       state === "edit"
-        ? await updateMutate(habit._id, payload) // CreateHabitDTO es asignable a UpdateHabitDTO
-        : await mutate(payload);
+        ? await updateMutate(
+            habit._id,
+            buildHabitPayload({
+              state: "edit",
+              name: nome,
+              description,
+              category,
+              type,
+              target,
+              unit,
+            }),
+          )
+        : await mutate(
+            buildHabitPayload({
+              state: "create",
+              name: nome,
+              description,
+              category,
+              type,
+              target,
+              unit,
+            }),
+          );
 
     if (saved) onSuccess?.(saved);
   };
