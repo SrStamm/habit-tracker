@@ -212,6 +212,40 @@ describe("HabitUpdateSchema", () => {
     }
   });
 
+  // KAN-68 #19: DURATION sem unit no update faria $unset de unit no service e o goals quebra com 500.
+  it("rejeita DURATION sem unit no update quando type vem no body", () => {
+    const result = HabitUpdateSchema.safeParse({
+      type: "DURATION",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("aceita QUANTITY sem unit no update (PATCH parcial mantém unit guardado)", () => {
+    const result = HabitUpdateSchema.safeParse({
+      type: "QUANTITY",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("aceita DURATION com unit no update", () => {
+    const result = HabitUpdateSchema.safeParse({
+      type: "DURATION",
+      unit: "MINUTES",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  // Patch parcial sem type e sem unit: o schema não conhece o tipo guardado e não pode exigir unit.
+  it("aceita patch parcial sem unit e sem type (tipo QUANTITY guardado)", () => {
+    const result = HabitUpdateSchema.safeParse({
+      target: 5,
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({ target: 5 });
+    }
+  });
+
   // Atenção: o body do update NÃO é .strict(), só o CreateHabitSchema é.
   // Por isso uma key errada aqui é descartada em silêncio. E success: true
   // sozinho não prova nada: body vazio também dá true. Por isso o teste

@@ -66,6 +66,21 @@ const unitRequiredForMeasurable = (
   }
 };
 
+// Update es parcial: solo DURATION exige unit en el body (si no, el service hace $unset).
+// QUANTITY sin unit es válido porque conserva el unit guardado.
+const unitRequiredForDurationUpdate = (
+  habit: { type?: HabitType; unit?: string },
+  ctx: z.RefinementCtx,
+) => {
+  if (habit.type === HabitType.DURATION && habit.unit === undefined) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["unit"],
+      message: "unit is required when type is DURATION",
+    });
+  }
+};
+
 const unitsForMeasurable = (
   habit: { type?: HabitType; unit?: string },
   ctx: z.RefinementCtx,
@@ -120,6 +135,7 @@ export const HabitUpdateSchema = z
   })
   .strict()
   .superRefine(targetOnlyForMeasurable)
+  .superRefine(unitRequiredForDurationUpdate)
   .superRefine(unitsForMeasurable);
 
 export type UpdateHabitDTO = z.infer<typeof HabitUpdateSchema>;
