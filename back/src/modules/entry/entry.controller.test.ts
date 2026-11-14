@@ -178,21 +178,51 @@ describe("handleCreateEntry", () => {
 
     await handleCreateEntry(req, res);
 
+    // A escrita é a união `at` | `dayKey`: nenhuma das ramas casa, então o
+    // erro é um invalid_union com o motivo de cada rama.
     expect(res.json).toHaveBeenCalledWith({
       error: "Validation failed: body",
       issues: [
         {
-          code: "invalid_type",
-          expected: "boolean",
-          message: "Invalid input: expected boolean, received undefined",
-          path: ["completed"],
-        },
-        {
-          code: "unrecognized_keys",
-          keys: ["value"],
-          message: 'Unrecognized key: "value"',
-
+          code: "invalid_union",
           path: [],
+          message: "Invalid input",
+          errors: [
+            [
+              {
+                code: "invalid_type",
+                expected: "string",
+                path: ["at"],
+                message: "Invalid input: expected string, received undefined",
+              },
+              {
+                code: "invalid_type",
+                expected: "boolean",
+                path: ["completed"],
+                message: "Invalid input: expected boolean, received undefined",
+              },
+              {
+                code: "unrecognized_keys",
+                keys: ["dayKey", "value"],
+                path: [],
+                message: 'Unrecognized keys: "dayKey", "value"',
+              },
+            ],
+            [
+              {
+                code: "invalid_type",
+                expected: "boolean",
+                path: ["completed"],
+                message: "Invalid input: expected boolean, received undefined",
+              },
+              {
+                code: "unrecognized_keys",
+                keys: ["value"],
+                path: [],
+                message: 'Unrecognized key: "value"',
+              },
+            ],
+          ],
         },
       ],
     });
@@ -247,7 +277,7 @@ describe("handleGetEntries", () => {
     const req = {
       userId: "u1",
       params: { habitId: "h1" },
-      query: { from: undefined, to: undefined },
+      query: { fromDayKey: undefined, toDayKey: undefined },
     } as unknown as Request;
 
     const res = {
@@ -263,10 +293,10 @@ describe("handleGetEntries", () => {
     expect(res.json).toHaveBeenCalledWith({ entries: [entry] });
   });
 
-  it("converte req.query.from e req.query.to para Date antes de chamar getEntries", async () => {
+  it("passa req.query.fromDayKey/toDayKey como strings antes de chamar getEntries", async () => {
     const query = {
-      from: "2026-10-01",
-      to: "2026-10-18",
+      fromDayKey: "2026-10-01",
+      toDayKey: "2026-10-18",
     };
 
     const entry = {
@@ -297,8 +327,8 @@ describe("handleGetEntries", () => {
     expect(getEntries).toHaveBeenCalledWith(
       "u1",
       "h1",
-      new Date("2026-10-01"),
-      new Date("2026-10-18"),
+      "2026-10-01",
+      "2026-10-18",
     );
   });
 
@@ -316,7 +346,7 @@ describe("handleGetEntries", () => {
     const req = {
       userId: "u1",
       params: { habitId: "h1" },
-      query: { from: undefined, to: undefined },
+      query: { fromDayKey: undefined, toDayKey: undefined },
     } as unknown as Request;
 
     const res = {
@@ -335,7 +365,7 @@ describe("handleGetEntries", () => {
     const req = {
       userId: "u1",
       params: { habitId: "h1" },
-      query: { from: undefined, to: undefined },
+      query: { fromDayKey: undefined, toDayKey: undefined },
     } as unknown as Request;
 
     const res = {
@@ -365,7 +395,7 @@ describe("handleGetAllEntries", () => {
 
     const req = {
       userId: "u1",
-      query: { from: undefined, to: undefined },
+      query: { fromDayKey: undefined, toDayKey: undefined },
     } as unknown as Request;
 
     const res = {
@@ -381,10 +411,10 @@ describe("handleGetAllEntries", () => {
     expect(res.json).toHaveBeenCalledWith({ entries: [entry] });
   });
 
-  it("converte req.query.from e req.query.to para Date e passa habitId", async () => {
+  it("passa req.query.fromDayKey/toDayKey como strings e passa habitId", async () => {
     const query = {
-      from: "2026-10-01",
-      to: "2026-10-18",
+      fromDayKey: "2026-10-01",
+      toDayKey: "2026-10-18",
       habitId: "h1",
     };
 
@@ -414,8 +444,8 @@ describe("handleGetAllEntries", () => {
 
     expect(getAllEntries).toHaveBeenCalledWith(
       "u1",
-      new Date("2026-10-01"),
-      new Date("2026-10-18"),
+      "2026-10-01",
+      "2026-10-18",
       query.habitId,
     );
   });
@@ -423,7 +453,7 @@ describe("handleGetAllEntries", () => {
   it("rejeita com o erro do service sem responder (errorHandler decide o status)", async () => {
     const req = {
       userId: "u1",
-      query: { from: undefined, to: undefined },
+      query: { fromDayKey: undefined, toDayKey: undefined },
     } as unknown as Request;
 
     const res = {

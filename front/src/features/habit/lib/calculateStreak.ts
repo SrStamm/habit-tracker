@@ -4,15 +4,9 @@
 
 import { Entry } from "@habits/shared/entry";
 import { Habit } from "@habits/shared/habit";
+import { shiftDayKey } from "@habits/shared/dayKey";
 import { isCompleted } from "./isCompleted";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
-
-const previousDayKey = (dayKey: string): string => {
-  const [y, m, d] = dayKey.split("-").map(Number);
-  const date = new Date(y, m - 1, d); // ← constructor LOCAL
-  date.setDate(date.getDate() - 1);
-  return fmtDayKey(date);
-};
 
 export const calculateStreak = (habit: Habit, entries: Entry[]): number => {
   const byDay = new Map(entries.map((e) => [e.dayKey, e]));
@@ -21,12 +15,12 @@ export const calculateStreak = (habit: Habit, entries: Entry[]): number => {
   let streak = 0;
 
   if (!isCompleted(habit, byDay.get(day))) {
-    day = previousDayKey(day);
+    day = shiftDayKey(day, -1);
   }
 
   while (isCompleted(habit, byDay.get(day))) {
     streak++;
-    day = previousDayKey(day);
+    day = shiftDayKey(day, -1);
   }
 
   return streak;

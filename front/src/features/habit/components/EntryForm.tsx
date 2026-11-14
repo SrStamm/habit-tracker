@@ -60,6 +60,11 @@ function EntryForm({
   const suggestions = useMemo(() => buildEntrySuggestions(entries), [entries]);
 
   const isToday = dayKey === todayKey;
+
+  // Guardar "hoy" es un instante: el servidor deriva el día con APP_TIMEZONE.
+  // Un día elegido explícitamente (pasado) viaja como dayKey, sin ambigüedad.
+  const dayIntent = () =>
+    isToday ? { at: new Date().toISOString() } : { dayKey };
   const entryUnitLabel =
     habit.type === HabitType.DURATION && habit.unit
       ? DURATION_OPTIONS_LABELS[habit.unit as DurationOptions]
@@ -89,7 +94,10 @@ function EntryForm({
 
   const handleSubmit = async () => {
     if (habit.type === HabitType.BOOLEAN) {
-      const saved = await mutate({ completed: !completed, dayKey }, habit._id);
+      const saved = await mutate(
+        { completed: !completed, ...dayIntent() },
+        habit._id,
+      );
 
       if (saved) {
         setCompleted(saved.completed ?? false);
@@ -98,7 +106,7 @@ function EntryForm({
       }
     } else if (habit.type === HabitType.WORKOUT) {
       const saved = await mutate(
-        { workout: toWorkout(workoutValue), dayKey },
+        { workout: toWorkout(workoutValue), ...dayIntent() },
         habit._id,
       );
 
@@ -108,7 +116,7 @@ function EntryForm({
       }
     } else if (habit.type === HabitType.LECTURE) {
       const saved = await mutate(
-        { lecture: toLecture(lectureValue), dayKey },
+        { lecture: toLecture(lectureValue), ...dayIntent() },
         habit._id,
       );
 
@@ -119,7 +127,7 @@ function EntryForm({
     } else {
       if (value === "" || Number.isNaN(value)) return;
 
-      const created = await mutate({ value, dayKey }, habit._id);
+      const created = await mutate({ value, ...dayIntent() }, habit._id);
 
       if (created) {
         setShowEntryForm(false);

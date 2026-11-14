@@ -6,18 +6,23 @@ import {
 import { WorkoutRecord } from "@habits/shared/workout";
 import { api } from "../../lib/api";
 
-const createURL = (filter?: GetEntriesQueryDTO, habitId?: string): string => {
+// A URL fala em dias canônicos (YYYY-MM-DD), os mesmos que o servidor usa
+// no filtro. Nenhum instante do navegador entra aqui.
+export const buildEntriesURL = (
+  filter?: GetEntriesQueryDTO,
+  habitId?: string,
+): string => {
   const url = habitId ? `/habits/${habitId}/entries` : "/habits/entries";
   if (!filter) return url;
 
   const params = new URLSearchParams();
 
-  if (filter.from) {
-    params.append("from", filter.from.toISOString());
+  if (filter.fromDayKey) {
+    params.append("fromDayKey", filter.fromDayKey);
   }
 
-  if (filter.to) {
-    params.append("to", filter.to.toISOString());
+  if (filter.toDayKey) {
+    params.append("toDayKey", filter.toDayKey);
   }
 
   const queryString = params.toString();
@@ -38,7 +43,7 @@ export const getAllEntries = async (
   filter?: GetEntriesQueryDTO,
   habitId?: string,
 ): Promise<{ entries: Entry[] }> => {
-  const url = createURL(filter, habitId);
+  const url = buildEntriesURL(filter, habitId);
 
   return api(url, { method: "GET" });
 };

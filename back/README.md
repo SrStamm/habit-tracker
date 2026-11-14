@@ -91,9 +91,9 @@ All routes except `auth` require `Authorization: Bearer <jwt>`.
 | `POST` | `/habits` | Create habit |
 | `PATCH` | `/habits/:habitId` | Update habit (name, description, category, type, target, unit) |
 | `DELETE` | `/habits/:habitId` | Archive habit (soft delete) |
-| `GET` | `/habits/entries` | All entries of the user (`?from`, `?to`, `?habitId`) — feeds the home heatmap |
-| `GET` | `/habits/:habitId/entries` | Entries of one habit (`?from`, `?to`) |
-| `POST` | `/habits/:habitId/entries` | Register the entry for a `dayKey` |
+| `GET` | `/habits/entries` | All entries of the user (`?fromDayKey`, `?toDayKey`, `?habitId`) — feeds the home heatmap |
+| `GET` | `/habits/:habitId/entries` | Entries of one habit (`?fromDayKey`, `?toDayKey`) |
+| `POST` | `/habits/:habitId/entries` | Register the entry for a day: send `at` (instant, the server derives the day) **or** `dayKey` (explicit day), never both |
 | `GET` | `/habits/:habitId/goals` | List the goals of a habit |
 | `GET` | `/habits/:habitId/goals/:goalId/progress` | Progress of one goal for the current period |
 | `POST` | `/habits/:habitId/goals` | Create a goal (`amount`, `period`: `WEEK` \| `MONTH`) |
@@ -155,8 +155,16 @@ and `003-unit-habits` backfill later schema changes.
 **Unique compound index:** `{ userId, habitId, dayKey }` — one entry per habit
 per user per day (idempotent daily check-in).
 
-The `dayKey` is computed by the backend from the request instant using
-`APP_TIMEZONE`, so clients in any timezone record the same calendar day.
+The write carries one of two day intents, never both:
+
+- `at` (ISO 8601 instant): the backend derives the `dayKey` from it using
+  `APP_TIMEZONE`, so a client in any timezone records the same calendar day.
+  The front uses this for "today".
+- `dayKey` (`YYYY-MM-DD`): an explicitly chosen day, accepted as-is.
+
+In both cases the resolved `dayKey` must not be in the future relative to the
+server's `APP_TIMEZONE` today (400 otherwise). Entry queries take
+`fromDayKey`/`toDayKey` as day strings, not instants.
 
 ## Validation
 

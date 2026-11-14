@@ -10,6 +10,7 @@ import {
 } from "../../entry/hooks/useEntries";
 import { mergeEntries } from "../../entry/lib/mergeEntries";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
+import { shiftDayKey } from "@habits/shared/dayKey";
 import WeekLabels from "./WeekLabels";
 import HeatmapGrid from "./HeatmapGrid";
 import { HabitTypeBadge } from "./HabitTypeBadge";
@@ -64,9 +65,7 @@ function HabitDetail({
     [entries, rangeEntries.data],
   );
 
-  const desde = new Date();
-  desde.setDate(desde.getDate() - days);
-  const desdeKey = fmtDayKey(desde);
+  const desdeKey = shiftDayKey(todayKey, -days);
 
   const weeks = buildHeatmap(
     entriesInRange,

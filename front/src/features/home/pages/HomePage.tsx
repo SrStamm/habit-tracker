@@ -9,6 +9,7 @@ import { useArchiveHabit, useGetHabits } from "../../habit/hooks/useHabits";
 import { useEntries } from "../../entry/hooks/useEntries";
 import { useAuth } from "../../auth/context/AuthContext";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
+import { shiftDayKey } from "@habits/shared/dayKey";
 import { groupByHabitId } from "../../habit/lib/groupById";
 import { calculateStreak } from "../../habit/lib/calculateStreak";
 import HabitDetail from "../../habit/components/HabitDetail";
@@ -87,15 +88,18 @@ export default function HomePage() {
     void habitMutate(true);
   }, []);
 
-  const hace90d = new Date();
-  hace90d.setDate(hace90d.getDate() - 90);
+  // Ventana en días canónicos: el borde no depende de la zona del navegador.
+  // Se recalcula en cada carga para que la vuelta de medianoche no la congele.
+  const historyWindow = () => {
+    const toDayKey = fmtDayKey(new Date());
+    return { fromDayKey: shiftDayKey(toDayKey, -90), toDayKey };
+  };
 
   useEffect(() => {
-    void historyEntries.mutate({ from: hace90d, to: new Date() });
+    void historyEntries.mutate(historyWindow());
   }, []);
 
-  const refreshHistory = () =>
-    void historyEntries.mutate({ from: hace90d, to: new Date() });
+  const refreshHistory = () => void historyEntries.mutate(historyWindow());
 
   const todayByHabit = useMemo(
     () =>

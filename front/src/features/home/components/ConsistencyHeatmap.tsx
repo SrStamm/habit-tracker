@@ -7,6 +7,7 @@ import Legend from "../../habit/components/Legend";
 import { Cell } from "../../entry/lib/buildHeatmap";
 import { buildConsistencyHeatmap } from "../lib/buildConsistencyHeatmap";
 import { fmtDayKey } from "../../../lib/fmtDayKey";
+import { shiftDayKey } from "@habits/shared/dayKey";
 import { formatDate } from "../../../lib/formDate";
 
 type Props = {
@@ -17,12 +18,11 @@ type Props = {
 function ConsistencyHeatmap({ habits, entries }: Props) {
   const [selectedDate, setSelectedDate] = useState<Cell | null>(null);
 
-  // Janela fixa de 90 dias — mesma fórmula do fetch do Home (hace90d).
+  // Janela fixa de 90 dias — mesma fórmula do fetch do Home. Aritmética de
+  // calendário puro: nem DST nem zona do navegador movem o borde.
   const { from, to } = useMemo(() => {
-    const start = new Date();
-    start.setDate(start.getDate() - 90);
-
-    return { from: fmtDayKey(start), to: fmtDayKey(new Date()) };
+    const to = fmtDayKey(new Date());
+    return { from: shiftDayKey(to, -90), to };
   }, []);
 
   const weeks = useMemo(
