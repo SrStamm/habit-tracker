@@ -5,7 +5,6 @@ import { Input } from "../../../components/ui/Input";
 import { Tag } from "../../../components/ui/Tag";
 import { HABIT_TYPE_LABELS } from "../lib/habitTypeLabels";
 import { useCreateEntry } from "../../entry/hooks/useEntries";
-import { fmtDayKey } from "../../../lib/fmtDayKey";
 import { Entry } from "@habits/shared/entry";
 import { DURATION_OPTIONS_LABELS } from "../lib/durationOptionsLabels";
 import { workoutSummary } from "../../workout/lib/workoutSummary";
@@ -33,7 +32,9 @@ function HabitCard({
   const [value, setValue] = useState<number | "">("");
   const { isPending, error, mutate } = useCreateEntry();
 
-  const dayKey = fmtDayKey(new Date());
+  // El botón de la tarjeta siempre registra "hoy": un instante, para que el
+  // servidor decida el día con APP_TIMEZONE.
+  const todayIntent = () => ({ at: new Date().toISOString() });
 
   useEffect(() => {
     setCompletedToday(todayEntry?.completed ?? false);
@@ -42,7 +43,7 @@ function HabitCard({
   // Handler para marcar hábitos simples/booleanos
   const handleToggleCheck = async () => {
     const saved = await mutate(
-      { completed: !completedToday, dayKey },
+      { completed: !completedToday, ...todayIntent() },
       habit._id,
     );
 
@@ -58,7 +59,7 @@ function HabitCard({
   const handleValueSubmit = async () => {
     if (!value) return;
 
-    const created = await mutate({ value, dayKey }, habit._id);
+    const created = await mutate({ value, ...todayIntent() }, habit._id);
     if (created) {
       setCompletedToday(true);
       onEntrySaved?.();

@@ -1,4 +1,5 @@
 import { Entry } from "@habits/shared/entry";
+import { shiftDayKey } from "@habits/shared/dayKey";
 import { HabitType } from "@habits/shared/habit";
 import { Workout } from "@habits/shared/workout";
 import { workoutSummary } from "../../workout/lib/workoutSummary";
@@ -77,16 +78,9 @@ export const valueToLevel = (value: number, max: number): 0 | 1 | 2 | 3 | 4 => {
   return Math.min(4, clamp) as 0 | 1 | 2 | 3 | 4;
 };
 
-const addOneDay = (date: string): string => {
-  const [year, month, day] = date.split("-");
-
-  const currentDate = new Date(Number(year), Number(month) - 1, Number(day));
-  currentDate.setDate(currentDate.getDate() + 1);
-
-  return `${currentDate.getFullYear()}-${String(
-    currentDate.getMonth() + 1,
-  ).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")}`;
-};
+// Aritmética de calendario pura (compartida con el resto de la app): el
+// date local podía saltarse o repetir un día en fusos con DST a medianoche.
+const addOneDay = (date: string): string => shiftDayKey(date, 1);
 
 export const buildDayRange = (from: string, to: string) => {
   const array: string[] = [];
