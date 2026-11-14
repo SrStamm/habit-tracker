@@ -4,7 +4,7 @@ import {
   buildDayRange,
   Cell,
   createPadding,
-  toLocalDayKey,
+  toDayKey,
   valueToLevel,
 } from "../../entry/lib/buildHeatmap";
 import { isCompleted } from "../../habit/lib/isCompleted";
@@ -17,8 +17,8 @@ export const buildConsistencyHeatmap = (
   from: string,
   to: string,
 ): (Cell | null)[][] => {
-  const fromKey = toLocalDayKey(from);
-  const toKey = toLocalDayKey(to);
+  const fromKey = toDayKey(from);
+  const toKey = toDayKey(to);
 
   const activeHabits = habits
     .filter((h) => h.active)
@@ -26,7 +26,7 @@ export const buildConsistencyHeatmap = (
       habit,
       // createdAt chega como ISO string (JSON) ou Date — normalizar para a
       // chave de dia local permite comparar lexicograficamente com <=.
-      createdDayKey: toLocalDayKey(String(habit.createdAt)),
+      createdDayKey: toDayKey(String(habit.createdAt)),
     }));
 
   // Última entry por hábito+dia (last wins).

@@ -1,4 +1,5 @@
 import { dayKeyFrom } from "../../lib/dayKey";
+import { shiftDayKey } from "@habits/shared/dayKey";
 import { HttpError } from "../../lib/errors";
 import Goal, { type GoalDoc } from "../../models/Goal";
 import Entry, { EntryDoc } from "../../models/Entry";
@@ -18,11 +19,31 @@ const toGoalResponse = (doc: GoalDoc): GoalResponseDTO => ({
   period: doc.period,
 });
 
-// Converte os componentes de calendário de um Date em "YYYY-MM-DD".
-// Não passe um instante (new Date()): aí quem decide o dia é a timezone
-// do servidor, não a da aplicação.
-const toLocalDayKey = (date: Date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+// Janelas de calendário sobre dayKeys ("YYYY-MM-DD"). A aritmética é de dias,
+// não de instantes: UTC aparece só como calendário neutro, nunca como fuso,
+// e o dia de hoje já vem decidido pela APP_TIMEZONE.
+const utcCalendarDate = (dayKey: string): Date => {
+  const [year, month, day] = dayKey.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
+// Semana de segunda a domingo (segunda = índice 0).
+const weekWindow = (dayKey: string) => {
+  const weekDay = (utcCalendarDate(dayKey).getUTCDay() + 6) % 7;
+  const periodStart = shiftDayKey(dayKey, -weekDay);
+
+  return { periodStart, periodEnd: shiftDayKey(periodStart, 6) };
+};
+
+// Mês em curso, do dia 1 ao último dia (o último mês pode ter 28 a 31 dias).
+const monthWindow = (dayKey: string) => {
+  const date = utcCalendarDate(dayKey);
+  const periodStart = shiftDayKey(dayKey, 1 - date.getUTCDate());
+  const lastDay = new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+
+  return { periodStart, periodEnd: shiftDayKey(periodStart, lastDay - 1) };
 };
 
 export const getGoals = async (userId: string, habitId: string) => {
@@ -57,36 +78,10 @@ export const getGoalProgress = async (
   if (!goal) throw new HttpError("Goal não encontrado", 404);
 
   // Janela calendário em curso (segunda..domingo ou dia 1..último),
-  // calculada na timezone da aplicação e não na do servidor.
+  // calculada a partir do dia canônico da aplicação.
   const today = dayKeyFrom(new Date(), APP_TIMEZONE);
-  const [year, month, day] = today.split("-");
-
-  // Opera como calculadora de calendário (componentes de data), não como
-  // instante: assim nenhum deslocamento de timezone entra na conta.
-  const currentDate = new Date(Number(year), Number(month) - 1, Number(day));
-
-  let periodStart = "";
-  let periodEnd = "";
-
-  if (goal.period === "WEEK") {
-    // Segunda-feira = índice 0 ((diaDaSemana + 6) % 7).
-    const weekDay = (currentDate.getDay() + 6) % 7;
-
-    currentDate.setDate(currentDate.getDate() - weekDay);
-    periodStart = toLocalDayKey(currentDate);
-
-    currentDate.setDate(currentDate.getDate() + 6);
-    periodEnd = toLocalDayKey(currentDate);
-  } else {
-    currentDate.setDate(1);
-    periodStart = toLocalDayKey(currentDate);
-
-    // setMonth é 0-based: Number(month) já aponta para o mês seguinte.
-    // setDate(0) = último dia do mês atual.
-    currentDate.setMonth(Number(month));
-    currentDate.setDate(0);
-    periodEnd = toLocalDayKey(currentDate);
-  }
+  const { periodStart, periodEnd } =
+    goal.period === "WEEK" ? weekWindow(today) : monthWindow(today);
 
   // O dayKey é "YYYY-MM-DD", então comparar string é comparar data.
   const entries = await Entry.find({

@@ -1,8 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { Entry } from "@habits/shared/entry";
 import { Habit, HabitType } from "@habits/shared/habit";
 import { Cell } from "../../entry/lib/buildHeatmap";
 import { buildConsistencyHeatmap } from "./buildConsistencyHeatmap";
+import { setAppTimeZone } from "../../../lib/appTimeZone";
 
 const makeHabit = (extra: Partial<Habit>): Habit => ({
   _id: "habit-1",
@@ -177,5 +178,23 @@ describe("buildConsistencyHeatmap — createdAt como ISO string e como Date", ()
     expect(cellsIso).toEqual(cellsDate);
     expect(findCell(cellsIso, "2026-01-04")?.label).toBe("Sin datos");
     expect(findCell(cellsIso, "2026-01-05")?.label).toBe("0 de 1 hábitos (0%)");
+  });
+});
+
+// createdAt es un instante: el día en el que nace el hábito tiene que ser el
+// de la APP_TIMEZONE, no el del navegador. 02:00Z del 5 es todavía el 4 en
+// Buenos Aires (UTC-3), aunque el navegador esté en UTC+14.
+describe("buildConsistencyHeatmap — createdAt se lee en la zona de la app", () => {
+  afterEach(() => setAppTimeZone(undefined));
+
+  it("el hábito cuenta desde el día canónico de createdAt, no desde el local", () => {
+    setAppTimeZone("America/Argentina/Buenos_Aires");
+
+    const habits = [makeHabit({ createdAt: "2026-01-05T02:00:00Z" as unknown as Date })];
+
+    const cells = buildConsistencyHeatmap(habits, [], FROM, TO);
+
+    expect(findCell(cells, "2026-01-04")?.label).toBe("0 de 1 hábitos (0%)");
+    expect(findCell(cells, "2026-01-03")?.label).toBe("Sin datos");
   });
 });

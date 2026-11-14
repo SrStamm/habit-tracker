@@ -1,13 +1,9 @@
 import { type Response, type Request } from "express";
 import { APP_TIMEZONE } from "../../config/timeZone";
-import { dayKeyFrom } from "../../lib/dayKey";
 
-// Fonte canônica de "qual dia é hoje" para o front. `timeZone` é a verdade;
-// `today` é evidência/diagnóstico (o front recalcula em cada render para não
-// congelar a virada da meia-noite).
+// Fuente de la zona de la aplicación para el front. El día de "hoy" no se
+// expone: el front lo calcula con esta zona en cada render, y el servidor
+// valida los días con su propio reloj.
 export const handleGetConfig = async (_req: Request, res: Response) => {
-  res.status(200).json({
-    timeZone: APP_TIMEZONE,
-    today: dayKeyFrom(new Date(), APP_TIMEZONE),
-  });
+  res.status(200).json({ timeZone: APP_TIMEZONE });
 };

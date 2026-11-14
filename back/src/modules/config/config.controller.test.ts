@@ -3,10 +3,9 @@ import { type Response, type Request } from "express";
 import { handleGetConfig } from "./config.controller";
 import { APP_TIMEZONE } from "../../config/timeZone";
 
-// Contrato HTTP do /config: o front depende dele para saber qual é "hoje".
-// Não assertamos uma data fixa: o teste flakearia na virada da meia-noite.
+// Contrato HTTP del /config: el front depende de la zona para calcular el día.
 describe("handleGetConfig", () => {
-  it("200 + { timeZone, today } com a timezone da aplicação", async () => {
+  it("200 + { timeZone } con la zona de la aplicación", async () => {
     const req = {} as Request;
 
     const res = {
@@ -17,9 +16,6 @@ describe("handleGetConfig", () => {
     await handleGetConfig(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
-    expect(res.json).toHaveBeenCalledWith({
-      timeZone: APP_TIMEZONE,
-      today: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
-    });
+    expect(res.json).toHaveBeenCalledWith({ timeZone: APP_TIMEZONE });
   });
 });
