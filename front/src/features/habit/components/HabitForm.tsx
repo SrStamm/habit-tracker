@@ -28,7 +28,11 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
   const [target, setTarget] = useState<number | "">(
     () => habit?.target ?? "",
   );
-  const [unit, setUnit] = useState(() => habit?.unit ?? "");
+  const [unit, setUnit] = useState(
+    () =>
+      habit?.unit ??
+      (habit?.type === HabitType.DURATION ? DurationOptions.MINUTES : ""),
+  );
 
   const { error, isPending, mutate } = useCreateHabit();
   const {
@@ -119,6 +123,7 @@ function HabitForm({ onSuccess, state, habit }: HabitFormProps) {
       <Select
         id="type"
         required
+        disabled={state === "edit"}
         value={type}
         onChange={(e) => handleTypeChange(e.target.value as HabitType)}
       >
