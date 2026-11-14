@@ -28,6 +28,9 @@ import {
   upsertEntry,
 } from "./entry.service";
 import { dayKeyFrom } from "../../lib/dayKey";
+import { shiftDayKey } from "@habits/shared/dayKey";
+import { APP_TIMEZONE } from "../../config/timeZone";
+import { HttpError } from "../../lib/errors";
 import { Types } from "mongoose";
 
 // ============================================================
@@ -56,14 +59,11 @@ describe("getAllEntries", () => {
     expect(result).toBe(data);
   });
 
-  it("converte from/to em dayKey { $gte, $lte } com APP_TIMEZONE", async () => {
+  it("usa fromDayKey/toDayKey como bordas do filtro, sem reconverter instantes", async () => {
     const data = [{ _id: "e1", userId: "u1" }];
-    const from = new Date("2026-03-10T12:00:00Z");
-    const to = new Date("2026-03-12T12:00:00Z");
-
     m.sort.mockResolvedValue(data);
 
-    await getAllEntries("u1", from, to);
+    await getAllEntries("u1", "2026-03-10", "2026-03-12");
 
     expect(m.find).toHaveBeenCalledWith({
       userId: "u1",
@@ -71,21 +71,18 @@ describe("getAllEntries", () => {
     });
   });
 
-  it("só 'from' -> só $gte; só 'to' -> só $lte", async () => {
+  it("só fromDayKey -> só $gte; só toDayKey -> só $lte", async () => {
     const data = [{ _id: "e1", userId: "u1" }];
-    const from = new Date("2026-03-10T12:00:00Z");
-    const to = new Date("2026-03-12T12:00:00Z");
-
     m.sort.mockResolvedValue(data);
 
-    await getAllEntries("u1", from);
+    await getAllEntries("u1", "2026-03-10");
 
     expect(m.find).toHaveBeenCalledWith({
       userId: "u1",
       dayKey: { $gte: "2026-03-10" },
     });
 
-    await getAllEntries("u1", undefined, to);
+    await getAllEntries("u1", undefined, "2026-03-12");
 
     expect(m.find).toHaveBeenCalledWith({
       userId: "u1",
@@ -118,13 +115,11 @@ describe("getEntries", () => {
     expect(result).toBe(data);
   });
 
-  it("converte from/to em dayKey { $gte, $lte } com APP_TIMEZONE", async () => {
+  it("usa fromDayKey/toDayKey como bordas do filtro", async () => {
     const data = [{ _id: "e1", userId: "u1", habitId: "h1" }];
-    const from = new Date("2026-03-10T12:00:00Z");
-    const to = new Date("2026-03-12T12:00:00Z");
     m.sort.mockResolvedValue(data);
 
-    const result = await getEntries("u1", "h1", from, to);
+    const result = await getEntries("u1", "h1", "2026-03-10", "2026-03-12");
 
     expect(m.find).toHaveBeenCalledWith({
       userId: "u1",
@@ -310,6 +305,91 @@ describe("upsertEntry", () => {
     await expect(upsertEntry("u1", "h1", input)).rejects.toThrow(
       "Falha ao gravar a entry",
     );
+    expect(m.findOneAndUpdate).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ============================================================
+// resolveDayKey — o dia é do servidor, não do cliente
+// ============================================================
+describe("upsertEntry com intenção de dia", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const savedResponse = (dayKey: string) => ({
+    value: { _id: "e1", userId: "u1", habitId: "h1", dayKey },
+    lastErrorObject: { updatedExisting: false },
+  });
+
+  it("deriva dayKey de `at` com APP_TIMEZONE, não com a zona do processo", async () => {
+    // 02:00Z do dia 10 ainda é dia 9 em Buenos Aires (UTC-3).
+    const input: CreateEntryDTO = {
+      at: "2026-03-10T02:00:00Z",
+      completed: true,
+    };
+    m.findOneAndUpdate.mockResolvedValue(savedResponse("2026-03-09"));
+
+    await upsertEntry("u1", "h1", input);
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledWith(
+      { userId: "u1", habitId: "h1", dayKey: "2026-03-09" },
+      { $set: { completed: true } },
+      expect.objectContaining({ upsert: true }),
+    );
+  });
+
+  it("aceita offset explícito em `at` e ainda decide o dia pela APP_TIMEZONE", async () => {
+    // 10:00+02:00 = 08:00Z do dia 10 = 05:00 do dia 10 em Buenos Aires.
+    const input: CreateEntryDTO = {
+      at: "2026-03-10T10:00:00+02:00",
+      value: 5,
+    };
+    m.findOneAndUpdate.mockResolvedValue(savedResponse("2026-03-10"));
+
+    await upsertEntry("u1", "h1", input);
+
+    expect(m.findOneAndUpdate).toHaveBeenCalledWith(
+      { userId: "u1", habitId: "h1", dayKey: "2026-03-10" },
+      { $set: { value: 5 } },
+      expect.objectContaining({ upsert: true }),
+    );
+  });
+
+  it("rejeita dayKey posterior ao hoje do servidor com HttpError 400", async () => {
+    const today = dayKeyFrom(new Date(), APP_TIMEZONE);
+    const input: CreateEntryDTO = {
+      dayKey: shiftDayKey(today, 1),
+      completed: true,
+    };
+
+    await expect(upsertEntry("u1", "h1", input)).rejects.toMatchObject({
+      name: "HttpError",
+      statusCode: 400,
+    });
+    expect(m.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  it("rejeita um `at` cujo dia derivado cai no futuro", async () => {
+    const input: CreateEntryDTO = {
+      at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      completed: true,
+    };
+
+    await expect(upsertEntry("u1", "h1", input)).rejects.toBeInstanceOf(
+      HttpError,
+    );
+    expect(m.findOneAndUpdate).not.toHaveBeenCalled();
+  });
+
+  it("aceita dayKey de hoje e de dias passados", async () => {
+    const today = dayKeyFrom(new Date(), APP_TIMEZONE);
+    m.findOneAndUpdate.mockResolvedValue(savedResponse(today));
+
+    await upsertEntry("u1", "h1", { dayKey: today, completed: true });
+    await upsertEntry("u1", "h1", {
+      dayKey: shiftDayKey(today, -10),
+      completed: true,
+    });
+
     expect(m.findOneAndUpdate).toHaveBeenCalledTimes(2);
   });
 });

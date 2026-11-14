@@ -8,20 +8,29 @@ import {
 import { buildCreateEntrySchema } from "@habits/shared/entry";
 
 export const handleGetAllEntries = async (req: Request, res: Response) => {
-  const from = req.query.from ? new Date(String(req.query.from)) : undefined;
-  const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+  const fromDayKey = req.query.fromDayKey
+    ? String(req.query.fromDayKey)
+    : undefined;
+  const toDayKey = req.query.toDayKey ? String(req.query.toDayKey) : undefined;
   const habitId = req.query.habitId ? String(req.query.habitId) : undefined;
 
-  const entries = await getAllEntries(req.userId, from, to, habitId);
+  const entries = await getAllEntries(req.userId, fromDayKey, toDayKey, habitId);
   res.status(200).json({ entries });
 };
 
 export const handleGetEntries = async (req: Request, res: Response) => {
   const { habitId } = req.params;
-  const from = req.query.from ? new Date(String(req.query.from)) : undefined;
-  const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+  const fromDayKey = req.query.fromDayKey
+    ? String(req.query.fromDayKey)
+    : undefined;
+  const toDayKey = req.query.toDayKey ? String(req.query.toDayKey) : undefined;
 
-  const entries = await getEntries(req.userId, String(habitId), from, to);
+  const entries = await getEntries(
+    req.userId,
+    String(habitId),
+    fromDayKey,
+    toDayKey,
+  );
   res.status(200).json({ entries });
 };
 
