@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { dayKeyFrom } from "./dayKey";
+import { dayKeyFrom, shiftDayKey } from "./dayKey";
 
 // O dia de um Entry NAO vem do Date: vem do dayKey, e o dayKey sai daqui.
 // Back e front compartilham esta implementação para que "hoje" seja o mesmo
@@ -66,5 +66,30 @@ describe("dayKeyFrom", () => {
     expect(() =>
       dayKeyFrom(new Date("2026-01-01T02:00:00Z"), "Europe/England/London"),
     ).toThrow(RangeError);
+  });
+});
+
+// O shift de um dia é calendário puro: 2026-03-01 menos um dia é 2026-02-28
+// em qualquer fuso. Se isto usasse Date local, um navegador a oeste da zona
+// da aplicação devolveria o dia errado e a streak saltaria dias.
+describe("shiftDayKey", () => {
+  it("volta um dia dentro do mesmo mês", () => {
+    expect(shiftDayKey("2026-03-15", -1)).toBe("2026-03-14");
+  });
+
+  it("atravessa o início do mês", () => {
+    expect(shiftDayKey("2026-03-01", -1)).toBe("2026-02-28");
+  });
+
+  it("atravessa o início do ano", () => {
+    expect(shiftDayKey("2026-01-01", -1)).toBe("2025-12-31");
+  });
+
+  it("respeita o dia bissexto", () => {
+    expect(shiftDayKey("2024-03-01", -1)).toBe("2024-02-29");
+  });
+
+  it("avança um dia", () => {
+    expect(shiftDayKey("2026-03-15", 1)).toBe("2026-03-16");
   });
 });
