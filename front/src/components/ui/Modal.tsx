@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "../../lib/cn";
 
@@ -17,6 +17,9 @@ export function Modal({
   children,
   className,
 }: ModalProps) {
+  const modalId = useId();
+  const closedByPopstate = useRef(false);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -32,6 +35,30 @@ export function Modal({
       document.body.style.overflow = "";
     };
   }, [isOpen, onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const state = { ...(window.history.state ?? {}), __modal: modalId };
+    window.history.pushState(state, "");
+
+    const handlePopState = () => {
+      if (window.history.state?.__modal !== modalId) {
+        closedByPopstate.current = true;
+        onClose();
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (!closedByPopstate.current && window.history.state?.__modal === modalId) {
+        window.history.back();
+      }
+      closedByPopstate.current = false;
+    };
+  }, [isOpen, modalId, onClose]);
 
   if (!isOpen) return null;
 

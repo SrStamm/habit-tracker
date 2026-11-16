@@ -206,17 +206,17 @@ export default function HomePage() {
         </Modal>
 
         <section className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
               <h2 className="text-xl font-semibold text-text">Meus Hábitos</h2>
 
               {/* Switch de vista: Ativos / Arquivados */}
-              <div className="flex items-center rounded-lg border border-border bg-card p-1 shadow-sm">
+              <div className="flex w-full items-center rounded-lg border border-border bg-card p-1 shadow-sm sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setAll(false)}
                   className={cn(
-                    "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                    "flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors sm:flex-none sm:py-1",
                     all
                       ? "text-text-muted hover:text-text"
                       : "bg-primary text-white",
@@ -228,7 +228,7 @@ export default function HomePage() {
                   type="button"
                   onClick={() => setAll(true)}
                   className={cn(
-                    "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                    "flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-colors sm:flex-none sm:py-1",
                     all
                       ? "bg-primary text-white"
                       : "text-text-muted hover:text-text",
@@ -239,10 +239,10 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 sm:justify-end">
               {!all && categories.length > 0 && (
                 <Select
-                  className="py-0.5 w-auto text-xs px-2"
+                  className="w-full min-w-0 py-1.5 text-xs px-2 sm:w-auto sm:py-0.5"
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   value={categoryFilter}
                 >
@@ -257,12 +257,15 @@ export default function HomePage() {
                 </Select>
               )}
 
-              <span className="text-xs text-text-muted">
+              <span className="text-xs text-text-muted sm:ml-auto">
                 {filteredHabits ? filteredHabits.length : 0}{" "}
                 {all ? "arquivados" : "ativos"}
               </span>
 
-              <Button onClick={onCreateHabit} className="shadow-sm">
+              <Button
+                onClick={onCreateHabit}
+                className="w-full shadow-sm sm:w-auto"
+              >
                 + Novo Hábito
               </Button>
             </div>
