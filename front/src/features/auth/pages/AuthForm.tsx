@@ -10,9 +10,17 @@ type Props = {
   isPending: boolean;
   onSubmit: (values: { nome: string; senha: string }) => void;
   footer?: { text: string; linkLabel: string; to: string };
+  placeholder?: string;
 };
 
-function AuthForm({ title, error, isPending, onSubmit, footer }: Props) {
+function AuthForm({
+  title,
+  error,
+  isPending,
+  onSubmit,
+  footer,
+  placeholder,
+}: Props) {
   const [nome, setNome] = useState<string>("");
   const [senha, setSenha] = useState<string>("");
 
@@ -42,6 +50,7 @@ function AuthForm({ title, error, isPending, onSubmit, footer }: Props) {
             type="text"
             autoComplete="off"
             required
+            placeholder={placeholder}
             value={nome}
             onChange={(e) => setNome(e.target.value)}
           />
@@ -52,6 +61,7 @@ function AuthForm({ title, error, isPending, onSubmit, footer }: Props) {
             type="password"
             autoComplete="off"
             required
+            placeholder={placeholder}
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
           />

@@ -15,6 +15,7 @@ function LoginPage() {
   return (
     <AuthForm
       title="Login"
+      placeholder="testUser"
       isPending={isPending}
       error={error}
       onSubmit={({ nome, senha }) => handleLogin(nome, senha)}
