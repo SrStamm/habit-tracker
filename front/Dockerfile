@@ -5,7 +5,7 @@ RUN npm install -g pnpm@11.22.0
 
 WORKDIR /app
 
-COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY back/package.json ./back/
 COPY shared/package.json ./shared/
 COPY front/package.json ./front/
