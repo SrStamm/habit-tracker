@@ -109,6 +109,10 @@ pnpm --filter front dev     # terminal 2
 | `pnpm --filter back test` | Backend test suite (Vitest). |
 | `pnpm --filter front test` | Frontend test suite (Vitest). |
 | `pnpm -r test` | Run every workspace test suite. |
+| `pnpm lint` | Biome lint over the whole repo (`biome check .`). Fails on errors; warnings are informative. |
+| `pnpm lint:fix` | Apply Biome's safe fixes. |
+| `pnpm typecheck` | Type-check `back` (`tsc --noEmit`) and `front` (`tsc -b`). |
+| `pnpm verify` | Lint + typecheck + test, the same sequence CI runs on every PR. |
 | `pnpm --filter back build` | Type-check and build the API (`tsc`). |
 | `pnpm --filter front build` | Type-check and build the SPA (`tsc -b && vite build`). |
 | `pnpm --filter back migrate` | Apply pending MongoDB migrations. |

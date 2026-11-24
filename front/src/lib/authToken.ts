@@ -7,7 +7,11 @@ export const subscribeAuth = (fn: () => void) => {
     listeners.delete(fn);
   };
 };
-const emit = () => listeners.forEach((fn) => fn());
+const emit = () => {
+  listeners.forEach((fn) => {
+    fn();
+  });
+};
 
 export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 

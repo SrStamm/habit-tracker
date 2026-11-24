@@ -23,6 +23,7 @@ function HeatmapGrid({ weeks, onCellSelect }: HeatmapProps) {
     >
       {weeks.map((week, weekIndex) => (
         <div
+          // biome-ignore lint/suspicious/noArrayIndexKey: grilla posicional estática (semana), nunca se reordena
           key={weekIndex}
           className="grid gap-1"
           style={{ gridTemplateRows: "repeat(7, 20px)" }}
@@ -30,11 +31,13 @@ function HeatmapGrid({ weeks, onCellSelect }: HeatmapProps) {
           {week.map((cell, cellIndex) =>
             cell === null ? (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: grilla posicional estática (día), nunca se reordena
                 key={cellIndex}
                 className="size-5 rounded-[3px] bg-transparent"
               />
             ) : (
               <div
+                // biome-ignore lint/suspicious/noArrayIndexKey: grilla posicional estática (día), nunca se reordena
                 key={cellIndex}
                 title={`${formatDate(cell.date)} — ${cell.label}`}
                 aria-label={`${formatDate(cell.date)} — ${cell.label}`}
