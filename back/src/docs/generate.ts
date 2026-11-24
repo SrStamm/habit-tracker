@@ -6,4 +6,4 @@ import "./index";
 
 const out = resolve(dirname(fileURLToPath(import.meta.url)), "./openapi.json");
 mkdirSync(dirname(out), { recursive: true });
-writeFileSync(out, JSON.stringify(buildDocument(), null, 2) + "\n");
+writeFileSync(out, `${JSON.stringify(buildDocument(), null, 2)}\n`);
