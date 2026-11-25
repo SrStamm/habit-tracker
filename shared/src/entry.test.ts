@@ -277,10 +277,42 @@ describe("buildCreateEntrySchema com LECTURE", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejeita lecture: [] (min 1)", () => {
+  it("aceita lecture: [] (dia tocado sem leituras)", () => {
     const result = schema.safeParse({
       dayKey: "2026-01-01",
       lecture: [],
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita leitura sem livro", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      lecture: [{ book: "", chapter: "2", page: 40 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita leitura sem capítulo", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      lecture: [{ book: "Sapiens", chapter: "", page: 40 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita leitura com página 0", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      lecture: [{ book: "Sapiens", chapter: "2", page: 0 }],
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejeita leitura com página não inteira", () => {
+    const result = schema.safeParse({
+      dayKey: "2026-01-01",
+      lecture: [{ book: "Sapiens", chapter: "2", page: 40.5 }],
     });
     expect(result.success).toBe(false);
   });
