@@ -85,9 +85,7 @@ function EntryForm({
 
     if (habit.type === HabitType.LECTURE) {
       setLecture(
-        entry?.lecture?.length
-          ? toDraftLecture(entry.lecture)
-          : [emptyLecture()],
+        entry ? toDraftLecture(entry.lecture ?? []) : [emptyLecture()],
       );
     }
   }, [dayKey, entries, habit.type]);

@@ -40,4 +40,4 @@ export const isLectureValid = (item: LectureDraftItem): boolean => {
 };
 
 export const isLectureDraftValid = (draft: LectureDraft): boolean =>
-  draft.length > 0 && draft.every(isLectureValid);
+  draft.every(isLectureValid);

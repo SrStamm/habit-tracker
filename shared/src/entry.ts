@@ -23,7 +23,7 @@ export const buildCreateEntrySchema = (type: HabitType) =>
     : type === HabitType.WORKOUT
       ? dayIntent({ workout: z.array(WorkoutExerciseSchema).min(1) })
       : type === HabitType.LECTURE
-        ? dayIntent({ lecture: z.array(LectureSchema).min(1) })
+        ? dayIntent({ lecture: z.array(LectureSchema) })
         : dayIntent({ value: z.number().min(0) });
 
 export type CreateEntryDTO = z.infer<ReturnType<typeof buildCreateEntrySchema>>;
